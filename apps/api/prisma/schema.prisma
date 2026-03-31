@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---- MODELS ----
+
+enum ItemType {
+  article
+  tweet
+  youtube
+  pdf
+  image
+  podcast
+  link
+}
+
+enum SaveSource {
+  extension
+  web_url
+  web_upload
+}
+
+enum ProcessingStatus {
+  pending
+  processing
+  ready
+  failed
+}
+
+model User {
+  id              String      @id @default(uuid())
+  email           String      @unique
+  name           String?
+  password       String?
+  avatarUrl      String?     @map("avatar_url")
+  googleId       String?     @unique @map("google_id")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  items          Item[]
+  tags           Tag[]
+  collections     Collection[]
+  highlights     Highlight[]
+  resurfaceLogs   ResurfaceLog[]
+
+  @@map("users")
+}
+
+model Item {
+  id              String           @id @default(uuid())
+  userId          String           @map("user_id")
+  url             String?
+  title           String?
+  description     String?          @db.Text
+  contentText     String?          @db.Text @map("content_text")
+  thumbnailUrl    String?          @map("thumbnail_url")
+  fileUrl         String?          @map("file_url")
+  itemType        ItemType         @map("item_type")
+  saveSource      SaveSource       @map("save_source")
+  status          ProcessingStatus @default(pending)
+  readingTime     Int?             @map("reading_time")
+  wordCount       Int?             @map("word_count")
+  sourceDomain    String?          @map("source_domain")
+  author          String?
+  publishedAt     DateTime?        @map("published_at")
+  savedAt         DateTime         @default(now()) @map("saved_at")
+  lastViewedAt    DateTime?        @map("last_viewed_at")
+  viewCount       Int              @default(0) @map("view_count")
+  isArchived      Boolean          @default(false) @map("is_archived")
+  isFavourite     Boolean          @default(false) @map("is_favourite")
+  userNote        String?          @db.Text @map("user_note")
+  youtubeTimestamp Int?            @map("youtube_timestamp")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags            ItemTag[]
+  collections     CollectionItem[]
+  highlights      Highlight[]
+  resurfaceLogs    ResurfaceLog[]
+
+  @@map("items")
+}
+
+model Tag {
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  name            String
+  color           String?
+  isAiGenerated   Boolean     @default(false) @map("is_ai_generated")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           ItemTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model ItemTag {
+  itemId      String      @map("item_id")
+  tagId       String      @map("tag_id")
+  confidence  Float       @default(1.0)
+
+  item        Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tag         Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, tagId])
+  @@map("item_tags")
+}
+
+model Collection {
+  id              String           @id @default(uuid())
+  userId          String           @map("user_id")
+  name            String
+  description     String?          @db.Text
+  coverImage      String?          @map("cover_image")
+  isPublic        Boolean          @default(false) @map("is_public")
+  publicSlug      String?          @unique @map("public_slug")
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           CollectionItem[]
+
+  @@map("collections")
+}
+
+model CollectionItem {
+  collectionId String      @map("collection_id")
+  itemId       String      @map("item_id")
+  position     Int?
+  addedAt      DateTime    @default(now()) @map("added_at")
+
+  collection   Collection  @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  item         Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, itemId])
+  @@map("collection_items")
+}
+
+model Highlight {
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  itemId          String      @map("item_id")
+  text            String      @db.Text
+  note            String?     @db.Text
+  color           String?     // yellow, blue, pink, green
+  positionStart   Int?        @map("position_start")
+  positionEnd     Int?        @map("position_end")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item            Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@map("highlights")
+}
+
+model ResurfaceLog {
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  itemId          String      @map("item_id")
+  resurfacedAt    DateTime    @default(now()) @map("resurfaced_at")
+  wasClicked      Boolean     @default(false) @map("was_clicked")
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item            Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@map("resurface_log")
+}

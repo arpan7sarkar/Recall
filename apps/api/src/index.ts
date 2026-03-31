@@ -3,6 +3,9 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import authRoutes from "./routes/auth";
+import itemRoutes from "./routes/items";
+import tagsRoutes from "./routes/tags";
 
 // Load environment variables
 dotenv.config();
@@ -16,6 +19,11 @@ app.use(morgan("dev")); // Logging
 app.use(cors()); // CORS support
 app.use(express.json()); // JSON body parser
 app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use("/auth", authRoutes);
+app.use("/items", itemRoutes);
+app.use("/tags", tagsRoutes);
 
 /**
  * @route   GET /health
