@@ -65,7 +65,7 @@ export const SOURCE_TYPE_OPTIONS: {
   icon: string;
   label: string;
   description: string;
-  inputMode: "url" | "file";
+  inputMode: "url" | "file" | "both";
 }[] = [
   {
     type: "article",
@@ -93,7 +93,7 @@ export const SOURCE_TYPE_OPTIONS: {
     icon: "📁",
     label: "PDF / Document",
     description: "Upload a PDF or paste a link to one",
-    inputMode: "file",
+    inputMode: "both",
   },
   {
     type: "podcast",
@@ -107,7 +107,7 @@ export const SOURCE_TYPE_OPTIONS: {
     icon: "🖼️",
     label: "Image / GIF",
     description: "Upload an image or paste a link",
-    inputMode: "file",
+    inputMode: "both",
   },
   {
     type: "link",

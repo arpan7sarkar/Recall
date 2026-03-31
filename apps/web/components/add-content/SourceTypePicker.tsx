@@ -12,18 +12,18 @@ export function SourceTypePicker() {
     <div className="space-y-6">
       <div className="text-center">
         <h2
-          className="text-xl font-semibold mb-1"
+          className="text-2xl font-bold tracking-tight mb-1"
           style={{ color: "var(--text-primary)" }}
         >
           What are you saving?
         </h2>
         <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
-          Choose a content type or just paste a URL below
+          Pick a source type or paste any link below
         </p>
       </div>
 
       {/* Type cards grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {SOURCE_TYPE_OPTIONS.map((opt) => (
           <button
             key={opt.type}
@@ -43,19 +43,18 @@ export function SourceTypePicker() {
                   : "var(--border)"
               }`,
               borderRadius: "var(--radius-lg)",
-              ringColor: "var(--accent-500)",
             }}
           >
             <span className="text-2xl">{opt.icon}</span>
             <span
-              className="text-sm font-medium"
+              className="text-sm font-semibold"
               style={{ color: "var(--text-primary)" }}
             >
               {opt.label}
             </span>
             <span
-              className="text-xs leading-tight"
-              style={{ color: "var(--text-tertiary)" }}
+              className="text-[11px] leading-tight opacity-70"
+              style={{ color: "var(--text-secondary)" }}
             >
               {opt.description}
             </span>
@@ -64,31 +63,37 @@ export function SourceTypePicker() {
       </div>
 
       {/* Fallback URL paste */}
-      <div className="relative">
+      <div className="pt-2">
         <div
-          className="flex items-center gap-3 px-4 py-3 rounded-xl"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl shadow-sm transition-all focus-within:ring-2 focus-within:ring-accent-500"
           style={{
             background: "var(--bg-primary)",
             border: "1px dashed var(--border)",
             borderRadius: "var(--radius-lg)",
           }}
         >
-          <span style={{ color: "var(--text-tertiary)" }}>🔗</span>
+          <span className="text-lg opacity-40">🔗</span>
           <input
             type="url"
-            placeholder="Or just paste any URL and we'll detect it automatically…"
-            className="flex-1 bg-transparent text-sm outline-none"
+            placeholder="Or just paste any URL and we'll detect it automatically ▼"
+            className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-50"
             style={{ color: "var(--text-primary)" }}
             onChange={(e) => {
-              setUrl(e.target.value);
-              if (e.target.value.trim()) {
+              const val = e.target.value.trim();
+              setUrl(val);
+              if (val) {
                 // Auto-detect type
-                const url = e.target.value.toLowerCase();
-                let detected: ItemType = "link";
-                if (url.includes("youtube.com") || url.includes("youtu.be")) detected = "youtube";
-                else if (url.includes("twitter.com") || url.includes("x.com")) detected = "tweet";
-                else if (url.endsWith(".pdf")) detected = "pdf";
+                const urlLower = val.toLowerCase();
+                let detected: ItemType = "article";
+                
+                if (urlLower.includes("youtube.com") || urlLower.includes("youtu.be")) detected = "youtube";
+                else if (urlLower.includes("twitter.com") || urlLower.includes("x.com")) detected = "tweet";
+                else if (urlLower.endsWith(".pdf")) detected = "pdf";
+                else if (/\.(jpg|jpeg|png|gif|webp|avif)$/.test(urlLower)) detected = "image";
+                else if (urlLower.includes("spotify.com") || urlLower.includes("apple.com/podcast") || urlLower.includes("podcasts.")) detected = "podcast";
+                else if (!urlLower.startsWith("http")) detected = "link"; // Default fallback
                 else detected = "article";
+                
                 setSelectedType(detected);
               }
             }}

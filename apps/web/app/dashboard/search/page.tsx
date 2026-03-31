@@ -46,7 +46,7 @@ export default function SearchPage() {
           autoFocus
         />
         <div
-          className="flex items-center rounded-xl overflow-hidden flex-shrink-0"
+          className="flex items-center rounded-xl overflow-hidden shrink-0"
           style={{ border: "1px solid var(--border)" }}
         >
           {(["semantic", "keyword"] as const).map((t) => (

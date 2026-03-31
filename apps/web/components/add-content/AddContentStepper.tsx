@@ -3,19 +3,14 @@
 import { useState, useCallback } from "react";
 import { useAddContentStore } from "@/store/addContentStore";
 import { useUIStore } from "@/store/uiStore";
-import { SOURCE_TYPE_OPTIONS } from "@/lib/constants";
 import { SourceTypePicker } from "./SourceTypePicker";
-import { UrlInputForm } from "./UrlInputForm";
-import { FileUploadForm } from "./FileUploadForm";
+import { ContentDetailsForm } from "./ContentDetailsForm";
 import { MetadataForm } from "./MetadataForm";
 
 export function AddContentStepper() {
-  const { step, selectedType, resetForm, resetForAnotherSave } = useAddContentStore();
+  const { step, resetForm, resetForAnotherSave } = useAddContentStore();
   const { closeAddContent } = useUIStore();
   const [isSaving, setIsSaving] = useState(false);
-
-  const sourceOption = SOURCE_TYPE_OPTIONS.find((o) => o.type === selectedType);
-  const isFileMode = sourceOption?.inputMode === "file";
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -53,8 +48,7 @@ export function AddContentStepper() {
       </div>
 
       {step === "type" && <SourceTypePicker />}
-      {step === "input" && !isFileMode && <UrlInputForm />}
-      {step === "input" && isFileMode && <FileUploadForm />}
+      {step === "input" && <ContentDetailsForm />}
       {step === "metadata" && (
         <MetadataForm
           onSave={handleSave}

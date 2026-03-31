@@ -5,6 +5,7 @@ import { Topbar } from "@/components/layout/Topbar";
 import { AddContentModal } from "@/components/AddContentModal";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useUIStore } from "@/store/uiStore";
+import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
@@ -12,7 +13,9 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { sidebarCollapsed } = useUIStore();
+  const { sidebarCollapsed, openAddContent } = useUIStore();
+
+  useKeyboardShortcut("k", openAddContent);
 
   return (
     <AuthGuard>

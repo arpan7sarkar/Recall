@@ -30,7 +30,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       >
         {/* Thumbnail placeholder */}
         <div
-          className="flex items-center justify-center flex-shrink-0 rounded-lg text-2xl"
+          className="flex items-center justify-center shrink-0 rounded-lg text-2xl"
           style={{
             width: 56,
             height: 56,
@@ -56,7 +56,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         </div>
 
         {/* Tags */}
-        <div className="hidden md:flex items-center gap-1.5 flex-shrink-0">
+        <div className="hidden md:flex items-center gap-1.5 shrink-0">
           {item.tags.slice(0, 2).map((tag) => (
             <TagChip key={tag.tagId} name={tag.tagName} color={tag.tagColor} isAiGenerated={tag.isAiGenerated} />
           ))}
@@ -64,7 +64,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
 
         {/* Favourite */}
         {item.isFavourite && (
-          <span className="text-sm flex-shrink-0" title="Favourited">♥</span>
+          <span className="text-sm shrink-0" title="Favourited">♥</span>
         )}
       </Link>
     );
