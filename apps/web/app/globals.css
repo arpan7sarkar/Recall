@@ -1,26 +1,134 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
+/* ── Design Tokens ─────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Base neutrals */
+  --bg-primary: hsl(220, 14%, 96%);
+  --bg-secondary: hsl(0, 0%, 100%);
+  --bg-tertiary: hsl(220, 13%, 91%);
+  --bg-elevated: hsl(0, 0%, 100%);
+
+  --text-primary: hsl(220, 14%, 10%);
+  --text-secondary: hsl(220, 9%, 46%);
+  --text-tertiary: hsl(220, 9%, 64%);
+
+  /* Accent — muted teal */
+  --accent-50: hsl(168, 30%, 95%);
+  --accent-100: hsl(168, 30%, 89%);
+  --accent-500: hsl(168, 32%, 42%);
+  --accent-600: hsl(168, 34%, 35%);
+  --accent-700: hsl(168, 36%, 28%);
+
+  /* Warm */
+  --warm-100: hsl(30, 40%, 92%);
+  --warm-500: hsl(30, 42%, 52%);
+
+  /* Status */
+  --success: hsl(152, 30%, 42%);
+  --warning: hsl(38, 40%, 52%);
+  --error: hsl(0, 35%, 52%);
+
+  /* Border & shadow */
+  --border: hsl(220, 13%, 87%);
+  --border-focus: var(--accent-500);
+  --shadow-card: 0 2px 8px hsla(220, 14%, 10%, 0.06);
+  --shadow-md: 0 4px 12px hsla(220, 14%, 10%, 0.08);
+  --shadow-lg: 0 8px 24px hsla(220, 14%, 10%, 0.10);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Sidebar */
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+  --topbar-height: 64px;
 }
 
+/* Dark mode */
+[data-theme="dark"] {
+  --bg-primary: hsl(220, 14%, 10%);
+  --bg-secondary: hsl(220, 14%, 14%);
+  --bg-tertiary: hsl(220, 13%, 18%);
+  --bg-elevated: hsl(220, 14%, 16%);
+  --text-primary: hsl(220, 14%, 92%);
+  --text-secondary: hsl(220, 9%, 62%);
+  --text-tertiary: hsl(220, 9%, 45%);
+  --border: hsl(220, 13%, 22%);
+  --shadow-card: 0 2px 8px hsla(0, 0%, 0%, 0.3);
+}
+
+/* ── Tailwind v4 Theme ──────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--bg-secondary);
+  --color-card-foreground: var(--text-primary);
+  --color-muted: var(--bg-tertiary);
+  --color-muted-foreground: var(--text-secondary);
+  --color-accent: var(--accent-500);
+  --color-accent-foreground: hsl(0, 0%, 100%);
+  --color-border: var(--border);
+
+  --font-sans: var(--font-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base ────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ── Skeleton pulse animation ─────────────────────────────── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+.skeleton {
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+/* ── ItemCard hover lift ──────────────────────────────────── */
+.card-hover {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Focus ring ───────────────────────────────────────────── */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
 }
