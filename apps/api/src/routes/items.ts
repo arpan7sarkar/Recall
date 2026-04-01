@@ -1,19 +1,21 @@
 import { Router, Request, Response } from "express";
 import prisma from "@/lib/prisma";
-import { authenticateJWT } from "@/middleware/auth";
-import { ItemType, SaveSource } from "@prisma/client";
+import { authenticateClerk } from "@/middleware/auth";
+// Types should come from @prisma/client, but defining locally to fix generation/lint issues
+export type ItemType = "article" | "tweet" | "youtube" | "pdf" | "image" | "podcast" | "link";
+export type SaveSource = "extension" | "web_url" | "web_upload";
 
 const router = Router();
 
 // Apply auth to all item routes
-router.use(authenticateJWT);
+router.use(authenticateClerk);
 
 /**
  * @route   GET /items
  * @desc    List all items for user
  */
 router.get("/", async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+  const userId = (req as any).auth?.userId;
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
@@ -65,7 +67,7 @@ router.get("/", async (req: Request, res: Response) => {
  * @desc    Create a new item via URL
  */
 router.post("/", async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+  const userId = (req as any).auth?.userId;
   const { url, itemType, tags, collectionId, note, youtubeTimestamp } = req.body;
 
   if (!url && !itemType) {
@@ -121,7 +123,7 @@ router.post("/", async (req: Request, res: Response) => {
  * @desc    Get single item
  */
 router.get("/:id", async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+  const userId = (req as any).auth?.userId;
   const { id } = req.params;
 
   try {
@@ -148,7 +150,7 @@ router.get("/:id", async (req: Request, res: Response) => {
  * @desc    Update item
  */
 router.patch("/:id", async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+  const userId = (req as any).auth?.userId;
   const { id } = req.params;
   const { title, description, isFavourite, isArchived, userNote } = req.body;
 
@@ -180,7 +182,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
  * @desc    Delete item
  */
 router.delete("/:id", async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+  const userId = (req as any).auth?.userId;
   const { id } = req.params;
 
   try {

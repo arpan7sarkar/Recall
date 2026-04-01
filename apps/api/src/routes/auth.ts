@@ -1,98 +1,57 @@
 import { Router, Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
-import { authenticateJWT } from "@/middleware/auth";
+import { authenticateClerk } from "@/middleware/auth";
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 /**
- * @route   POST /auth/register
- * @desc    Registrar um novo usuário
+ * @route   POST /auth/sync
+ * @desc    Sync Clerk user with local database
+ * @access  Private (Clerk)
  */
-router.post("/register", async (req: Request, res: Response) => {
-  const { email, password, name } = req.body;
+router.post("/sync", authenticateClerk, async (req: Request, res: Response) => {
+  const auth = (req as any).auth;
+  const { email, name, avatarUrl } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+  if (!auth?.userId) {
+    return res.status(401).json({ error: "Missing Clerk userId" });
   }
 
   try {
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ error: "Email already in use" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
+    const user = await prisma.user.upsert({
+      where: { id: auth.userId },
+      update: {
+        email: email || undefined,
+        name: name || undefined,
+        avatarUrl: avatarUrl || undefined,
+      },
+      create: {
+        id: auth.userId,
+        email: email || "",
+        name: name || "Anonymous",
+        avatarUrl: avatarUrl || null,
       },
     });
 
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
-
-    res.status(201).json({ token, user: { id: user.id, email: user.email, name: user.name } });
+    res.json({ user });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal server error during registration" });
-  }
-});
-
-/**
- * @route   POST /auth/login
- * @desc    Login com email/senha
- */
-router.post("/login", async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
-  }
-
-  try {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !user.password) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
-
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Login failed" });
+    console.error("User sync error:", error);
+    res.status(500).json({ error: "Failed to sync user" });
   }
 });
 
 /**
  * @route   GET /auth/me
- * @desc    Obter usuário atual
+ * @desc    Get current user profile
  */
-router.get("/me", authenticateJWT, async (req: Request, res: Response) => {
-  if (!req.user) return res.status(401).json({ error: "Unauthenticated" });
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      select: { id: true, email: true, name: true, avatarUrl: true },
-    });
-    
-    if (!user) return res.status(404).json({ error: "User not found" });
-    
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch user profile" });
+router.get("/me", authenticateClerk, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  
+  if (!user) {
+    return res.status(404).json({ error: "User not found in local database" });
   }
+    
+  res.json(user);
 });
 
 export default router;

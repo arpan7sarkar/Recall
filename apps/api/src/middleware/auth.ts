@@ -1,37 +1,36 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { getAuth } from "@clerk/express";
+import prisma from "@/lib/prisma";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+export const authenticateClerk = async (req: Request, res: Response, next: NextFunction) => {
+  const { userId } = getAuth(req);
 
-interface JWTPayload {
-  userId: string;
-  email: string;
-}
-
-// Extend Express Request type to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JWTPayload;
-    }
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized: No session found" });
   }
-}
 
-export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-
-  if (authHeader) {
-    const token = authHeader.split(" ")[1];
-
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(403).json({ error: "Forbidden: Invalid token" });
+  try {
+    // Optional: Sync user with local DB if needed, or just attach userId to request
+    // For now, we attach the clerk userId to the request for backend use
+    (req as any).auth = { userId };
+    
+    // We can also find the local user record if we need DB relations
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { googleId: userId }, // If Clerk uses Google
+          { id: userId }        // Or if we use Clerk ID as primary ID
+        ]
       }
-      
-      req.user = decoded as JWTPayload;
-      next();
     });
-  } else {
-    res.status(401).json({ error: "Unauthorized: No token provided" });
+
+    if (user) {
+      (req as any).user = user;
+    }
+
+    next();
+  } catch (error) {
+    console.error("Clerk Auth Error:", error);
+    res.status(500).json({ error: "Internal server error during authentication" });
   }
 };

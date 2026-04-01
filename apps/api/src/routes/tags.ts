@@ -1,18 +1,18 @@
 import { Router, Request, Response } from "express";
 import prisma from "@/lib/prisma";
-import { authenticateJWT } from "@/middleware/auth";
+import { authenticateClerk } from "@/middleware/auth";
 
 const router = Router();
 
 // Apply auth to all tag routes
-router.use(authenticateJWT);
+router.use(authenticateClerk);
 
 /**
  * @route   GET /tags
  * @desc    Get all user tags
  */
 router.get("/", async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+  const userId = (req as any).auth?.userId;
   try {
     const tags = await prisma.tag.findMany({
       where: { userId },
@@ -34,7 +34,7 @@ router.get("/", async (req: Request, res: Response) => {
  * @desc    Create a new tag
  */
 router.post("/", async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+  const userId = (req as any).auth?.userId;
   const { name, color } = req.body;
 
   if (!name) return res.status(400).json({ error: "Tag name is required" });
@@ -58,7 +58,7 @@ router.post("/", async (req: Request, res: Response) => {
  * @desc    Update a tag
  */
 router.patch("/:id", async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+  const userId = (req as any).auth?.userId;
   const { id } = req.params;
   const { name, color } = req.body;
 
@@ -78,7 +78,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
  * @desc    Delete a tag
  */
 router.delete("/:id", async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+  const userId = (req as any).auth?.userId;
   const { id } = req.params;
 
   try {
@@ -97,7 +97,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 // I'll put it in items.ts or here. PRD says POST /items/:id/tags in tags API.
 // Usually, it's better in items.ts, but I'll follow the PRD 1.6.3 instructions if I can find them.
 router.post("/attach/:itemId", async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
+    const userId = (req as any).auth?.userId;
     const { itemId } = req.params;
     const { tagId, tagName } = req.body;
 
