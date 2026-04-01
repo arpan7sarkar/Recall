@@ -1,32 +1,23 @@
 import multer from "multer";
+import path from "path";
+import { Request } from "express";
 
-// Max file size: default 20MB, configurable via MAX_FILE_UPLOAD_MB env var
-const maxFileSizeMB = parseInt(process.env.MAX_FILE_UPLOAD_MB || "20", 10);
-const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
-
-// Store to memory buffer so we can stream directly to R2
 const storage = multer.memoryStorage();
 
-// Accept PDF and images only
-const fileFilter = (
-  req: Express.Request,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback
-) => {
-  if (file.mimetype === "application/pdf" || file.mimetype.startsWith("image/")) {
-    // Accept file
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif"];
+  
+  if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    // Reject file
-    cb(new Error("Invalid file type. Only PDF and images are allowed.") as any, false);
+    cb(new Error("Invalid file type. Only PDF and images are allowed."));
   }
 };
 
-// Multer middleware instance
 export const upload = multer({
   storage,
-  limits: {
-    fileSize: maxFileSizeBytes,
-  },
   fileFilter,
+  limits: {
+    fileSize: (parseInt(process.env.MAX_FILE_UPLOAD_MB || "20")) * 1024 * 1024,
+  },
 });

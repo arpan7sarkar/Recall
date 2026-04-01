@@ -5,10 +5,89 @@ import { authenticateClerk } from "@/middleware/auth";
 export type ItemType = "article" | "tweet" | "youtube" | "pdf" | "image" | "podcast" | "link";
 export type SaveSource = "extension" | "web_url" | "web_upload";
 
+import { upload } from "@/middleware/upload";
+
 const router = Router();
 
 // Apply auth to all item routes
 router.use(authenticateClerk);
+
+/**
+ * @route   POST /items/upload
+ * @desc    Upload a file (PDF or Image)
+ */
+router.post("/upload", upload.single("file"), async (req: Request, res: Response) => {
+  const userId = (req as any).auth?.userId;
+  const { title, itemType, tags, collectionId, note } = req.body;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  if (!title) {
+    return res.status(400).json({ error: "Title is required for uploads" });
+  }
+
+  try {
+    // Note: Actual storage to R2 would happen here or in a worker. 
+    // Following PRD Data Flow C, it's done synchronously in the API or in worker.
+    // For now, we'll store metadata and indicate processing.
+    
+    const item = await prisma.item.create({
+      data: {
+        userId: userId!,
+        title,
+        itemType: (itemType as ItemType) || (file.mimetype.startsWith("image") ? "image" : "pdf"),
+        saveSource: "web_upload",
+        userNote: note,
+        status: "processing", // No scraping needed, just AI processing
+        // If collection provided
+        ...(collectionId && {
+          collections: {
+            create: { collectionId },
+          },
+        }),
+        // If tags provided manually
+        ...(tags && tags.length > 0 && {
+          tags: {
+            create: (Array.isArray(tags) ? tags : [tags]).map((tagName: string) => ({
+              tag: {
+                connectOrCreate: {
+                  where: { userId_name: { userId: userId!, name: tagName } },
+                  create: { userId: userId!, name: tagName },
+                },
+              },
+              confidence: 1.0,
+            })),
+          },
+        }),
+      },
+      include: {
+        tags: { include: { tag: true } },
+      },
+    });
+
+    res.status(201).json(mapItemWithTags(item));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to upload item metadata" });
+  }
+});
+
+/**
+ * Helper to map Prisma item tags to the frontend ItemTag interface
+ */
+const mapItemWithTags = (item: any) => ({
+  ...item,
+  tags: item.tags?.map((t: any) => ({
+    tagId: t.tag.id,
+    tagName: t.tag.name,
+    tagColor: t.tag.color || null,
+    isAiGenerated: t.isAiGenerated || false,
+    confidence: t.confidence || 1.0,
+  })) || [],
+});
 
 /**
  * @route   GET /items
@@ -48,13 +127,11 @@ router.get("/", async (req: Request, res: Response) => {
     ]);
 
     res.json({
-      items,
-      meta: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
-      },
+      data: items.map(mapItemWithTags),
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
     });
   } catch (error) {
     console.error(error);
@@ -111,7 +188,7 @@ router.post("/", async (req: Request, res: Response) => {
       },
     });
 
-    res.status(201).json(item);
+    res.status(201).json(mapItemWithTags(item));
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to create item" });
@@ -139,7 +216,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    res.json(item);
+    res.json(mapItemWithTags(item));
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch item" });
   }
@@ -169,9 +246,12 @@ router.patch("/:id", async (req: Request, res: Response) => {
         isArchived,
         userNote,
       },
+      include: {
+        tags: { include: { tag: true } },
+      },
     });
 
-    res.json(updated);
+    res.json(mapItemWithTags(updated));
   } catch (error) {
     res.status(500).json({ error: "Failed to update item" });
   }

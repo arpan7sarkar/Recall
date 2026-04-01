@@ -4,13 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "@/lib/constants";
 import { useUIStore } from "@/store/uiStore";
-import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
+import { useUser, useClerk } from "@clerk/nextjs";
 
 export function Sidebar() {
+
   const pathname = usePathname();
   const { sidebarOpen, sidebarCollapsed, toggleSidebar, toggleSidebarCollapse, theme, setTheme } = useUIStore();
-  const { user, logout } = useAuthStore();
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   return (
     <>
@@ -150,7 +152,7 @@ export function Sidebar() {
           style={{ borderColor: "var(--border)" }}
         >
           <div
-            className="flex items-center justify-center rounded-full font-semibold text-sm shrink-0"
+            className="flex items-center justify-center rounded-full font-semibold text-sm shrink-0 overflow-hidden"
             style={{
               width: 36,
               height: 36,
@@ -158,7 +160,11 @@ export function Sidebar() {
               color: "var(--accent-700)",
             }}
           >
-            {user?.name?.charAt(0)?.toUpperCase() ?? "U"}
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} alt={user.fullName || "User"} className="w-full h-full object-cover" />
+            ) : (
+              user?.fullName?.charAt(0)?.toUpperCase() ?? "U"
+            )}
           </div>
           {!sidebarCollapsed && (
             <div className="flex-1 min-w-0">
@@ -166,10 +172,10 @@ export function Sidebar() {
                 className="text-sm font-medium truncate"
                 style={{ color: "var(--text-primary)" }}
               >
-                {user?.name ?? "User"}
+                {user?.fullName ?? "User"}
               </p>
               <button
-                onClick={logout}
+                onClick={() => signOut()}
                 className="text-xs hover:underline"
                 style={{ color: "var(--text-tertiary)" }}
               >

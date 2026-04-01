@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
 import { api } from "@/lib/api";
 import type { Item, PaginatedResponse } from "@/types";
 
@@ -13,6 +14,7 @@ interface UseItemsOptions {
 }
 
 export function useItems(opts: UseItemsOptions = {}) {
+  const { getToken } = useAuth();
   const { page = 1, limit = 20, type, tag, source } = opts;
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (type && type !== "all") params.set("type", type);
@@ -21,47 +23,64 @@ export function useItems(opts: UseItemsOptions = {}) {
 
   return useQuery({
     queryKey: ["items", opts],
-    queryFn: () => api.get<PaginatedResponse<Item>>(`/items?${params}`),
+    queryFn: async () => {
+      const token = await getToken();
+      return api.get<PaginatedResponse<Item>>(`/items?${params}`, { token: token || undefined });
+    },
   });
 }
 
 export function useItem(id: string) {
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: ["item", id],
-    queryFn: () => api.get<Item>(`/items/${id}`),
+    queryFn: async () => {
+      const token = await getToken();
+      return api.get<Item>(`/items/${id}`, { token: token || undefined });
+    },
     enabled: !!id,
   });
 }
 
 export function useCreateItem() {
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       url: string;
       itemType?: string;
       tags?: string[];
       collectionId?: string;
       note?: string;
       youtubeTimestamp?: string;
-    }) => api.post<Item>("/items", data),
+    }) => {
+      const token = await getToken();
+      return api.post<Item>("/items", data, { token: token || undefined });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
 }
 
 export function useUploadItem() {
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   return useMutation({
-    mutationFn: (formData: FormData) =>
-      api.upload<Item>("/items/upload", formData),
+    mutationFn: async (formData: FormData) => {
+      const token = await getToken();
+      return api.upload<Item>("/items/upload", formData, { token: token || undefined });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
 }
 
 export function useUpdateItem() {
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: string; [key: string]: unknown }) =>
-      api.patch<Item>(`/items/${id}`, data),
+    mutationFn: async ({ id, ...data }: { id: string; [key: string]: unknown }) => {
+      const token = await getToken();
+      return api.patch<Item>(`/items/${id}`, data, { token: token || undefined });
+    },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["items"] });
       qc.invalidateQueries({ queryKey: ["item", vars.id] });
@@ -71,8 +90,12 @@ export function useUpdateItem() {
 
 export function useDeleteItem() {
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/items/${id}`),
+    mutationFn: async (id: string) => {
+      const token = await getToken();
+      return api.delete(`/items/${id}`, { token: token || undefined });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
 }

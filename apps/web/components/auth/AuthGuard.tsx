@@ -1,38 +1,43 @@
-"use client";
-
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
 import { ROUTES } from "@/lib/constants";
+import { api } from "@/lib/api";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { user: clerkUser } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const [checked, setChecked] = useState(false);
+  const [synced, setSynced] = useState(false);
 
   useEffect(() => {
-    // Allow Zustand persist to hydrate before checking
-    const unsub = useAuthStore.persist.onFinishHydration(() => {
-      const state = useAuthStore.getState();
-      if (!state.isAuthenticated) {
-        router.replace(`${ROUTES.login}?redirect=${encodeURIComponent(pathname)}`);
-      }
-      setChecked(true);
-    });
-
-    // If already hydrated (fast path)
-    if (useAuthStore.persist.hasHydrated()) {
-      if (!isAuthenticated) {
-        router.replace(`${ROUTES.login}?redirect=${encodeURIComponent(pathname)}`);
-      }
-      setChecked(true);
+    if (isLoaded && !isSignedIn) {
+      router.replace(`${ROUTES.login}?redirect=${encodeURIComponent(pathname)}`);
     }
+  }, [isLoaded, isSignedIn, router, pathname]);
 
-    return unsub;
-  }, [isAuthenticated, router, pathname]);
+  // Sync user with local DB on first load after sign in
+  useEffect(() => {
+    async function sync() {
+      if (isSignedIn && clerkUser && !synced) {
+        try {
+          const token = await getToken();
+          await api.post("/auth/sync", {
+            email: clerkUser.primaryEmailAddress?.emailAddress,
+            name: clerkUser.fullName,
+            avatarUrl: clerkUser.imageUrl,
+          }, { token: token || undefined });
+          setSynced(true);
+        } catch (err) {
+          console.error("Sync failed", err);
+        }
+      }
+    }
+    sync();
+  }, [isSignedIn, clerkUser, getToken, synced]);
 
-  if (!checked) {
+  if (!isLoaded || (isSignedIn && !synced && !clerkUser)) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -46,14 +51,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             R
           </div>
           <div className="flex gap-1">
-            <span className="skeleton" style={{ width: 8, height: 8, borderRadius: "50%" }} />
-            <span className="skeleton" style={{ width: 8, height: 8, borderRadius: "50%", animationDelay: "0.2s" }} />
-            <span className="skeleton" style={{ width: 8, height: 8, borderRadius: "50%", animationDelay: "0.4s" }} />
+            <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse delay-75" />
+            <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse delay-150" />
           </div>
         </div>
       </div>
     );
   }
+
+  if (!isSignedIn) return null;
 
   return <>{children}</>;
 }

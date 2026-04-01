@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { MOCK_ITEMS } from "@/lib/mock-data";
+import { useItem } from "@/hooks/useItems";
 import { TypeBadge } from "@/components/shared/TypeBadge";
 import { TagChip } from "@/components/shared/TagChip";
 import { timeAgo, extractDomain, formatReadingTime } from "@/lib/utils";
@@ -9,13 +9,27 @@ import { timeAgo, extractDomain, formatReadingTime } from "@/lib/utils";
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const item = MOCK_ITEMS.find((i) => i.id === id);
+  
+  const { data: item, isLoading, error } = useItem(id as string);
 
-  if (!item) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="flex items-center justify-center rounded-xl font-bold text-white text-lg w-12 h-12 bg-indigo-500">R</div>
+        <div className="flex gap-1">
+          <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse delay-75" />
+          <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse delay-150" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !item) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <h2 className="text-xl font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
-          Item not found
+          {error ? "Failed to load item" : "Item not found"}
         </h2>
         <button
           onClick={() => router.back()}

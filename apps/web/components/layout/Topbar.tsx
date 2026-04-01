@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUIStore } from "@/store/uiStore";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { UserButton } from "@clerk/nextjs";
 
 export function Topbar() {
   const { openAddContent, toggleSidebar } = useUIStore();
@@ -11,6 +12,7 @@ export function Topbar() {
   const router = useRouter();
 
   useKeyboardShortcut("k", openAddContent);
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,23 +77,33 @@ export function Topbar() {
         </div>
       </form>
 
-      {/* Add Content CTA */}
-      <button
-        onClick={openAddContent}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-white transition-all duration-150 focus-ring"
-        style={{
-          background: "var(--accent-500)",
-          borderRadius: "var(--radius-md)",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-600)")}
-        onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent-500)")}
-        id="add-content-btn"
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-        <span className="hidden sm:inline">Add Content</span>
-      </button>
+      <div className="flex items-center gap-4">
+        {/* Add Content CTA */}
+        <button
+          onClick={openAddContent}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-white transition-all duration-150 focus-ring"
+          style={{
+            background: "var(--accent-500)",
+            borderRadius: "var(--radius-md)",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-600)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent-500)")}
+          id="add-content-btn"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <span className="hidden sm:inline">Add Content</span>
+        </button>
+
+        <UserButton 
+          appearance={{
+            elements: {
+              avatarBox: "w-9 h-9 rounded-lg border border-slate-200"
+            }
+          }}
+        />
+      </div>
     </header>
   );
 }
