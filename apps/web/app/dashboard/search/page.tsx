@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { MOCK_ITEMS } from "@/lib/mock-data";
+import { useItems } from "@/hooks/useItems";
 import { ItemCard } from "@/components/items/ItemCard";
 import { EmptyState } from "@/components/shared/EmptyState";
+import type { Item } from "@/types";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -12,9 +13,13 @@ export default function SearchPage() {
   const [query, setQuery] = useState(initialQuery);
   const [searchType, setSearchType] = useState<"semantic" | "keyword">("semantic");
 
+  // Temporarily grab all items until the global search endpoint is built in Phase 3
+  const { data, isLoading } = useItems({ limit: 100 });
+  const allItems = data?.data || [];
+
   const results = query.trim()
-    ? MOCK_ITEMS.filter(
-        (i) =>
+    ? allItems.filter(
+        (i: Item) =>
           i.title.toLowerCase().includes(query.toLowerCase()) ||
           i.description?.toLowerCase().includes(query.toLowerCase()) ||
           i.tags.some((t) => t.tagName.toLowerCase().includes(query.toLowerCase()))
@@ -66,7 +71,11 @@ export default function SearchPage() {
       </div>
 
       {/* Results */}
-      {!query.trim() ? (
+      {isLoading ? (
+        <div className="py-20 text-center text-sm" style={{ color: "var(--text-tertiary)" }}>
+          Searching...
+        </div>
+      ) : !query.trim() ? (
         <EmptyState
           icon="🔍"
           title="Search your knowledge"
@@ -84,7 +93,7 @@ export default function SearchPage() {
             {results.length} result{results.length !== 1 ? "s" : ""} for &quot;{query}&quot;
           </p>
           <div className="flex flex-col gap-3">
-            {results.map((item) => (
+            {results.map((item: Item) => (
               <ItemCard key={item.id} item={item} viewMode="list" />
             ))}
           </div>
