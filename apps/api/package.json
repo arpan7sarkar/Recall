@@ -11,8 +11,11 @@
     "test": "jest"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1021.0",
+    "@aws-sdk/s3-request-presigner": "^3.1021.0",
     "@clerk/express": "^2.0.8",
     "@prisma/client": "^6.19.3",
+    "@supabase/supabase-js": "^2.101.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
