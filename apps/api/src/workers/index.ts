@@ -8,6 +8,8 @@ const connection = new IORedis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: null,
 });
 
+import { processScrape } from "./scraperWorker";
+
 console.log("👷 Starting workers...");
 
 // Scrape Worker
@@ -15,8 +17,7 @@ const scrapeWorker = new Worker(
   "scrapeQueue",
   async (job) => {
     console.log(`[Scrape] Processing job ${job.id} for item ${job.data.itemId}`);
-    // TODO: Implement actual scraping in Step 3.2
-    return { success: true };
+    return processScrape(job);
   },
   { connection }
 );
