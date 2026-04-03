@@ -94,7 +94,7 @@ export async function processAi(job: any) {
             },
             isAiGenerated: true,
             confidence: 0.9, // Placeholder confidence level
-          }Right, today's post, today quoted for 5 hours. Have done some, have an added cloud for CMS process saving and some.
+          }
         });
       } catch (err) {
         console.warn(`[AI] Failed to link tag ${normalized} to item ${itemId}`);

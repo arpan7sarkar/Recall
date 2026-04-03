@@ -9,6 +9,7 @@ import itemRoutes from "./routes/items";
 import tagsRoutes from "./routes/tags";
 import collectionsRoutes from "./routes/collections";
 import searchRoutes from "./routes/search";
+import graphRoutes from "./routes/graph";
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +31,7 @@ app.use("/v1/items", itemRoutes);
 app.use("/v1/tags", tagsRoutes);
 app.use("/v1/collections", collectionsRoutes);
 app.use("/v1/search", searchRoutes);
+app.use("/v1/graph", graphRoutes);
 
 /**
  * @route   GET /health
