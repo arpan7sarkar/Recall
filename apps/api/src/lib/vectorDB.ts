@@ -25,13 +25,15 @@ export async function upsertEmbedding(
   metadata: VectorMetadata
 ) {
   try {
-    await index.upsert([
-      {
-        id: itemId,
-        values: vector,
-        metadata,
-      },
-    ]);
+    await index.upsert({
+      records: [
+        {
+          id: itemId,
+          values: vector,
+          metadata,
+        },
+      ]
+    });
     return { success: true };
   } catch (error: any) {
     console.error(`[VectorDB] Error upserting embedding for item ${itemId}:`, error.message);
@@ -68,11 +70,25 @@ export async function queryEmbedding(
 }
 
 /**
+ * Fetch a single vector by its ID
+ */
+export async function fetchEmbedding(itemId: string) {
+  try {
+    const response = await index.fetch({ ids: [itemId] });
+    const record = response.records[itemId];
+    return record?.values || null;
+  } catch (error: any) {
+    console.error(`[VectorDB] Error fetching embedding for item ${itemId}:`, error.message);
+    throw error;
+  }
+}
+
+/**
  * Delete an embedding from Pinecone
  */
 export async function deleteEmbedding(itemId: string) {
   try {
-    await index.deleteOne(itemId);
+    await index.deleteOne({ id: itemId });
     return { success: true };
   } catch (error: any) {
     console.error(`[VectorDB] Error deleting embedding for item ${itemId}:`, error.message);
