@@ -11,15 +11,19 @@ interface UseItemsOptions {
   type?: string;
   tag?: string;
   source?: string;
+  archived?: boolean;
+  favorite?: boolean;
 }
 
 export function useItems(opts: UseItemsOptions = {}) {
   const { getToken } = useAuth();
-  const { page = 1, limit = 20, type, tag, source } = opts;
+  const { page = 1, limit = 20, type, tag, source, archived, favorite } = opts;
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (type && type !== "all") params.set("type", type);
   if (tag) params.set("tag", tag);
   if (source) params.set("source", source);
+  if (archived !== undefined) params.set("archived", String(archived));
+  if (favorite !== undefined) params.set("favorite", String(favorite));
 
   return useQuery({
     queryKey: ["items", opts],

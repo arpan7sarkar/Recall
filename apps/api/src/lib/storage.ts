@@ -128,7 +128,7 @@ export async function uploadFromUrl(
   }
 
   const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const buffer = Buffer.from(arrayBuffer);  
 
   return uploadFile(buffer, key, mimeType);
 }

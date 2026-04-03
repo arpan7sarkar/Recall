@@ -7,6 +7,7 @@ import { clerkMiddleware } from "@clerk/express";
 import authRoutes from "./routes/auth";
 import itemRoutes from "./routes/items";
 import tagsRoutes from "./routes/tags";
+import collectionsRoutes from "./routes/collections";
 
 // Load environment variables
 dotenv.config();
@@ -23,9 +24,10 @@ app.use(express.json()); // JSON body parser
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use("/auth", authRoutes);
-app.use("/items", itemRoutes);
-app.use("/tags", tagsRoutes);
+app.use("/v1/auth", authRoutes);
+app.use("/v1/items", itemRoutes);
+app.use("/v1/tags", tagsRoutes);
+app.use("/v1/collections", collectionsRoutes);
 
 /**
  * @route   GET /health
