@@ -1,25 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUIStore } from "@/store/uiStore";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { useSearch } from "@/hooks/useSearch";
+import { SearchDropdown } from "./SearchDropdown";
 import { UserButton } from "@clerk/nextjs";
 
 export function Topbar() {
   const { openAddContent, toggleSidebar } = useUIStore();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
   const router = useRouter();
 
-  useKeyboardShortcut("k", openAddContent);
+  // Live search results (debounced inside useSearch)
+  const { data: searchResults = [], isLoading: isSearching } = useSearch(
+    searchQuery,
+    "semantic"
+  );
 
+  useKeyboardShortcut("k", openAddContent);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/dashboard/search?q=${encodeURIComponent(searchQuery)}`);
+      setShowDropdown(false);
     }
   };
+
+  const closeDropdown = useCallback(() => setShowDropdown(false), []);
 
   return (
     <header
@@ -42,40 +53,83 @@ export function Topbar() {
         </svg>
       </button>
 
-      {/* Search bar */}
-      <form onSubmit={handleSearch} className="flex-1 max-w-xl">
-        <div
-          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-shadow"
-          style={{
-            background: "var(--bg-primary)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ color: "var(--text-tertiary)", flexShrink: 0 }}>
-            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search your knowledge…"
-            className="flex-1 bg-transparent text-sm outline-none"
-            style={{ color: "var(--text-primary)" }}
-            id="global-search"
-          />
-          <kbd
-            className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium"
+      {/* Search bar with live dropdown */}
+      <div className="relative flex-1 max-w-xl">
+        <form onSubmit={handleSearch}>
+          <div
+            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-shadow"
             style={{
-              background: "var(--bg-secondary)",
-              color: "var(--text-tertiary)",
-              border: "1px solid var(--border)",
+              background: "var(--bg-primary)",
+              border: `1px solid ${showDropdown && searchQuery.length >= 2 ? "var(--accent-300, var(--accent-500))" : "var(--border)"}`,
+              transition: "border-color 0.15s",
             }}
           >
-            ⌘K
-          </kbd>
-        </div>
-      </form>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              style={{ color: "var(--text-tertiary)", flexShrink: 0 }}
+            >
+              <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowDropdown(e.target.value.length >= 2);
+              }}
+              onFocus={() => {
+                if (searchQuery.length >= 2) setShowDropdown(true);
+              }}
+              placeholder="Search your knowledge…"
+              className="flex-1 bg-transparent text-sm outline-none"
+              style={{ color: "var(--text-primary)" }}
+              id="global-search"
+              autoComplete="off"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setShowDropdown(false);
+                }}
+                style={{ color: "var(--text-tertiary)", lineHeight: 1 }}
+                aria-label="Clear search"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+            )}
+            {!searchQuery && (
+              <kbd
+                className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium"
+                style={{
+                  background: "var(--bg-secondary)",
+                  color: "var(--text-tertiary)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                ⌘K
+              </kbd>
+            )}
+          </div>
+        </form>
+
+        {/* Live dropdown overlay */}
+        {showDropdown && (
+          <SearchDropdown
+            results={searchResults}
+            isLoading={isSearching}
+            query={searchQuery}
+            onClose={closeDropdown}
+          />
+        )}
+      </div>
 
       <div className="flex items-center gap-4">
         {/* Add Content CTA */}
@@ -96,11 +150,11 @@ export function Topbar() {
           <span className="hidden sm:inline">Add Content</span>
         </button>
 
-        <UserButton 
+        <UserButton
           appearance={{
             elements: {
-              avatarBox: "w-9 h-9 rounded-lg border border-slate-200"
-            }
+              avatarBox: "w-9 h-9 rounded-lg border border-slate-200",
+            },
           }}
         />
       </div>
