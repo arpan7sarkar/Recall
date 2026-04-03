@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import prisma from "@/lib/prisma";
 import { authenticateClerk } from "@/middleware/auth";
+import { fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
 // Types should come from @prisma/client, but defining locally to fix generation/lint issues
 export type ItemType = "article" | "tweet" | "youtube" | "pdf" | "image" | "podcast" | "link";
 export type SaveSource = "extension" | "web_url" | "web_upload";
@@ -282,6 +283,52 @@ router.delete("/:id", async (req: Request, res: Response) => {
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: "Failed to delete item" });
+  }
+});
+
+/**
+ * @route   GET /items/:id/related
+ * @desc    Get related items based on semantic similarity
+ */
+router.get("/:id/related", async (req: Request, res: Response) => {
+  const userId = (req as any).auth?.userId;
+  const { id: itemId } = req.params;
+
+  try {
+    // 1. Fetch the item's embedding from Pinecone
+    const embedding = await fetchEmbedding(itemId);
+    
+    if (!embedding) {
+      // If no embedding yet, maybe item isn't processed. Returning empty or fallback.
+      return res.json([]);
+    }
+
+    // 2. Query Pinecone for top 6 similar items (one might be the item itself)
+    const matches = await queryEmbedding(userId!, embedding, 6);
+
+    // 3. Filter out the current item itself
+    const relatedIds = matches
+      .filter(m => m.id !== itemId)
+      .slice(0, 5)
+      .map(m => m.id);
+
+    if (relatedIds.length === 0) return res.json([]);
+
+    // 4. Fetch from PostgreSQL
+    const relatedItems = await prisma.item.findMany({
+      where: { id: { in: relatedIds } },
+      include: {
+        tags: { include: { tag: true } }
+      }
+    });
+
+    // Sort to maintain Pinecone's relevance order
+    const sorted = relatedItems.sort((a, b) => relatedIds.indexOf(a.id) - relatedIds.indexOf(b.id));
+
+    res.json(sorted.map(mapItemWithTags));
+  } catch (error: any) {
+    console.error(`[Related] Error:`, error.message);
+    res.status(500).json({ error: "Failed to fetch related items" });
   }
 });
 

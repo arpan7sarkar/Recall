@@ -5,6 +5,7 @@ import { useItem } from "@/hooks/useItems";
 import { TypeBadge } from "@/components/shared/TypeBadge";
 import { TagChip } from "@/components/shared/TagChip";
 import { timeAgo, extractDomain, formatReadingTime } from "@/lib/utils";
+import { RelatedItems } from "@/components/items/RelatedItems";
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -149,19 +150,8 @@ export default function ItemDetailPage() {
             </div>
           )}
 
-          {/* Related items placeholder */}
-          <div
-            className="p-6 rounded-xl text-center"
-            style={{
-              background: "var(--bg-secondary)",
-              border: "1px dashed var(--border)",
-              borderRadius: "var(--radius-lg)",
-            }}
-          >
-            <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>
-              🔗 Related items will appear here once enabled
-            </span>
-          </div>
+          {/* Related items */}
+          <RelatedItems itemId={id as string} />
         </div>
 
         {/* Right column — sidebar */}

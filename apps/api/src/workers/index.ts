@@ -8,6 +8,10 @@ const connection = new IORedis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: null,
 });
 
+import { processScrape } from "./scraperWorker";
+import { processAi } from "./aiWorker";
+import { processEmbed } from "./embedWorker";
+
 console.log("👷 Starting workers...");
 
 // Scrape Worker
@@ -15,8 +19,7 @@ const scrapeWorker = new Worker(
   "scrapeQueue",
   async (job) => {
     console.log(`[Scrape] Processing job ${job.id} for item ${job.data.itemId}`);
-    // TODO: Implement actual scraping in Step 3.2
-    return { success: true };
+    return processScrape(job);
   },
   { connection }
 );
@@ -26,8 +29,7 @@ const aiWorker = new Worker(
   "aiQueue",
   async (job) => {
     console.log(`[AI] Processing job ${job.id} for item ${job.data.itemId}`);
-    // TODO: Implement actual AI processing in Step 3.2
-    return { success: true };
+    return processAi(job);
   },
   { connection }
 );
@@ -37,8 +39,7 @@ const embedWorker = new Worker(
   "embedQueue",
   async (job) => {
     console.log(`[Embed] Processing job ${job.id} for item ${job.data.itemId}`);
-    // TODO: Implement actual embedding in Step 3.2
-    return { success: true };
+    return processEmbed(job);
   },
   { connection }
 );

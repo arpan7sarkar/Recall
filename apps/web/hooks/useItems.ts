@@ -46,6 +46,18 @@ export function useItem(id: string) {
   });
 }
 
+export function useRelatedItems(id: string) {
+  const { getToken } = useAuth();
+  return useQuery({
+    queryKey: ["item", id, "related"],
+    queryFn: async () => {
+      const token = await getToken();
+      return api.get<Item[]>(`/items/${id}/related`, { token: token || undefined });
+    },
+    enabled: !!id,
+  });
+}
+
 export function useCreateItem() {
   const qc = useQueryClient();
   const { getToken } = useAuth();

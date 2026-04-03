@@ -107,6 +107,7 @@ model ItemTag {
   itemId      String      @map("item_id")
   tagId       String      @map("tag_id")
   confidence  Float       @default(1.0)
+  isAiGenerated Boolean     @default(false) @map("is_ai_generated")
 
   item        Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
   tag         Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
