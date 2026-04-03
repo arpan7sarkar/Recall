@@ -8,6 +8,7 @@ export type SaveSource = "extension" | "web_url" | "web_upload";
 
 import { upload } from "@/middleware/upload";
 import { scrapeQueue, aiQueue } from "@/queues";
+import { buildKey, uploadFile } from "@/lib/storage";
 
 const router = Router();
 
@@ -23,6 +24,10 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
   const { title, itemType, tags, collectionId, note } = req.body;
   const file = req.file;
 
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   if (!file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
@@ -32,17 +37,20 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
   }
 
   try {
-    // Note: Actual storage to R2 would happen here or in a worker. 
-    // Following PRD Data Flow C, it's done synchronously in the API or in worker.
-    // For now, we'll store metadata and indicate processing.
-    
+    const inferredType = (itemType as ItemType) || (file.mimetype.startsWith("image") ? "image" : "pdf");
+    const key = buildKey(userId, "files", file.originalname);
+    const uploaded = await uploadFile(file.buffer, key, file.mimetype);
+
     const item = await prisma.item.create({
       data: {
-        userId: userId!,
+        userId,
         title,
-        itemType: (itemType as ItemType) || (file.mimetype.startsWith("image") ? "image" : "pdf"),
+        itemType: inferredType,
         saveSource: "web_upload",
         userNote: note,
+        fileUrl: uploaded.url,
+        thumbnailUrl: inferredType === "image" ? uploaded.url : null,
+        sourceDomain: "upload",
         status: "processing", // No scraping needed, just AI processing
         // If collection provided
         ...(collectionId && {
@@ -56,8 +64,8 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
             create: (Array.isArray(tags) ? tags : [tags]).map((tagName: string) => ({
               tag: {
                 connectOrCreate: {
-                  where: { userId_name: { userId: userId!, name: tagName } },
-                  create: { userId: userId!, name: tagName },
+                  where: { userId_name: { userId, name: tagName } },
+                  create: { userId, name: tagName },
                 },
               },
               confidence: 1.0,
@@ -152,15 +160,19 @@ router.post("/", async (req: Request, res: Response) => {
   const userId = (req as any).auth?.userId;
   const { url, itemType, tags, collectionId, note, youtubeTimestamp } = req.body;
 
-  if (!url && !itemType) {
-    return res.status(400).json({ error: "URL or Item type is required" });
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  if (!url || typeof url !== "string") {
+    return res.status(400).json({ error: "URL is required" });
   }
 
   try {
     // Initial creation - metadata will be filled by worker later
     const item = await prisma.item.create({
       data: {
-        userId: userId!,
+        userId,
         url,
         itemType: (itemType as ItemType) || "link",
         saveSource: "web_url", // Default for this endpoint
@@ -179,8 +191,8 @@ router.post("/", async (req: Request, res: Response) => {
             create: tags.map((tagName: string) => ({
               tag: {
                 connectOrCreate: {
-                  where: { userId_name: { userId: userId!, name: tagName } },
-                  create: { userId: userId!, name: tagName },
+                  where: { userId_name: { userId, name: tagName } },
+                  create: { userId, name: tagName },
                 },
               },
               confidence: 1.0,

@@ -7,7 +7,7 @@ export interface Collection {
   isPublic: boolean;
   publicSlug: string | null;
   itemCount: number;
-  _count: {
+  _count?: {
     items: number;
   };
   createdAt: string;

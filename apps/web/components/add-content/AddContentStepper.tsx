@@ -15,7 +15,7 @@ export function AddContentStepper() {
   const { getToken } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
-  const performSave = async () => {
+  const performSave = useCallback(async () => {
     const { selectedType, url, file, title, note, youtubeTimestamp, tags, collectionId } = useAddContentStore.getState();
     const token = await getToken();
     const isUpload = selectedType === "pdf" || selectedType === "image";
@@ -40,7 +40,7 @@ export function AddContentStepper() {
         youtubeTimestamp,
       }, { token: token || undefined });
     }
-  };
+  }, [getToken]);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -53,7 +53,7 @@ export function AddContentStepper() {
     } finally {
       setIsSaving(false);
     }
-  }, [resetForm, closeAddContent, getToken]);
+  }, [performSave, resetForm, closeAddContent]);
 
   const handleSaveAndAdd = useCallback(async () => {
     setIsSaving(true);
@@ -65,7 +65,7 @@ export function AddContentStepper() {
     } finally {
       setIsSaving(false);
     }
-  }, [resetForAnotherSave, getToken]);
+  }, [performSave, resetForAnotherSave]);
 
   return (
     <div className="w-full max-w-lg mx-auto">

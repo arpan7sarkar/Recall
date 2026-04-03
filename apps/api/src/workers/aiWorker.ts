@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import pdf from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 import prisma from "@/lib/prisma";
 import { embedQueue } from "@/queues";
 import axios from "axios";
@@ -32,8 +32,13 @@ export async function processAi(job: any) {
       console.log(`[AI] Parsing PDF for item ${itemId}...`);
       try {
         const response = await axios.get(item.fileUrl, { responseType: "arraybuffer" });
-        const data = await pdf(Buffer.from(response.data));
-        contentToAnalyze = data.text;
+        const parser = new PDFParse({ data: Buffer.from(response.data) });
+        try {
+          const data = await parser.getText();
+          contentToAnalyze = data.text;
+        } finally {
+          await parser.destroy();
+        }
         
         // Update content in DB for later use
         await prisma.item.update({

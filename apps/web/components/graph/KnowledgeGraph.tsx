@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import type { ForceGraphMethods } from "react-force-graph-2d";
 
 // ForceGraph must be dynamically imported for SSR compatibility in Next.js
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
@@ -14,7 +15,7 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ),
 });
 
-interface Node {
+interface GraphNode {
   id: string;
   label: string;
   type: string;
@@ -25,7 +26,7 @@ interface Node {
   y?: number;
 }
 
-interface Link {
+interface GraphLink {
   source: string;
   target: string;
   strength: number;
@@ -33,29 +34,25 @@ interface Link {
 }
 
 interface GraphData {
-  nodes: Node[];
-  links: Link[];
+  nodes: GraphNode[];
+  links: GraphLink[];
 }
 
 interface KnowledgeGraphProps {
   data: {
-    nodes: any[];
-    edges: any[];
+    nodes: GraphNode[];
+    edges: GraphLink[];
   };
 }
 
 export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
   const router = useRouter();
-  const graphRef = useRef<any>(null);
+  const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   const graphData: GraphData = {
     nodes: data.nodes,
-    links: data.edges.map((e) => ({
-      ...e,
-      source: e.source,
-      target: e.target,
-    })),
+    links: data.edges,
   };
 
   useEffect(() => {
@@ -85,6 +82,26 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
     }
   };
 
+  const getNodeLabel = (node: unknown) => {
+    const label = (node as { label?: unknown })?.label;
+    return typeof label === "string" ? label : "";
+  };
+
+  const getNodeType = (node: unknown) => {
+    const type = (node as { type?: unknown })?.type;
+    return typeof type === "string" ? type : "";
+  };
+
+  const getLinkType = (link: unknown) => {
+    const type = (link as { type?: unknown })?.type;
+    return typeof type === "string" ? type : "";
+  };
+
+  const getLinkStrength = (link: unknown) => {
+    const strength = (link as { strength?: unknown })?.strength;
+    return typeof strength === "number" ? strength : 1;
+  };
+
   return (
     <div 
       className="rounded-2xl overflow-hidden border bg-white shadow-sm" 
@@ -99,26 +116,29 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
         backgroundColor="#ffffff"
         
         // Node styling
-        nodeLabel={(node: any) => node.label}
+        nodeLabel={(node) => getNodeLabel(node)}
         nodeRelSize={6}
-        nodeColor={(node: any) => getNodeColor(node.type)}
+        nodeColor={(node) => getNodeColor(getNodeType(node))}
         
         // Link styling
-        linkColor={(link: any) => 
-          link.type === "similarity" ? "rgba(0,0,0,0.08)" : "rgba(99, 102, 241, 0.15)"
+        linkColor={(link) =>
+          getLinkType(link) === "similarity" ? "rgba(0,0,0,0.08)" : "rgba(99, 102, 241, 0.15)"
         }
-        linkWidth={(link: any) => (link.type === "similarity" ? 1 : 1.5)}
-        linkLineDash={(link: any) => (link.type === "similarity" ? [3, 2] : null)}
+        linkWidth={(link) => (getLinkType(link) === "similarity" ? 1 : 1.5)}
+        linkLineDash={(link) => (getLinkType(link) === "similarity" ? [3, 2] : null)}
         
         // Visual particles for active relationships
         linkDirectionalParticles={1}
-        linkDirectionalParticleSpeed={(link: any) => (link.strength || 1) * 0.005}
+        linkDirectionalParticleSpeed={(link) => getLinkStrength(link) * 0.005}
         linkDirectionalParticleWidth={1.5}
         linkDirectionalParticleColor={() => "rgba(99, 102, 241, 0.4)"}
 
         // Interaction
-        onNodeClick={(node: any) => {
-          router.push(`/dashboard/items/${node.id}`);
+        onNodeClick={(node) => {
+          const id = (node as { id?: unknown })?.id;
+          if (typeof id === "string" || typeof id === "number") {
+            router.push(`/dashboard/items/${id}`);
+          }
         }}
         
         // Engine settings for better UX

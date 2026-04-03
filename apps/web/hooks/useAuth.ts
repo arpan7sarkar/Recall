@@ -18,7 +18,7 @@ export function useAuth() {
       avatarUrl: clerkUser.imageUrl,
     }, { token: token || undefined });
     return res.user;
-  }, [clerkUser]);
+  }, [clerkUser, getToken]);
 
   const logout = useCallback(async () => {
     await signOut();
