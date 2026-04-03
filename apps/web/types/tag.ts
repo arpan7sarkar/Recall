@@ -4,5 +4,8 @@ export interface Tag {
   name: string;
   color: string | null;
   isAiGenerated: boolean;
+  _count: {
+    items: number;
+  };
   createdAt: string;
 }

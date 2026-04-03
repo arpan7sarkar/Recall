@@ -6,6 +6,7 @@ export type ItemType = "article" | "tweet" | "youtube" | "pdf" | "image" | "podc
 export type SaveSource = "extension" | "web_url" | "web_upload";
 
 import { upload } from "@/middleware/upload";
+import { scrapeQueue, aiQueue } from "@/queues";
 
 const router = Router();
 
@@ -67,6 +68,9 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
         tags: { include: { tag: true } },
       },
     });
+
+    // 3.1.5 Push to aiQueue directly (syncing not needed for files)
+    await aiQueue.add("process-upload", { itemId: item.id, userId });
 
     res.status(201).json(mapItemWithTags(item));
   } catch (error) {
@@ -187,6 +191,9 @@ router.post("/", async (req: Request, res: Response) => {
         tags: { include: { tag: true } },
       },
     });
+
+    // 3.1.4 Push to scrapeQueue
+    await scrapeQueue.add("scrape-url", { itemId: item.id, url, userId });
 
     res.status(201).json(mapItemWithTags(item));
   } catch (error) {

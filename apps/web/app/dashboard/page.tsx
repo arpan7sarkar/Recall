@@ -16,6 +16,7 @@ export default function DashboardPage() {
 
   const { data, isLoading, error } = useItems({
     type: activeFilter === "all" ? undefined : activeFilter,
+    archived: false,
   });
 
   const items = data?.data || [];

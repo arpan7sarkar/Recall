@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
+import { useAuth } from "@clerk/nextjs";
 
 export default function LandingPage() {
+  const { isLoaded, isSignedIn } = useAuth();
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-primary)" }}>
       {/* Nav */}
@@ -21,20 +25,33 @@ export default function LandingPage() {
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href={ROUTES.login}
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors focus-ring"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Sign In
-          </Link>
-          <Link
-            href={ROUTES.register}
-            className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors focus-ring"
-            style={{ background: "var(--accent-500)", borderRadius: "var(--radius-md)" }}
-          >
-            Get Started
-          </Link>
+          {isLoaded && !isSignedIn && (
+            <>
+              <Link
+                href={ROUTES.login}
+                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors focus-ring"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                Sign In
+              </Link>
+              <Link
+                href={ROUTES.register}
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors focus-ring"
+                style={{ background: "var(--accent-500)", borderRadius: "var(--radius-md)" }}
+              >
+                Get Started
+              </Link>
+            </>
+          )}
+          {isLoaded && isSignedIn && (
+            <Link
+              href={ROUTES.dashboard}
+              className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors focus-ring"
+              style={{ background: "var(--accent-500)", borderRadius: "var(--radius-md)" }}
+            >
+              Go to Dashboard
+            </Link>
+          )}
         </div>
       </nav>
 
@@ -75,24 +92,37 @@ export default function LandingPage() {
           </p>
 
           <div className="flex items-center justify-center gap-4">
-            <Link
-              href={ROUTES.register}
-              className="px-8 py-3 text-base font-semibold text-white rounded-xl transition-all focus-ring"
-              style={{ background: "var(--accent-500)", borderRadius: "var(--radius-lg)" }}
-            >
-              Start for Free
-            </Link>
-            <Link
-              href={ROUTES.login}
-              className="px-8 py-3 text-base font-semibold rounded-xl transition-all focus-ring"
-              style={{
-                border: "1px solid var(--border)",
-                color: "var(--text-primary)",
-                borderRadius: "var(--radius-lg)",
-              }}
-            >
-              Sign In
-            </Link>
+            {isLoaded && !isSignedIn && (
+              <>
+                <Link
+                  href={ROUTES.register}
+                  className="px-8 py-3 text-base font-semibold text-white rounded-xl transition-all focus-ring"
+                  style={{ background: "var(--accent-500)", borderRadius: "var(--radius-lg)" }}
+                >
+                  Start for Free
+                </Link>
+                <Link
+                  href={ROUTES.login}
+                  className="px-8 py-3 text-base font-semibold rounded-xl transition-all focus-ring"
+                  style={{
+                    border: "1px solid var(--border)",
+                    color: "var(--text-primary)",
+                    borderRadius: "var(--radius-lg)",
+                  }}
+                >
+                  Sign In
+                </Link>
+              </>
+            )}
+            {isLoaded && isSignedIn && (
+              <Link
+                href={ROUTES.dashboard}
+                className="px-8 py-3 text-base font-semibold text-white rounded-xl transition-all focus-ring"
+                style={{ background: "var(--accent-500)", borderRadius: "var(--radius-lg)" }}
+              >
+                Go to Dashboard
+              </Link>
+            )}
           </div>
         </div>
       </section>
