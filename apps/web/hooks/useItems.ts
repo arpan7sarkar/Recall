@@ -31,6 +31,13 @@ export function useItems(opts: UseItemsOptions = {}) {
       const token = await getToken();
       return api.get<PaginatedResponse<Item>>(`/items?${params}`, { token: token || undefined });
     },
+    refetchInterval: (query) => {
+      const data = query.state.data as PaginatedResponse<Item> | undefined;
+      const hasPendingProcessing = data?.data?.some(
+        (item) => item.status === "pending" || item.status === "processing"
+      );
+      return hasPendingProcessing ? 5000 : false;
+    },
   });
 }
 

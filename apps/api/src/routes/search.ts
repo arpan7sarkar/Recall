@@ -92,6 +92,7 @@ router.get("/", async (req: Request, res: Response) => {
     const embeddingResponse = await openai.embeddings.create({
       model: "text-embedding-3-small",
       input: query,
+      dimensions: 1024,
       encoding_format: "float",
     });
     const queryVector = embeddingResponse.data[0].embedding;

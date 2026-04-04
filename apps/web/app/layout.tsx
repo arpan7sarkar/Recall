@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { QueryProvider } from "@/lib/query-provider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Recall — Your Personal Knowledge Base",
@@ -23,7 +16,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${inter.variable} h-full`} suppressHydrationWarning>
+      <html lang="en" className="h-full" suppressHydrationWarning>
         <body className="min-h-full flex flex-col" style={{ fontFamily: "var(--font-sans)" }}>
           <QueryProvider>
             <ThemeProvider>

@@ -63,7 +63,7 @@ export default function CollectionsPage() {
                 {col.description}
               </p>
               <div className="flex items-center justify-between text-xs" style={{ color: "var(--text-tertiary)" }}>
-                <span>{col._count.items} items</span>
+                <span>{col._count?.items ?? col.itemCount} items</span>
                 {col.isPublic && (
                   <span
                     className="px-2 py-0.5 rounded-full text-xs"

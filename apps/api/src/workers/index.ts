@@ -21,7 +21,7 @@ const scrapeWorker = new Worker(
     console.log(`[Scrape] Processing job ${job.id} for item ${job.data.itemId}`);
     return processScrape(job);
   },
-  { connection }
+  { connection, concurrency: 2 }
 );
 
 // AI Worker
@@ -31,7 +31,7 @@ const aiWorker = new Worker(
     console.log(`[AI] Processing job ${job.id} for item ${job.data.itemId}`);
     return processAi(job);
   },
-  { connection }
+  { connection, concurrency: 2 }
 );
 
 // Embed Worker
@@ -41,17 +41,38 @@ const embedWorker = new Worker(
     console.log(`[Embed] Processing job ${job.id} for item ${job.data.itemId}`);
     return processEmbed(job);
   },
-  { connection }
+  { connection, concurrency: 2 }
 );
 
+// Success handlers
+scrapeWorker.on("completed", (job) => console.log(`✅ [Scrape] Job ${job?.id} completed for item ${job?.data?.itemId}`));
+aiWorker.on("completed", (job) => console.log(`✅ [AI] Job ${job?.id} completed for item ${job?.data?.itemId}`));
+embedWorker.on("completed", (job) => console.log(`✅ [Embed] Job ${job?.id} completed for item ${job?.data?.itemId}`));
+
 // Error handlers
-scrapeWorker.on("error", (err) => console.error(`[Scrape] Error:`, err));
-scrapeWorker.on("failed", (job, err) => console.error(`[Scrape] Job ${job?.id} failed:`, err));
+scrapeWorker.on("error", (err) => console.error(`[Scrape] Error:`, err.message));
+scrapeWorker.on("failed", (job, err) => console.error(`❌ [Scrape] Job ${job?.id} FAILED for item ${job?.data?.itemId}:`, err.message));
 
-aiWorker.on("error", (err) => console.error(`[AI] Error:`, err));
-aiWorker.on("failed", (job, err) => console.error(`[AI] Job ${job?.id} failed:`, err));
+aiWorker.on("error", (err) => console.error(`[AI] Error:`, err.message));
+aiWorker.on("failed", (job, err) => console.error(`❌ [AI] Job ${job?.id} FAILED for item ${job?.data?.itemId}:`, err.message));
 
-embedWorker.on("error", (err) => console.error(`[Embed] Error:`, err));
-embedWorker.on("failed", (job, err) => console.error(`[Embed] Job ${job?.id} failed:`, err));
+embedWorker.on("error", (err) => console.error(`[Embed] Error:`, err.message));
+embedWorker.on("failed", (job, err) => console.error(`❌ [Embed] Job ${job?.id} FAILED for item ${job?.data?.itemId}:`, err.message));
 
-console.log("✅ All workers initialized");
+// Graceful shutdown
+const shutdown = async () => {
+  console.log("🔻 Shutting down workers...");
+  await Promise.all([
+    scrapeWorker.close(),
+    aiWorker.close(),
+    embedWorker.close(),
+  ]);
+  await connection.quit();
+  console.log("🛑 Workers stopped.");
+  process.exit(0);
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+
+console.log("✅ All workers initialized and listening for jobs");
