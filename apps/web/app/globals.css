@@ -150,3 +150,12 @@ body {
   outline: 2px solid var(--accent-500);
   outline-offset: 2px;
 }
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

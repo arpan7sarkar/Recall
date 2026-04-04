@@ -10,19 +10,21 @@ import { InfiniteSlider } from "@/components/ui/infinite-slider";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 
 import { HoverFooter } from "@/components/blocks/hover-footer";
+import { AnimatedShaderBackground } from "@/components/ui/animated-shader-background";
 
 export default function LandingPage() {
   const { isLoaded, isSignedIn } = useAuth();
   
   return (
-    <div className="min-h-screen bg-[#070707] text-zinc-300 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+    <div className="min-h-screen bg-transparent text-zinc-300 font-sans selection:bg-indigo-500/30 overflow-x-hidden relative">
+      <AnimatedShaderBackground />
       
       <HeroSection />
 
       <main className="relative z-10 w-full flex flex-col items-center">
 
         {/* BRANDS / TRUSTED BY SECTION - Tightened and integrated with Logos */}
-        <section className="w-full pb-16 pt-0 -mt-20 relative overflow-hidden bg-[#070707]">
+        <section className="w-full pb-16 pt-0 -mt-20 relative overflow-hidden bg-transparent">
             <div className="mx-auto max-w-4xl px-6 text-center relative z-10">
                 <div className="text-xl font-serif text-white/30 tracking-tight mb-8">
                     <span className="italic">Trusted by teams at</span>
@@ -77,7 +79,7 @@ export default function LandingPage() {
             {/* Gradient Horizon Transition */}
             <div className="relative -mt-16 h-32 w-full overflow-hidden mask-linear-to-t from-white to-transparent opacity-10">
                 <div className="absolute inset-x-0 bottom-0 h-px w-full bg-linear-to-r from-transparent via-indigo-500/50 to-transparent" />
-                <div className="absolute -left-1/2 top-1/2 aspect-2/1 z-10 w-[200%] rounded-[100%] border-t border-white/10 bg-[#070707]" />
+                <div className="absolute -left-1/2 top-1/2 aspect-2/1 z-10 w-[200%] rounded-[100%] border-t border-white/5 bg-transparent" />
             </div>
         </section>
 
