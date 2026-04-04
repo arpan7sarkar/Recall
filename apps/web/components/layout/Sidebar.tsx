@@ -6,6 +6,7 @@ import { NAV_ITEMS } from "@/lib/constants";
 import { useUIStore } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/nextjs";
+import { Icon } from "@/components/shared/Icon";
 
 export function Sidebar() {
 
@@ -74,9 +75,7 @@ export function Sidebar() {
             style={{ color: "var(--text-tertiary)" }}
             aria-label="Close sidebar"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+            <Icon name="close" size={16} />
           </button>
         </div>
 
@@ -103,8 +102,8 @@ export function Sidebar() {
                 }}
                 title={sidebarCollapsed ? item.label : undefined}
               >
-                <span className="text-lg" style={{ width: 24, textAlign: "center" }}>
-                  {item.icon}
+                <span className="flex items-center justify-center shrink-0" style={{ width: 24 }}>
+                  <Icon name={item.icon} size={18} />
                 </span>
                 {!sidebarCollapsed && <span>{item.label}</span>}
               </Link>
@@ -122,8 +121,8 @@ export function Sidebar() {
             onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-tertiary)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
-            <span className="text-lg" style={{ width: 24, textAlign: "center" }}>
-              {theme === "light" ? "🌙" : "☀️"}
+            <span className="flex items-center justify-center shrink-0" style={{ width: 24 }}>
+              <Icon name={theme === "light" ? "moon" : "sun"} size={18} />
             </span>
             {!sidebarCollapsed && (
               <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
@@ -139,8 +138,8 @@ export function Sidebar() {
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <span className="text-lg" style={{ width: 24, textAlign: "center" }}>
-              {sidebarCollapsed ? "→" : "←"}
+            <span className="flex items-center justify-center shrink-0" style={{ width: 24 }}>
+              <Icon name={sidebarCollapsed ? "right" : "left"} size={18} />
             </span>
             {!sidebarCollapsed && <span>Collapse</span>}
           </button>

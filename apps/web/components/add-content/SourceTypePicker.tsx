@@ -4,6 +4,7 @@ import { useAddContentStore } from "@/store/addContentStore";
 import { SOURCE_TYPE_OPTIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { ItemType } from "@/types";
+import { Icon } from "@/components/shared/Icon";
 
 export function SourceTypePicker() {
   const { selectedType, setSelectedType, setUrl } = useAddContentStore();
@@ -45,7 +46,9 @@ export function SourceTypePicker() {
               borderRadius: "var(--radius-lg)",
             }}
           >
-            <span className="text-2xl">{opt.icon}</span>
+            <div className="flex items-center justify-center p-3 rounded-full mb-1" style={{ background: "var(--bg-primary)", color: "var(--accent-600)" }}>
+              <Icon name={opt.icon} size={28} />
+            </div>
             <span
               className="text-sm font-semibold"
               style={{ color: "var(--text-primary)" }}
@@ -72,7 +75,9 @@ export function SourceTypePicker() {
             borderRadius: "var(--radius-lg)",
           }}
         >
-          <span className="text-lg opacity-40">🔗</span>
+          <div className="flex items-center justify-center opacity-40" style={{ width: 24 }}>
+            <Icon name="link" size={20} />
+          </div>
           <input
             type="url"
             placeholder="Or just paste any URL and we'll detect it automatically ▼"

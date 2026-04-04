@@ -18,11 +18,11 @@ export const ROUTES = {
 
 /** Sidebar navigation items */
 export const NAV_ITEMS = [
-  { label: "Home", icon: "🏠", href: ROUTES.dashboard },
-  { label: "Collections", icon: "📁", href: ROUTES.collections },
-  { label: "Tags", icon: "🏷️", href: ROUTES.tags },
-  { label: "Graph", icon: "🕸️", href: ROUTES.graph },
-  { label: "Archive", icon: "📑", href: ROUTES.archive },
+  { label: "Home", icon: "home", href: ROUTES.dashboard },
+  { label: "Collections", icon: "collection", href: ROUTES.collections },
+  { label: "Tags", icon: "tag", href: ROUTES.tags },
+  { label: "Graph", icon: "graph", href: ROUTES.graph },
+  { label: "Archive", icon: "archive", href: ROUTES.archive },
 ] as const;
 
 /** Content type filter options */
@@ -69,49 +69,49 @@ export const SOURCE_TYPE_OPTIONS: {
 }[] = [
   {
     type: "article",
-    icon: "📄",
+    icon: "article",
     label: "Article / Blog",
     description: "Paste a link to any article or blog post",
     inputMode: "url",
   },
   {
     type: "youtube",
-    icon: "▶️",
+    icon: "youtube",
     label: "YouTube Video",
     description: "Save a YouTube video with optional timestamp",
     inputMode: "url",
   },
   {
     type: "tweet",
-    icon: "🐦",
+    icon: "tweet",
     label: "Tweet / Post",
     description: "Save a tweet or social media post",
     inputMode: "url",
   },
   {
     type: "pdf",
-    icon: "📁",
+    icon: "pdf",
     label: "PDF / Document",
     description: "Upload a PDF or paste a link to one",
     inputMode: "both",
   },
   {
     type: "podcast",
-    icon: "🎙️",
+    icon: "podcast",
     label: "Podcast Episode",
     description: "Save a podcast episode link",
     inputMode: "url",
   },
   {
     type: "image",
-    icon: "🖼️",
+    icon: "image",
     label: "Image / GIF",
     description: "Upload an image or paste a link",
     inputMode: "both",
   },
   {
     type: "link",
-    icon: "🔗",
+    icon: "link",
     label: "Other Link",
     description: "Any other URL you want to save",
     inputMode: "url",

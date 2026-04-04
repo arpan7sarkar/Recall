@@ -7,6 +7,8 @@ import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import { useSearch } from "@/hooks/useSearch";
 import { SearchDropdown } from "./SearchDropdown";
 import { UserButton } from "@clerk/nextjs";
+import { Icon } from "@/components/shared/Icon";
+import { Menu } from "lucide-react";
 
 export function Topbar() {
   const { openAddContent, toggleSidebar } = useUIStore();
@@ -44,13 +46,11 @@ export function Topbar() {
       {/* Mobile hamburger */}
       <button
         onClick={toggleSidebar}
-        className="lg:hidden p-2 rounded-lg focus-ring"
-        style={{ color: "var(--text-secondary)" }}
+        className="lg:hidden p-2 rounded-lg focus-ring transition-colors"
+        style={{ color: "var(--text-secondary)", background: "var(--bg-tertiary)" }}
         aria-label="Toggle sidebar"
       >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+        <Menu size={20} />
       </button>
 
       {/* Search bar with live dropdown */}
@@ -64,16 +64,9 @@ export function Topbar() {
               transition: "border-color 0.15s",
             }}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              style={{ color: "var(--text-tertiary)", flexShrink: 0 }}
-            >
-              <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+            <div className="flex items-center justify-center opacity-40" style={{ width: 16 }}>
+              <Icon name="search" size={16} />
+            </div>
             <input
               type="text"
               value={searchQuery}
@@ -97,12 +90,11 @@ export function Topbar() {
                   setSearchQuery("");
                   setShowDropdown(false);
                 }}
-                style={{ color: "var(--text-tertiary)", lineHeight: 1 }}
+                className="flex items-center justify-center p-1 rounded-md hover:bg-slate-100 transition-colors"
+                style={{ color: "var(--text-tertiary)" }}
                 aria-label="Clear search"
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+                <Icon name="close" size={14} />
               </button>
             )}
             {!searchQuery && (
@@ -144,9 +136,7 @@ export function Topbar() {
           onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent-500)")}
           id="add-content-btn"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          <Icon name="plus" size={18} />
           <span className="hidden sm:inline">Add Content</span>
         </button>
 

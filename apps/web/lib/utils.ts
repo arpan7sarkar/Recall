@@ -47,13 +47,13 @@ export function truncate(text: string, maxLen: number): string {
 
 /** Content-type icon map */
 export const TYPE_ICONS: Record<ItemType, string> = {
-  article: "📄",
-  youtube: "▶️",
-  tweet: "🐦",
-  pdf: "📁",
-  podcast: "🎙️",
-  image: "🖼️",
-  link: "🔗",
+  article: "article",
+  youtube: "youtube",
+  tweet: "tweet",
+  pdf: "pdf",
+  podcast: "podcast",
+  image: "image",
+  link: "link",
 };
 
 /** Content-type label map */

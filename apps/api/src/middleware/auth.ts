@@ -10,18 +10,26 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
   }
 
   try {
-    // Optional: Sync user with local DB if needed, or just attach userId to request
-    // For now, we attach the clerk userId to the request for backend use
+    // 1. Check if prisma is healthy
+    if (!prisma?.user) {
+      console.error("[Auth] Prisma Client not initialized or 'user' model missing.");
+      return next(); 
+    }
+
+    // 2. Attach clerk userId to request
     (req as any).auth = { userId };
     
-    // We can also find the local user record if we need DB relations
+    // 3. Find/Attach local user record
     const user = await prisma.user.findFirst({
       where: {
         OR: [
-          { googleId: userId }, // If Clerk uses Google
-          { id: userId }        // Or if we use Clerk ID as primary ID
+          { googleId: userId },
+          { id: userId }
         ]
       }
+    }).catch(err => {
+      console.error("[Auth] Database query failed:", err.message);
+      return null;
     });
 
     if (user) {
@@ -29,8 +37,8 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
     }
 
     next();
-  } catch (error) {
-    console.error("Clerk Auth Error:", error);
+  } catch (error: any) {
+    console.error("[Auth] Unexpected middleware error:", error.message);
     res.status(500).json({ error: "Internal server error during authentication" });
   }
 };

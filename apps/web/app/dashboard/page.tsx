@@ -8,6 +8,7 @@ import { ItemFilters } from "@/components/items/ItemFilters";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useUIStore } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
+import { Icon } from "@/components/shared/Icon";
 import type { Item } from "@/types";
 
 export default function DashboardPage() {
@@ -48,7 +49,7 @@ export default function DashboardPage() {
           }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <span>💡</span>
+            <Icon name="lightbulb" size={18} className="text-amber-500" />
             <h2
               className="text-sm font-semibold"
               style={{ color: "var(--text-primary)" }}
@@ -90,7 +91,7 @@ export default function DashboardPage() {
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          icon="📚"
+          icon="library"
           title="No items yet"
           description={
             activeFilter === "all"
