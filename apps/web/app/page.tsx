@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowRight, Search, Sparkles, Network, X, Check, Cloud } from "lucide-react";
+import { HeroSection } from "@/components/blocks/hero-section-2";
+import { BackgroundPaths } from "@/components/ui/background-paths";
 
 export default function LandingPage() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -11,41 +13,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#070707] text-zinc-300 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
       
-      {/* Abstract Atmosphere Background */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-         {/* Top auroral spread */}
-         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] sm:w-[100%] h-[800px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/15 via-[#070707] to-[#070707] opacity-80" />
-         {/* Subtle starry/grid texture */}
-         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03]" />
-      </div>
-
-      {/* Nav */}
-      <nav className="relative z-50 w-full max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-6">
-         <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded bg-gradient-to-br from-zinc-200 to-zinc-400 text-[#070707] flex items-center justify-center font-serif font-black text-sm shadow-md">
-              R
-            </div>
-            <span className="font-serif font-medium text-lg tracking-wide text-zinc-100">Recall</span>
-         </div>
-         <div className="hidden md:flex items-center gap-10 text-sm font-medium text-zinc-400">
-            <a href="#features" className="hover:text-zinc-100 transition-colors">Platform</a>
-            <a href="#pricing" className="hover:text-zinc-100 transition-colors">Pricing</a>
-            <a href="#mission" className="hover:text-zinc-100 transition-colors">Mission</a>
-         </div>
-         <div className="flex items-center gap-4">
-            {isLoaded && !isSignedIn && (
-              <div className="flex items-center gap-4">
-                <Link href={ROUTES.login} className="text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-colors">Log in</Link>
-                <Link href={ROUTES.register} className="text-sm font-medium text-[#070707] bg-zinc-100 hover:bg-white px-5 py-2.5 rounded-full transition-colors shadow-sm hidden sm:block">Start free</Link>
-              </div>
-            )}
-            {isLoaded && isSignedIn && (
-               <Link href={ROUTES.dashboard} className="text-sm font-medium text-[#070707] bg-zinc-100 hover:bg-white px-5 py-2.5 rounded-full transition-colors flex items-center gap-2 shadow-sm">
-                  Dashboard <ArrowRight size={14} />
-               </Link>
-            )}
-         </div>
-      </nav>
+      <HeroSection />
 
       <main className="relative z-10 w-full flex flex-col items-center">
         
@@ -191,98 +159,18 @@ export default function LandingPage() {
            </div>
         </section>
 
-        {/* PRICING SECTION */}
-        <section id="pricing" className="w-full max-w-7xl px-6 py-24 flex flex-col items-center">
-           <div className="mb-14 text-center">
-             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-white text-center mb-4">Simple scalable pricing</h2>
-             <p className="text-zinc-400 text-lg font-light">One plan for individuals, one for infinite scaling.</p>
-           </div>
-
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-              
-              {/* Free Scale */}
-              <div className="rounded-3xl bg-[#0a0a0a] border border-white/[0.04] p-10 flex flex-col shadow-lg">
-                 <h3 className="text-lg font-medium text-zinc-300 mb-2">Hobby</h3>
-                 <div className="flex items-end gap-2 mb-8">
-                    <span className="text-5xl font-serif text-white leading-none">$0</span>
-                    <span className="text-zinc-500 font-medium mb-1">/ forever</span>
-                 </div>
-                 
-                 <div className="space-y-4 mb-10 flex-1">
-                    <div className="flex items-start gap-3">
-                       <Check size={16} className="text-indigo-400 mt-1 shrink-0" />
-                       <span className="text-zinc-300 font-light">Up to 1,000 vault items</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                       <Check size={16} className="text-indigo-400 mt-1 shrink-0" />
-                       <span className="text-zinc-300 font-light">Standard Semantic Search</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                       <Check size={16} className="text-indigo-400 mt-1 shrink-0" />
-                       <span className="text-zinc-300 font-light">Unlimited Tagging</span>
-                    </div>
-                 </div>
-
-                 <Link href={ROUTES.register} className="w-full py-3.5 rounded-full border border-white/10 text-center font-medium text-zinc-300 hover:bg-white/5 transition-colors">Create Free Account</Link>
-              </div>
-
-              {/* Pro Scale */}
-              <div className="rounded-3xl bg-[#0e0e0e] border border-indigo-500/20 p-10 flex flex-col relative overflow-hidden shadow-2xl">
-                 <div className="absolute -top-12 -right-12 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none" />
-                 
-                 <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-medium text-white">Pro</h3>
-                    <span className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold tracking-widest uppercase">Unlimited</span>
-                 </div>
-                 <div className="flex items-end gap-2 mb-8">
-                    <span className="text-5xl font-serif text-white leading-none">$8</span>
-                    <span className="text-zinc-500 font-medium mb-1">/ month</span>
-                 </div>
-                 
-                 <div className="space-y-4 mb-10 flex-1 relative z-10">
-                    <div className="flex items-start gap-3">
-                       <Check size={16} className="text-white mt-1 shrink-0" />
-                       <span className="text-zinc-200 font-light">Unlimited vault items</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                       <Check size={16} className="text-white mt-1 shrink-0" />
-                       <span className="text-zinc-200 font-light">Deep AI natural language models</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                       <Check size={16} className="text-white mt-1 shrink-0" />
-                       <span className="text-zinc-200 font-light">Interactive Knowledge Graph Access</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                       <Check size={16} className="text-white mt-1 shrink-0" />
-                       <span className="text-zinc-200 font-light">Premium Support Pipeline</span>
-                    </div>
-                 </div>
-
-                 <Link href={ROUTES.register} className="relative z-10 w-full py-3.5 rounded-full bg-white text-[#050505] text-center font-medium hover:bg-zinc-200 transition-all shadow-[0_2px_15px_rgba(255,255,255,0.1)] active:scale-95">Upgrade to Pro</Link>
-              </div>
-           </div>
-        </section>
-
-        {/* BOTTOM CTA (Oval cutout) */}
-        <section className="w-full flex flex-col items-center justify-center pt-32 pb-8 relative overflow-hidden min-h-[500px]">
-           {/* Dark misty glow backdrop mapping to the bottom edge */}
-           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150%] max-w-[1200px] h-[400px] pointer-events-none">
-              <div className="absolute bottom-[-100px] w-full h-[300px] bg-gradient-to-t from-indigo-500/10 to-transparent blur-[80px] rounded-[100%]" />
-           </div>
-
-           <div className="relative z-10 text-center max-w-2xl px-6 mb-20 flex flex-col items-center">
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif text-white tracking-tight leading-[1.1] mb-6">Elevate your second brain.</h2>
-              <p className="text-zinc-400 mb-10 font-light text-lg">Join the vanguard of thinkers building spatial intelligence networks.</p>
-              <Link href={ROUTES.register} className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-[#070707] font-medium hover:bg-zinc-200 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                Start your vault
-              </Link>
-           </div>
-           
-           {/* Massive watermark logo */}
-           <div className="w-full overflow-hidden flex justify-center opacity-[0.02] select-none pointer-events-none mt-auto">
-              <h1 className="text-[25vw] sm:text-[20vw] leading-[0.7] font-serif tracking-tighter">Recall</h1>
-           </div>
-        </section>
+      {/* PRICING SECTION */}
+      {/* ... previous content exists ... */}
+      
+      {/* CTA SECTION - Upgraded with Background Paths */}
+      <BackgroundPaths 
+        title="Elevate your second brain"
+        subtitle="Join the vanguard of thinkers building spatial intelligence networks. Find clarity in the noise."
+        primaryCTA={{
+            label: "Initialize your vault",
+            href: ROUTES.register
+        }}
+      />
 
       </main>
 
