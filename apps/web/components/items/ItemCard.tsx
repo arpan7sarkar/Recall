@@ -29,7 +29,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
     return (
       <div
         onClick={handleCardClick}
-        className="flex items-center gap-4 p-5 cursor-pointer transition-all duration-300 border rounded-xl bg-[#0e0e0e] border-white/4 hover:border-white/10 hover:bg-white/5 shadow-sm"
+        className="flex items-center gap-4 p-5 cursor-pointer transition-all duration-300 border rounded-xl bg-[var(--bg-secondary)] border-[var(--border)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-tertiary)] shadow-sm"
         id={`item-card-${item.id}`}
       >
         <div
@@ -47,10 +47,10 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-serif text-white tracking-tight truncate">
+          <h3 className="text-sm font-serif text-[var(--text-primary)] tracking-tight truncate">
             {item.title || "Untitled"}
           </h3>
-          <p className="text-[10px] font-light text-zinc-500 mt-1">
+          <p className="text-[10px] font-light text-[var(--text-secondary)] mt-1">
             {extractDomain(item.url)} · {timeAgo(item.savedAt)}
           </p>
         </div>
@@ -67,13 +67,13 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   return (
     <div
       onClick={handleCardClick}
-      className="flex flex-col overflow-hidden cursor-pointer transition-all duration-300 border rounded-2xl bg-[#0e0e0e] border-white/4 hover:border-white/10 shadow-sm group h-full"
+      className="flex flex-col overflow-hidden cursor-pointer transition-all duration-300 border rounded-2xl bg-[var(--bg-secondary)] border-[var(--border)] hover:border-[var(--border-hover)] shadow-sm group h-full"
       id={`item-card-${item.id}`}
     >
       {/* Thumbnail / Showcase */}
       <div
         className={cn(
-          "relative flex items-center justify-center overflow-hidden bg-black/40 border-b border-white/4 h-48 transition-all duration-500",
+          "relative flex items-center justify-center overflow-hidden bg-[var(--bg-primary)]/40 border-b border-[var(--border)] h-48 transition-all duration-500",
           !item.thumbnailUrl && item.itemType !== "tweet" && "bg-linear-to-br from-indigo-500/5 to-transparent",
           isProcessing && "skeleton"
         )}
@@ -105,7 +105,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
 
         {/* ... overlay logic ... */}
         {item.isFavourite && (
-          <div className="absolute top-3 right-3 z-10 flex items-center justify-center rounded-full text-xs shadow-sm bg-white/90 backdrop-blur-sm" style={{ width: 32, height: 32, color: "var(--accent-500)" }}>
+          <div className="absolute top-3 right-3 z-10 flex items-center justify-center rounded-full text-xs shadow-sm bg-[var(--bg-elevated)]/90 backdrop-blur-sm" style={{ width: 32, height: 32, color: "var(--accent-500)" }}>
             <Heart size={16} fill="currentColor" />
           </div>
         )}
@@ -115,17 +115,17 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       <div className="flex flex-col gap-2 p-5 flex-1 relative">
         <div className="absolute inset-x-0 bottom-0 top-0 bg-linear-to-tl from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
         
-        <div className="flex items-center gap-2 text-[10px] text-zinc-500 relative z-10">
+        <div className="flex items-center gap-2 text-[10px] text-[var(--text-secondary)] relative z-10">
           <TypeBadge type={item.itemType} size="sm" />
           <span>{timeAgo(item.savedAt)}</span>
         </div>
 
-        <h3 className="text-base font-serif text-white tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-indigo-200 transition-colors duration-300">
+        <h3 className="text-base font-serif text-[var(--text-primary)] tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-indigo-400 transition-colors duration-300">
           {item.title || "Untitled"}
         </h3>
         
         {item.description && item.itemType !== "tweet" && (
-          <p className="text-xs font-light text-zinc-400 line-clamp-2 mt-1 relative z-10 leading-relaxed">
+          <p className="text-xs font-light text-[var(--text-secondary)] line-clamp-2 mt-1 relative z-10 leading-relaxed">
             {item.description}
           </p>
         )}

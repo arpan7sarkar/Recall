@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS } from "@/lib/constants";
+import { NAV_ITEMS, ROUTES } from "@/lib/constants";
 import { useUIStore } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/nextjs";
@@ -33,18 +33,18 @@ export function Sidebar() {
           sidebarOpen ? "translate-x-0" : "-translate-x-[150%]",
           "lg:relative lg:inset-0 lg:translate-x-0 lg:shadow-none lg:h-full lg:backdrop-blur-none",
           sidebarCollapsed ? "lg:w-[80px]" : "lg:w-[260px]",
-          "bg-[#0e0e0e] border-white/4 shadow-sm"
+          "bg-[var(--bg-secondary)] border-[var(--border)] shadow-sm"
         )}
       >
         {/* Logo */}
         <div
-          className="flex items-center gap-3 px-5 py-4 border-b border-white/4 shrink-0"
+          className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border)] shrink-0"
         >
           <div
             className={cn(
               "flex items-center justify-center rounded-lg font-serif transition-all duration-500",
               "group-hover:rotate-360 group-hover:scale-110 transform-gpu",
-              "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+              "bg-[var(--accent-500)]/10 text-[var(--accent-500)] border border-[var(--accent-500)]/20 shadow-[0_0_15px_rgba(192,192,192,0.1)] dark:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
             )}
             style={{
               width: 32,
@@ -55,7 +55,7 @@ export function Sidebar() {
             R
           </div>
           {!sidebarCollapsed && (
-            <span className="font-serif text-xl tracking-tight text-white">
+            <span className="font-serif text-xl tracking-tight text-[var(--text-primary)]">
               Recall
             </span>
           )}
@@ -74,7 +74,10 @@ export function Sidebar() {
         {/* Nav Items */}
         <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            const isHomePath = item.href === ROUTES.dashboard;
+            const isActive = isHomePath 
+              ? pathname === item.href 
+              : pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
@@ -86,8 +89,8 @@ export function Sidebar() {
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 focus-ring",
                   "text-sm font-light",
                   isActive 
-                    ? "text-white bg-indigo-500/10 border border-indigo-500/10" 
-                    : "text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent"
+                    ? "text-[var(--text-primary)] bg-[var(--accent-500)]/10 border border-[var(--accent-500)]/10" 
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] border border-transparent"
                 )}
                 title={sidebarCollapsed ? item.label : undefined}
               >
@@ -111,7 +114,7 @@ export function Sidebar() {
           {/* Collapse toggle — desktop only */}
           <button
             onClick={toggleSidebarCollapse}
-            className="hidden lg:flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-light transition-colors focus-ring text-zinc-400 hover:text-white hover:bg-white/5"
+            className="hidden lg:flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-light transition-colors focus-ring text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
             title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <span className="flex items-center justify-center shrink-0 w-6">
@@ -121,8 +124,8 @@ export function Sidebar() {
           </button>
         </div>
 
-        <div className="flex items-center gap-3 px-4 py-4 border-t border-white/4 shrink-0">
-          <div className="flex items-center justify-center rounded-full font-serif text-sm shrink-0 overflow-hidden w-9 h-9 bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">
+        <div className="flex items-center gap-3 px-4 py-4 border-t border-[var(--border)] shrink-0">
+          <div className="flex items-center justify-center rounded-full font-serif text-sm shrink-0 overflow-hidden w-9 h-9 bg-[var(--accent-500)]/10 text-[var(--accent-500)] border border-[var(--accent-500)]/20 shadow-inner">
             {user?.imageUrl ? (
               <img src={user.imageUrl} alt={user.fullName || "User"} className="w-full h-full object-cover" />
             ) : (
@@ -131,12 +134,12 @@ export function Sidebar() {
           </div>
           {!sidebarCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
+              <p className="text-sm font-medium text-[var(--text-primary)] truncate">
                 {user?.fullName ?? "User"}
               </p>
               <button
                 onClick={() => signOut()}
-                className="text-xs font-light text-zinc-400 hover:text-white transition-colors"
+                className="text-xs font-light text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 Sign Out
               </button>

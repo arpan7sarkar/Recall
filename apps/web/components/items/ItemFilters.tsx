@@ -27,8 +27,8 @@ export function ItemFilters({
             className={cn(
               "px-5 py-1.5 rounded-full text-xs font-light tracking-tight transition-all duration-300 border",
               activeFilter === filter.value
-                ? "bg-indigo-500/10 text-white border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.1)]"
-                : "bg-transparent text-zinc-500 border-white/4 hover:border-white/10 hover:text-zinc-400"
+                ? "bg-[var(--accent-500)]/10 text-[var(--text-primary)] border-[var(--accent-500)]/30 shadow-[0_0_15px_rgba(192,192,192,0.1)]"
+                : "bg-transparent text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)]"
             )}
           >
             {filter.label}
@@ -37,12 +37,12 @@ export function ItemFilters({
       </div>
 
       {/* View mode toggle */}
-      <div className="flex items-center rounded-lg overflow-hidden shrink-0 border border-white/4 bg-black/20">
+      <div className="flex items-center rounded-lg overflow-hidden shrink-0 border border-[var(--border)] bg-[var(--bg-primary)]/40">
         <button
           onClick={() => onViewModeChange("grid")}
           className={cn(
             "p-2 transition-all duration-300",
-            viewMode === "grid" ? "bg-indigo-500/10 text-indigo-400" : "text-zinc-600 hover:text-zinc-400"
+            viewMode === "grid" ? "bg-[var(--accent-500)]/10 text-[var(--accent-500)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
           )}
           title="Grid view"
           aria-label="Grid view"
@@ -58,7 +58,7 @@ export function ItemFilters({
           onClick={() => onViewModeChange("list")}
           className={cn(
             "p-2 transition-all duration-300",
-            viewMode === "list" ? "bg-indigo-500/10 text-indigo-400" : "text-zinc-600 hover:text-zinc-400"
+            viewMode === "list" ? "bg-[var(--accent-500)]/10 text-[var(--accent-500)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
           )}
           title="List view"
           aria-label="List view"

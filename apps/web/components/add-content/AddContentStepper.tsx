@@ -77,8 +77,8 @@ export function AddContentStepper() {
             key={s}
             className={cn(
                "h-1 transition-all duration-500 rounded-full",
-               step === s ? "w-8 bg-indigo-500/50 shadow-[0_0_10px_rgba(99,102,241,0.3)]" : 
-               (["type", "input", "metadata"].indexOf(step) > i ? "w-4 bg-indigo-500/20" : "w-4 bg-white/5")
+               step === s ? "w-8 bg-[var(--accent-500)] shadow-[0_0_10px_var(--accent-500)]" : 
+               (["type", "input", "metadata"].indexOf(step) > i ? "w-4 bg-[var(--accent-500)]/40" : "bg-[var(--bg-tertiary)] w-4")
             )}
           />
         ))}

@@ -2,42 +2,33 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* ── Design Tokens ─────────────────────────────────────────── */
+/* ── Design Tokens (Light Mode - Violet White) ──────────────── */
 :root {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 
-  /* Base neutrals — Zinc Light */
-  --bg-primary: hsl(0, 0%, 98%); /* zinc-50 */
-  --bg-secondary: hsl(0, 0%, 100%); /* white */
-  --bg-tertiary: hsl(240, 5%, 96%); /* zinc-100 */
-  --bg-elevated: hsl(0, 0%, 100%);
+  /* Whiter, similar to violet, but not 100% white */
+  --bg-primary: #fbfbfe; 
+  --bg-secondary: #ffffff; 
+  --bg-tertiary: #f1f1f8; 
+  --bg-elevated: #ffffff;
 
-  --text-primary: hsl(240, 6%, 10%); /* zinc-900 */
-  --text-secondary: hsl(240, 5%, 34%); /* zinc-500 */
-  --text-tertiary: hsl(240, 5%, 65%); /* zinc-400 */
+  --text-primary: #0f172a; 
+  --text-secondary: #64748b; 
+  --text-tertiary: #94a3b8; 
 
-  /* Accent — Enterprise Blue */
-  --accent-50: hsl(214, 100%, 97%);
-  --accent-100: hsl(214, 100%, 93%);
-  --accent-500: hsl(221, 83%, 53%); /* Tailwind blue-600 */
-  --accent-600: hsl(221, 83%, 43%);
-  --accent-700: hsl(221, 83%, 33%);
+  /* Sky Blue Accents for Light Mode */
+  --accent-50: #f0f9ff;
+  --accent-100: #e0f2fe;
+  --accent-500: #38bdf8; 
+  --accent-600: #0ea5e9;
+  --accent-700: #0369a1;
 
-  /* Special Highlight — Premium Gold */
-  --warm-100: hsl(38, 92%, 95%);
-  --warm-500: hsl(38, 92%, 50%);
-
-  /* Status */
-  --success: hsl(152, 57%, 30%);
-  --warning: hsl(38, 92%, 50%);
-  --error: hsl(0, 84%, 44%);
-
-  /* Border & shadow — Minimalist Precision */
-  --border: hsl(240, 6%, 90%); /* zinc-200 */
-  --border-focus: var(--accent-500);
-  --shadow-card: 0 1px 2px -1px rgba(0, 0, 0, 0.05); /* Match switch card shadow */
+  /* Border & shadow */
+  --border: rgba(0, 0, 0, 0.05);
+  --border-hover: rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 
   /* Radius */
   --radius-sm: 8px;
@@ -58,27 +49,28 @@
   --sparkles-color: #8350e8;
 }
 
-/* Dark mode — Zinc Dark */
+/* Dark mode — Black with Silver Highlights */
 [data-theme="dark"] {
-  --bg-primary: hsl(240, 5%, 4%); /* zinc-950 */
-  --bg-secondary: hsl(240, 5%, 10%); /* zinc-900 */
-  --bg-tertiary: hsl(240, 4%, 16%); /* zinc-800 */
-  --bg-elevated: hsl(240, 5%, 10%);
+  --bg-primary: #000000; /* Pure Black Background */
+  --bg-secondary: #080808; /* Deepest black elevation */
+  --bg-tertiary: #121212; 
+  --bg-elevated: #1a1a1a;
   
-  --text-primary: hsl(0, 0%, 98%); /* zinc-50 */
-  --text-secondary: hsl(240, 5%, 65%); /* zinc-400 */
-  --text-tertiary: hsl(240, 5%, 34%); /* zinc-500 */
+  --text-primary: #f2f2f2; /* Silver/Off-white Text */
+  --text-secondary: #888888; 
+  --text-tertiary: #555555; 
   
-  --border: hsla(0, 0%, 100%, 0.1); /* white/10 border from switch */
-  --shadow-card: 0 1px 2px -1px rgba(0, 0, 0, 0.3); /* Match dark switch card shadow */
+  --border: rgba(255, 255, 255, 0.06); 
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.9);
   
-  /* Shiny Accents (Reduced) */
-  --accent-500: hsl(221, 83%, 53%);
-  --accent-600: hsl(221, 83%, 43%);
-
-  /* Sparkles & CTA Tokens - Dark */
-  --gradient-color: #8350e8;
-  --sparkles-color: #ffffff;
+  /* Silver Button/Accent Palette */
+  --accent-50: #ffffff;
+  --accent-500: #c0c0c0; /* Brushed Silver */
+  --accent-600: #a0a0a0;
+  --accent-700: #808080;
+  
+  --silver-gradient: linear-gradient(135deg, #c0c0c0 0%, #ffffff 50%, #c0c0c0 100%);
 }
 
 /* ── Tailwind v4 Theme ──────────────────────────────────────── */

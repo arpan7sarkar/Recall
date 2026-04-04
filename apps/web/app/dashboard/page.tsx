@@ -28,30 +28,27 @@ export default function DashboardPage() {
     <div>
       {/* Page header */}
       <div className="mb-10 flex flex-col pt-2">
-        <h1 className="text-4xl font-serif text-white tracking-tight">
+        <h1 className="text-4xl font-serif text-[var(--text-primary)] tracking-tight">
           Your Knowledge Base
         </h1>
-        <p className="text-sm font-light text-zinc-500 mt-2">
+        <p className="text-sm font-light text-[var(--text-secondary)] mt-2">
           {totalItems} items saved · {processingCount} processing
         </p>
       </div>
 
-      {/* Memory resurfacing widget - Obsidian Style */}
+      {/* Memory resurfacing widget - Clean & Flat */}
       {items.length > 0 && (
-        <div className="mb-12 p-8 rounded-2xl relative overflow-hidden bg-[#0e0e0e] border border-white/5 shadow-2xl group transition-all duration-500 hover:border-white/10">
-          {/* Subtle glow effect */}
-          <div className="absolute inset-x-0 bottom-0 top-0 bg-linear-to-tl from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-          
+        <div className="mb-12 p-8 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border)] transition-all duration-300">
           <div className="flex items-start gap-6 relative z-10">
-            <div className="p-4 rounded-xl shrink-0 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+            <div className="p-4 rounded-xl shrink-0 bg-[var(--accent-500)]/10 border border-[var(--accent-500)]/20 text-[var(--accent-500)]">
               <Icon name="lightbulb" size={28} />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-serif text-white tracking-tight mb-2">
+              <h2 className="text-2xl font-serif text-[var(--text-primary)] tracking-tight mb-2">
                 From your memory
               </h2>
-              <p className="text-base font-light text-zinc-400 leading-relaxed max-w-2xl">
-                You saved <span className="text-indigo-300 font-medium">'{items[0]?.title || "an item"}'</span>. 
+              <p className="text-base font-light text-[var(--text-secondary)] leading-relaxed max-w-2xl">
+                You saved <span className="text-[var(--accent-500)] font-medium">'{items[0]?.title || "an item"}'</span>. 
                 Rethink the connections you've built and how this piece fits into your current workflow.
               </p>
             </div>
