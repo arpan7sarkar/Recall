@@ -19,19 +19,13 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
-      <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
+      <div className="h-screen w-screen flex p-4 lg:p-6 gap-6 overflow-hidden" style={{ background: "var(--bg-primary)" }}>
         <Sidebar />
 
-        <div
-          className={cn(
-            "flex flex-col min-h-screen transition-all duration-200",
-            "lg:ml-[260px]",
-            sidebarCollapsed && "lg:ml-[72px]"
-          )}
-        >
+        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
           <Topbar />
 
-          <main className="flex-1 p-6 lg:p-8">
+          <main className="flex-1 overflow-auto mt-6 pb-24 lg:pb-0 scroll-smooth">
             {children}
           </main>
         </div>

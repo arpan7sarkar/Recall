@@ -27,14 +27,14 @@ export default function DashboardPage() {
   return (
     <div>
       {/* Page header */}
-      <div className="mb-6">
+      <div className="mb-8 flex flex-col pt-2">
         <h1
-          className="text-2xl font-bold"
+          className="text-4xl font-black tracking-tighter uppercase"
           style={{ color: "var(--text-primary)" }}
         >
           Your Knowledge Base
         </h1>
-        <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mt-2" style={{ color: "var(--text-tertiary)" }}>
           {totalItems} items saved · {processingCount} processing
         </p>
       </div>
@@ -42,26 +42,33 @@ export default function DashboardPage() {
       {/* Memory resurfacing widget mock */}
       {items.length > 0 && (
         <div
-          className="mb-8 p-5 rounded-xl"
+          className="mb-10 p-6 sm:p-8 rounded-4xl relative overflow-hidden backdrop-blur-md"
           style={{
-            background: "linear-gradient(135deg, var(--accent-50), var(--warm-100))",
-            borderRadius: "var(--radius-lg)",
+            background: "rgba(255, 255, 255, 0.02)",
+            border: "1px solid rgba(6,182,212,0.15)",
+            boxShadow: "inset 0 0 30px rgba(6,182,212,0.05), 0 10px 30px rgba(0,0,0,0.2)",
           }}
         >
-          <div className="flex items-center gap-2 mb-3">
-            <Icon name="lightbulb" size={18} className="text-amber-500" />
-            <h2
-              className="text-sm font-semibold"
-              style={{ color: "var(--text-primary)" }}
-            >
-              From your memory
-            </h2>
+          {/* Top highlight glow */}
+          <div className="absolute top-0 left-1/4 w-1/2 h-px bg-linear-to-r from-transparent via-cyan-500 to-transparent opacity-80 shadow-[0_0_15px_rgba(6,182,212,0.8)]" />
+          
+          <div className="flex items-start gap-5">
+            <div className="p-3.5 rounded-2xl shrink-0" style={{ background: "rgba(6,182,212,0.1)", boxShadow: "0 0 20px rgba(6,182,212,0.2)" }}>
+              <Icon name="lightbulb" size={28} className="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
+            </div>
+            <div>
+              <h2
+                className="text-xl sm:text-2xl font-black tracking-tighter uppercase mb-1"
+                style={{ color: "var(--text-primary)" }}
+              >
+                From your memory
+              </h2>
+              <p className="text-xs sm:text-sm font-bold uppercase tracking-widest opacity-40 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                You saved '{items[0]?.title || "an item"}'... A whisper of cyan light <br className="hidden sm:block" />
+                reminds you of its value.
+              </p>
+            </div>
           </div>
-          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            You saved &quot;{items[0]?.title || "an item"}&quot; {" "}
-            <span style={{ color: "var(--accent-600)" }}>some time ago</span>. Maybe it&apos;s
-            worth another look?
-          </p>
         </div>
       )}
 

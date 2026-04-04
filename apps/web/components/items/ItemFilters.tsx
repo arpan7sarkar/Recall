@@ -23,12 +23,12 @@ export function ItemFilters({
           <button
             key={filter.value}
             onClick={() => onFilterChange(filter.value)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-150 focus-ring"
+            className="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 focus-ring"
             style={{
               background:
                 activeFilter === filter.value
                   ? "var(--accent-500)"
-                  : "var(--bg-secondary)",
+                  : "transparent",
               color:
                 activeFilter === filter.value
                   ? "#fff"
@@ -37,6 +37,7 @@ export function ItemFilters({
                 activeFilter === filter.value
                   ? "1px solid var(--accent-500)"
                   : "1px solid var(--border)",
+              boxShadow: activeFilter === filter.value ? "0 0 15px rgba(6,182,212,0.3)" : "none"
             }}
           >
             {filter.label}

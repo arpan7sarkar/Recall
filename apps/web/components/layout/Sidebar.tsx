@@ -28,12 +28,13 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          "fixed top-0 left-0 h-full z-50 flex flex-col border-r transition-all duration-200 ease-in-out",
-          // Mobile: slide in/out based on sidebarOpen
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
-          // Desktop: always visible, collapse based on sidebarCollapsed
-          "lg:translate-x-0 lg:z-30",
-          sidebarCollapsed ? "lg:w-[72px] w-[260px]" : "w-[260px]"
+          "z-50 shrink-0 flex flex-col border transition-all duration-300 ease-in-out rounded-4xl overflow-hidden",
+          // Mobile: absolute/fixed with full height inside the wrapper
+          "fixed inset-y-4 left-4 shadow-2xl backdrop-blur-xl",
+          sidebarOpen ? "translate-x-0" : "-translate-x-[150%]",
+          // Desktop: static/relative
+          "lg:relative lg:inset-0 lg:translate-x-0 lg:shadow-none lg:h-full lg:backdrop-blur-none",
+          sidebarCollapsed ? "lg:w-[80px]" : "lg:w-[260px]"
         )}
         style={{
           background: "var(--bg-secondary)",
@@ -54,10 +55,10 @@ export function Sidebar() {
               "group-hover:rotate-360 group-hover:scale-110",
               theme === "dark" ? "rotate-180" : "rotate-0",
               "transform-gpu",
-              "drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]",
+              "drop-shadow-[0_0_8px_rgba(99,102,241,0.3)]",
               theme === "dark"
-                ? "text-zinc-500 group-hover:text-cyan-400"
-                : "text-cyan-600 group-hover:text-cyan-700",
+                ? "text-zinc-500 group-hover:text-indigo-400"
+                : "text-indigo-600 group-hover:text-indigo-700",
               "group-active:scale-95"
             )}
             style={{
@@ -105,7 +106,7 @@ export function Sidebar() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 focus-ring",
                   "text-xs font-black uppercase tracking-widest",
-                  isActive ? "text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]" : "hover:bg-white/5 opacity-60 hover:opacity-100"
+                  isActive ? "text-white shadow-[0_0_15px_rgba(99,102,241,0.3)]" : "hover:bg-white/5 opacity-60 hover:opacity-100"
                 )}
                 style={{
                   background: isActive ? "var(--accent-500)" : "transparent",

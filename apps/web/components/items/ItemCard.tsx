@@ -42,7 +42,6 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
           style={{
             width: 48,
             height: 48,
-            background: "var(--bg-tertiary)",
           }}
         >
           {isProcessing ? (
@@ -53,7 +52,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-[11px] font-black uppercase tracking-[0.1em] truncate" style={{ color: "var(--text-primary)" }}>
+          <h3 className="text-[11px] font-black uppercase tracking-widest truncate" style={{ color: "var(--text-primary)" }}>
             {item.title || "Untitled"}
           </h3>
           <p className="text-[9px] font-black uppercase tracking-widest mt-1 opacity-50" style={{ color: "var(--text-tertiary)" }}>
@@ -85,8 +84,8 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       {/* Thumbnail / Showcase */}
       <div
         className={cn(
-          "relative flex items-center justify-center overflow-hidden",
-          !item.thumbnailUrl && item.itemType !== "tweet" && "bg-gradient-to-br from-slate-50 to-slate-100",
+          "relative flex items-center justify-center overflow-hidden group bg-transparent border backdrop-blur-xl transition-all duration-500 hover:border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]",
+          !item.thumbnailUrl && item.itemType !== "tweet" && "bg-linear-to-br from-slate-50 to-slate-100",
           isProcessing && "skeleton"
         )}
         style={{

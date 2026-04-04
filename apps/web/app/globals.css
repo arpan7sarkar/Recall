@@ -6,22 +6,22 @@
 :root {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 
-  /* Base neutrals — Minimal Studio Light */
-  --bg-primary: hsl(210, 20%, 98%);
-  --bg-secondary: hsl(0, 0%, 100%);
-  --bg-tertiary: hsl(210, 16%, 93%);
+  /* Base neutrals — Zinc Light */
+  --bg-primary: hsl(0, 0%, 98%); /* zinc-50 */
+  --bg-secondary: hsl(0, 0%, 100%); /* white */
+  --bg-tertiary: hsl(240, 5%, 96%); /* zinc-100 */
   --bg-elevated: hsl(0, 0%, 100%);
 
-  --text-primary: hsl(222, 47%, 11%);
-  --text-secondary: hsl(215, 16%, 47%);
-  --text-tertiary: hsl(215, 13%, 65%);
+  --text-primary: hsl(240, 6%, 10%); /* zinc-900 */
+  --text-secondary: hsl(240, 5%, 34%); /* zinc-500 */
+  --text-tertiary: hsl(240, 5%, 65%); /* zinc-400 */
 
-  /* Accent — Refined Indigo & Amber */
-  --accent-50: hsl(226, 100%, 97%);
-  --accent-100: hsl(226, 100%, 94%);
-  --accent-500: hsl(226, 70%, 50%); /* Professional Indigo */
-  --accent-600: hsl(226, 70%, 40%);
-  --accent-700: hsl(226, 70%, 30%);
+  /* Accent — Premium Indigo */
+  --accent-50: hsl(238, 100%, 97%);
+  --accent-100: hsl(238, 100%, 92%);
+  --accent-500: hsl(238, 83%, 66%); /* Tailwind indigo-500 */
+  --accent-600: hsl(238, 83%, 56%);
+  --accent-700: hsl(238, 83%, 46%);
 
   /* Special Highlight — Premium Gold */
   --warm-100: hsl(38, 92%, 95%);
@@ -32,11 +32,11 @@
   --warning: hsl(38, 92%, 50%);
   --error: hsl(0, 84%, 44%);
 
-  /* Border & shadow — Diffused Premium */
-  --border: hsl(214, 32%, 91%);
+  /* Border & shadow — Minimalist Precision */
+  --border: hsl(240, 6%, 90%); /* zinc-200 */
   --border-focus: var(--accent-500);
-  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 1px 2px -1px rgba(0, 0, 0, 0.05); /* Match switch card shadow */
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 
   /* Radius */
@@ -54,19 +54,23 @@
   --topbar-height: 64px;
 }
 
-/* Dark mode — Sophisticated Noir */
+/* Dark mode — Zinc Dark */
 [data-theme="dark"] {
-  --bg-primary: hsl(222, 47%, 7%);
-  --bg-secondary: hsl(222, 47%, 10%);
-  --bg-tertiary: hsl(222, 47%, 13%);
-  --bg-elevated: hsl(222, 47%, 15%);
+  --bg-primary: hsl(240, 5%, 4%); /* zinc-950 */
+  --bg-secondary: hsl(240, 5%, 10%); /* zinc-900 */
+  --bg-tertiary: hsl(240, 4%, 16%); /* zinc-800 */
+  --bg-elevated: hsl(240, 5%, 10%);
   
-  --text-primary: hsl(210, 40%, 98%);
-  --text-secondary: hsl(215, 20%, 75%);
-  --text-tertiary: hsl(215, 20%, 55%);
+  --text-primary: hsl(0, 0%, 98%); /* zinc-50 */
+  --text-secondary: hsl(240, 5%, 65%); /* zinc-400 */
+  --text-tertiary: hsl(240, 5%, 34%); /* zinc-500 */
   
-  --border: hsl(217, 33%, 17%);
-  --shadow-card: 0 8px 16px -4px rgba(0, 0, 0, 0.5);
+  --border: hsla(0, 0%, 100%, 0.1); /* white/10 border from switch */
+  --shadow-card: 0 1px 2px -1px rgba(0, 0, 0, 0.3); /* Match dark switch card shadow */
+  
+  /* Shiny Accents */
+  --accent-500: hsl(238, 100%, 65%);
+  --accent-600: hsl(238, 100%, 55%);
 }
 
 /* ── Tailwind v4 Theme ──────────────────────────────────────── */
