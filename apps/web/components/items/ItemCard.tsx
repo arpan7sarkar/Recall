@@ -67,13 +67,14 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   return (
     <div
       onClick={handleCardClick}
-      className="flex flex-col overflow-hidden cursor-pointer transition-all duration-300 border rounded-2xl bg-[var(--bg-secondary)] border-[var(--border)] hover:border-[var(--border-hover)] shadow-sm group h-full"
+      className="flex flex-col overflow-hidden cursor-pointer transition-all duration-300 border rounded-2xl bg-[var(--bg-secondary)] border-[var(--border)] hover:border-[var(--border-hover)] shadow-sm group min-h-[400px] h-full"
       id={`item-card-${item.id}`}
     >
       {/* Thumbnail / Showcase */}
       <div
         className={cn(
-          "relative flex items-center justify-center overflow-hidden bg-[var(--bg-primary)]/40 border-b border-[var(--border)] h-48 transition-all duration-500",
+          "relative flex items-center justify-center overflow-hidden bg-[var(--bg-primary)]/40 border-b border-[var(--border)] transition-all duration-500",
+          item.itemType === "tweet" ? "h-auto min-h-48 p-4" : "h-48",
           !item.thumbnailUrl && item.itemType !== "tweet" && "bg-linear-to-br from-indigo-500/5 to-transparent",
           isProcessing && "skeleton"
         )}
@@ -84,8 +85,8 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         }}
       >
         {item.itemType === "tweet" && !isProcessing ? (
-          <div className="w-full flex justify-center py-2 pointer-events-auto">
-            <blockquote className="twitter-tweet" data-conversation="none" data-cards="hidden" data-media-max-width="400">
+          <div className="w-full flex justify-center pointer-events-auto">
+            <blockquote className="twitter-tweet" data-conversation="none" data-theme="dark" data-align="center">
                <a href={(item.url || "").replace("x.com", "twitter.com")} target="_blank"></a>
             </blockquote>
             <Script 

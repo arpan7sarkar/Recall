@@ -55,7 +55,7 @@ export default function GraphPage() {
             Knowledge Graph
           </h1>
           <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
-            A spatial map of your second brain, clustered by semantic similarity and shared tags.
+            A spatial map of your Recall, clustered by semantic similarity and shared tags.
           </p>
         </div>
 

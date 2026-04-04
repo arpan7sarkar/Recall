@@ -67,7 +67,7 @@ export function HoverFooter() {
               <span className="text-white text-2xl font-serif font-black">Recall</span>
             </div>
             <p className="text-zinc-500 text-sm leading-relaxed font-light max-w-xs">
-              Architecting spatial intelligence for modern minds. Your second brain, refined by obsidian aesthetics.
+              Architecting spatial intelligence for modern minds. Your Recall, refined by obsidian aesthetics.
             </p>
           </div>
 

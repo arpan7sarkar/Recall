@@ -6,22 +6,23 @@
 :root {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 
-  /* Whiter, similar to violet, but not 100% white */
-  --bg-primary: #fbfbfe; 
+  /* Premium Alabaster / Stone Base */
+  --bg-primary: #fafafa; 
   --bg-secondary: #ffffff; 
-  --bg-tertiary: #f1f1f8; 
+  --bg-tertiary: #f4f4f5; 
   --bg-elevated: #ffffff;
 
-  --text-primary: #0f172a; 
-  --text-secondary: #64748b; 
-  --text-tertiary: #94a3b8; 
+  /* Deep Graphite / Stone Text */
+  --text-primary: #18181b; 
+  --text-secondary: #52525b; 
+  --text-tertiary: #a1a1aa; 
 
-  /* Sky Blue Accents for Light Mode */
-  --accent-50: #f0f9ff;
-  --accent-100: #e0f2fe;
-  --accent-500: #38bdf8; 
-  --accent-600: #0ea5e9;
-  --accent-700: #0369a1;
+  /* Sophisticated Slate Accents */
+  --accent-50: #f8fafc;
+  --accent-100: #f1f5f9;
+  --accent-500: #334155; 
+  --accent-600: #1e293b;
+  --accent-700: #0f172a;
 
   /* Border & shadow */
   --border: rgba(0, 0, 0, 0.05);
@@ -45,8 +46,8 @@
   --topbar-height: 64px;
 
   /* Sparkles & CTA Tokens */
-  --gradient-color: #8350e8;
-  --sparkles-color: #8350e8;
+  --gradient-color: #334155; 
+  --sparkles-color: #334155;
 }
 
 /* Dark mode — Black with Silver Highlights */

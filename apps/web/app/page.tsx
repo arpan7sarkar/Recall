@@ -92,7 +92,7 @@ export default function LandingPage() {
       
       {/* CTA SECTION - Upgraded with Background Paths */}
       <BackgroundPaths 
-        title="Elevate your second brain"
+        title="Elevate your Recall"
         subtitle="Join the vanguard of thinkers building spatial intelligence networks. Find clarity in the noise."
         primaryCTA={{
             label: "Initialize your vault",

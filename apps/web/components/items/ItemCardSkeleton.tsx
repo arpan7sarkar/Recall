@@ -16,7 +16,7 @@ export function ItemCardSkeleton({ viewMode = "grid" }: { viewMode?: "grid" | "l
   }
 
   return (
-    <div className="flex flex-col rounded-2xl overflow-hidden bg-[#0e0e0e] border border-white/4 shadow-sm animate-pulse h-full">
+    <div className="flex flex-col rounded-2xl overflow-hidden bg-[#0e0e0e] border border-white/4 shadow-sm animate-pulse min-h-[400px] h-full">
       <div className="bg-white/5 h-48 border-b border-white/4" />
       <div className="p-5 space-y-4 flex-1">
         <div className="bg-white/5 rounded-md h-3 w-1/4" />

@@ -8,7 +8,10 @@ export const metadata: Metadata = {
   title: "Recall — Your Personal Knowledge Base",
   description:
     "Save, organise, and rediscover anything from the internet. AI-powered tagging, semantic search, and knowledge graph visualisation.",
-  keywords: ["knowledge base", "bookmarks", "AI tagging", "second brain", "research"],
+  keywords: ["knowledge base", "bookmarks", "AI tagging", "Recall", "research"],
+  icons: {
+    icon: "/favicon.png",
+  }
 };
 
 export default function RootLayout({
