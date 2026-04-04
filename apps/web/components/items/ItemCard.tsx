@@ -29,12 +29,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
     return (
       <div
         onClick={handleCardClick}
-        className="flex items-center gap-4 p-5 cursor-pointer card-hover focus-ring backdrop-blur-md border"
-        style={{
-          background: "var(--bg-secondary)",
-          boxShadow: "var(--shadow-card)",
-          borderColor: "var(--border)",
-        }}
+        className="flex items-center gap-4 p-5 cursor-pointer transition-all duration-300 border rounded-xl bg-[#0e0e0e] border-white/4 hover:border-white/10 hover:bg-white/5 shadow-sm"
         id={`item-card-${item.id}`}
       >
         <div
@@ -52,10 +47,10 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-[11px] font-black uppercase tracking-widest truncate" style={{ color: "var(--text-primary)" }}>
+          <h3 className="text-sm font-serif text-white tracking-tight truncate">
             {item.title || "Untitled"}
           </h3>
-          <p className="text-[9px] font-black uppercase tracking-widest mt-1 opacity-50" style={{ color: "var(--text-tertiary)" }}>
+          <p className="text-[10px] font-light text-zinc-500 mt-1">
             {extractDomain(item.url)} · {timeAgo(item.savedAt)}
           </p>
         </div>
@@ -72,24 +67,17 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   return (
     <div
       onClick={handleCardClick}
-      className="flex flex-col overflow-hidden cursor-pointer card-hover focus-ring backdrop-blur-md border"
-      style={{
-        background: "var(--bg-secondary)",
-        boxShadow: "var(--shadow-card)",
-        borderColor: "var(--border)",
-        height: "100%",
-      }}
+      className="flex flex-col overflow-hidden cursor-pointer transition-all duration-300 border rounded-2xl bg-[#0e0e0e] border-white/4 hover:border-white/10 shadow-sm group h-full"
       id={`item-card-${item.id}`}
     >
       {/* Thumbnail / Showcase */}
       <div
         className={cn(
-          "relative flex items-center justify-center overflow-hidden group bg-transparent border backdrop-blur-xl transition-all duration-500 hover:border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]",
-          !item.thumbnailUrl && item.itemType !== "tweet" && "bg-linear-to-br from-slate-50 to-slate-100",
+          "relative flex items-center justify-center overflow-hidden bg-black/40 border-b border-white/4 h-48 transition-all duration-500",
+          !item.thumbnailUrl && item.itemType !== "tweet" && "bg-linear-to-br from-indigo-500/5 to-transparent",
           isProcessing && "skeleton"
         )}
         style={{
-          minHeight: 180,
           background: item.thumbnailUrl
             ? `url(${item.thumbnailUrl}) center/cover`
             : undefined,
@@ -124,18 +112,20 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col gap-2 p-4 flex-1">
-        <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
+      <div className="flex flex-col gap-2 p-5 flex-1 relative">
+        <div className="absolute inset-x-0 bottom-0 top-0 bg-linear-to-tl from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+        
+        <div className="flex items-center gap-2 text-[10px] text-zinc-500 relative z-10">
           <TypeBadge type={item.itemType} size="sm" />
           <span>{timeAgo(item.savedAt)}</span>
         </div>
 
-        <h3 className="text-sm font-bold leading-tight line-clamp-2" style={{ color: "var(--text-primary)" }}>
+        <h3 className="text-base font-serif text-white tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-indigo-200 transition-colors duration-300">
           {item.title || "Untitled"}
         </h3>
         
         {item.description && item.itemType !== "tweet" && (
-          <p className="text-xs line-clamp-3 opacity-70" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-xs font-light text-zinc-400 line-clamp-2 mt-1 relative z-10 leading-relaxed">
             {item.description}
           </p>
         )}

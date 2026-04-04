@@ -17,11 +17,11 @@ export function TagChip({
 }: TagChipProps) {
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-light transition-colors"
       style={{
-        background: color ? `${color}18` : "var(--bg-tertiary)",
+        background: color ? `${color}10` : "rgba(255,255,255,0.03)",
         color: color ?? "var(--text-secondary)",
-        border: `1px solid ${color ? `${color}30` : "var(--border)"}`,
+        border: `1px solid ${color ? `${color}20` : "rgba(255,255,255,0.05)"}`,
       }}
     >
       {isAiGenerated && (

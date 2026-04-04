@@ -9,6 +9,7 @@ import { SearchDropdown } from "./SearchDropdown";
 import { UserButton } from "@clerk/nextjs";
 import { Icon } from "@/components/shared/Icon";
 import { Menu } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Topbar() {
   const { openAddContent, toggleSidebar } = useUIStore();
@@ -36,18 +37,12 @@ export function Topbar() {
 
   return (
     <header
-      className="shrink-0 flex items-center justify-between gap-4 px-6 rounded-4xl border shadow-lg backdrop-blur-xl relative z-20"
-      style={{
-        height: "var(--topbar-height)",
-        background: "rgba(var(--bg-secondary-rgb), 0.8)",
-        borderColor: "var(--border)",
-      }}
+      className="shrink-0 flex items-center justify-between gap-4 px-6 rounded-2xl border border-white/4 shadow-sm bg-[#0e0e0e]/80 backdrop-blur-xl relative z-20 h-16"
     >
       {/* Mobile hamburger */}
       <button
         onClick={toggleSidebar}
-        className="lg:hidden p-2 rounded-lg focus-ring transition-colors"
-        style={{ color: "var(--text-secondary)", background: "var(--bg-tertiary)" }}
+        className="lg:hidden p-2 rounded-lg focus-ring transition-colors bg-white/5 text-zinc-400 hover:text-white"
         aria-label="Toggle sidebar"
       >
         <Menu size={20} />
@@ -57,12 +52,10 @@ export function Topbar() {
       <div className="relative flex-1 flex justify-end max-w-2xl ml-auto">
         <form onSubmit={handleSearch} className="w-full max-w-xl">
           <div
-            className="flex items-center gap-3 px-5 py-2.5 rounded-full transition-all duration-300 border"
-            style={{
-              background: "var(--bg-primary)",
-              borderColor: showDropdown && searchQuery.length >= 2 ? "var(--accent-500)" : "var(--border)",
-              boxShadow: showDropdown ? "0 4px 12px rgba(0,0,0,0.15)" : "none",
-            }}
+            className={cn(
+              "flex items-center gap-3 px-5 py-2 rounded-full transition-all duration-300 border bg-black/20",
+              showDropdown && searchQuery.length >= 2 ? "border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.1)]" : "border-white/5"
+            )}
           >
             <div className="flex items-center justify-center opacity-40" style={{ width: 16 }}>
               <Icon name="search" size={16} />
@@ -77,9 +70,8 @@ export function Topbar() {
               onFocus={() => {
                 if (searchQuery.length >= 2) setShowDropdown(true);
               }}
-              placeholder="INITIALIZE SEARCH..."
-              className="flex-1 bg-transparent text-[10px] font-black uppercase tracking-widest outline-none"
-              style={{ color: "var(--text-primary)" }}
+              placeholder="Search your mind..."
+              className="flex-1 bg-transparent text-sm font-light text-white outline-none placeholder:text-zinc-600"
               id="global-search"
               autoComplete="off"
             />
@@ -99,12 +91,7 @@ export function Topbar() {
             )}
             {!searchQuery && (
               <kbd
-                className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium"
-                style={{
-                  background: "var(--bg-secondary)",
-                  color: "var(--text-tertiary)",
-                  border: "1px solid var(--border)",
-                }}
+                className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/5 text-zinc-500 border border-white/5"
               >
                 ⌘K
               </kbd>
@@ -127,10 +114,7 @@ export function Topbar() {
         {/* Add Content CTA */}
         <button
           onClick={openAddContent}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-full font-black uppercase tracking-widest text-[10px] text-white transition-all duration-300 hover:scale-105 shadow-md active:scale-95"
-          style={{
-            background: "var(--accent-500)",
-          }}
+          className="flex items-center gap-2 px-6 py-2 rounded-full font-serif text-sm text-white bg-indigo-600 hover:bg-indigo-500 transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(79,70,229,0.3)]"
           id="add-content-btn"
         >
           <Icon name="plus" size={16} />
@@ -140,7 +124,7 @@ export function Topbar() {
         <UserButton
           appearance={{
             elements: {
-              avatarBox: "w-9 h-9 rounded-lg border border-slate-200",
+              avatarBox: "w-9 h-9 rounded-full border border-white/10 shadow-sm",
             },
           }}
         />

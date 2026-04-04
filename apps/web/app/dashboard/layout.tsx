@@ -19,7 +19,7 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
-      <div className="h-screen w-screen flex p-4 lg:p-6 gap-6 overflow-hidden" style={{ background: "var(--bg-primary)" }}>
+      <div className="h-screen w-screen flex p-4 lg:p-6 gap-6 overflow-hidden bg-[#070707] text-zinc-300 font-sans selection:bg-indigo-500/30">
         <Sidebar />
 
         <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">

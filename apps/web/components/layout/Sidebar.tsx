@@ -28,54 +28,34 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          "z-50 shrink-0 flex flex-col border transition-all duration-300 ease-in-out rounded-4xl overflow-hidden",
-          // Mobile: absolute/fixed with full height inside the wrapper
+          "z-50 shrink-0 flex flex-col transition-all duration-300 ease-in-out border rounded-2xl overflow-hidden",
           "fixed inset-y-4 left-4 shadow-2xl backdrop-blur-xl",
           sidebarOpen ? "translate-x-0" : "-translate-x-[150%]",
-          // Desktop: static/relative
           "lg:relative lg:inset-0 lg:translate-x-0 lg:shadow-none lg:h-full lg:backdrop-blur-none",
-          sidebarCollapsed ? "lg:w-[80px]" : "lg:w-[260px]"
+          sidebarCollapsed ? "lg:w-[80px]" : "lg:w-[260px]",
+          "bg-[#0e0e0e] border-white/4 shadow-sm"
         )}
-        style={{
-          background: "var(--bg-secondary)",
-          borderColor: "var(--border)",
-        }}
       >
         {/* Logo */}
         <div
-          className="flex items-center gap-3 px-5 border-b shrink-0"
-          style={{
-            height: "var(--topbar-height)",
-            borderColor: "var(--border)",
-          }}
+          className="flex items-center gap-3 px-5 py-4 border-b border-white/4 shrink-0"
         >
           <div
             className={cn(
-              "flex items-center justify-center rounded-lg font-bold text-white transition-all duration-500",
-              "group-hover:rotate-360 group-hover:scale-110",
-              theme === "dark" ? "rotate-180" : "rotate-0",
-              "transform-gpu",
-              "drop-shadow-none",
-              theme === "dark"
-                ? "text-zinc-500 group-hover:text-indigo-400"
-                : "text-indigo-600 group-hover:text-indigo-700",
-              "group-active:scale-95"
+              "flex items-center justify-center rounded-lg font-serif transition-all duration-500",
+              "group-hover:rotate-360 group-hover:scale-110 transform-gpu",
+              "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
             )}
             style={{
-              width: 36,
-              height: 36,
-              background: "var(--accent-500)",
-              borderRadius: "var(--radius-sm)",
-              fontSize: 18,
+              width: 32,
+              height: 32,
+              fontSize: 16,
             }}
           >
             R
           </div>
           {!sidebarCollapsed && (
-            <span
-              className="font-black text-xl tracking-tighter uppercase"
-              style={{ color: "var(--text-primary)" }}
-            >
+            <span className="font-serif text-xl tracking-tight text-white">
               Recall
             </span>
           )}
@@ -100,21 +80,18 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => {
-                  // Close mobile sidebar on nav
                   if (window.innerWidth < 1024) toggleSidebar();
                 }}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 focus-ring",
-                  "text-xs font-black uppercase tracking-widest",
-                  isActive ? "text-white shadow-md" : "hover:bg-white/5 opacity-60 hover:opacity-100"
+                  "text-sm font-light",
+                  isActive 
+                    ? "text-white bg-indigo-500/10 border border-indigo-500/10" 
+                    : "text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent"
                 )}
-                style={{
-                  background: isActive ? "var(--accent-500)" : "transparent",
-                  color: isActive ? "#fff" : "var(--text-secondary)",
-                }}
                 title={sidebarCollapsed ? item.label : undefined}
               >
-                <span className="flex items-center justify-center shrink-0" style={{ width: 24 }}>
+                <span className="flex items-center justify-center shrink-0 w-6">
                   <Icon name={item.icon} size={18} />
                 </span>
                 {!sidebarCollapsed && <span>{item.label}</span>}
@@ -134,33 +111,18 @@ export function Sidebar() {
           {/* Collapse toggle — desktop only */}
           <button
             onClick={toggleSidebarCollapse}
-            className="hidden lg:flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors focus-ring"
-            style={{ color: "var(--text-tertiary)", background: "transparent" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-tertiary)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            className="hidden lg:flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-light transition-colors focus-ring text-zinc-400 hover:text-white hover:bg-white/5"
             title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <span className="flex items-center justify-center shrink-0" style={{ width: 24 }}>
+            <span className="flex items-center justify-center shrink-0 w-6">
               <Icon name={sidebarCollapsed ? "right" : "left"} size={18} />
             </span>
             {!sidebarCollapsed && <span>Collapse</span>}
           </button>
         </div>
 
-        {/* User section */}
-        <div
-          className="flex items-center gap-3 px-4 py-4 border-t shrink-0"
-          style={{ borderColor: "var(--border)" }}
-        >
-          <div
-            className="flex items-center justify-center rounded-full font-semibold text-sm shrink-0 overflow-hidden"
-            style={{
-              width: 36,
-              height: 36,
-              background: "var(--accent-100)",
-              color: "var(--accent-700)",
-            }}
-          >
+        <div className="flex items-center gap-3 px-4 py-4 border-t border-white/4 shrink-0">
+          <div className="flex items-center justify-center rounded-full font-serif text-sm shrink-0 overflow-hidden w-9 h-9 bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">
             {user?.imageUrl ? (
               <img src={user.imageUrl} alt={user.fullName || "User"} className="w-full h-full object-cover" />
             ) : (
@@ -169,16 +131,12 @@ export function Sidebar() {
           </div>
           {!sidebarCollapsed && (
             <div className="flex-1 min-w-0">
-              <p
-                className="text-sm font-medium truncate"
-                style={{ color: "var(--text-primary)" }}
-              >
+              <p className="text-sm font-medium text-white truncate">
                 {user?.fullName ?? "User"}
               </p>
               <button
                 onClick={() => signOut()}
-                className="text-xs hover:underline"
-                style={{ color: "var(--text-tertiary)" }}
+                className="text-xs font-light text-zinc-400 hover:text-white transition-colors"
               >
                 Sign Out
               </button>

@@ -37,7 +37,7 @@ export function AddContentModal() {
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh]">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/80 backdrop-blur-md"
         onClick={() => {
           closeAddContent();
           resetForm();
@@ -46,12 +46,7 @@ export function AddContentModal() {
 
       {/* Modal body */}
       <div
-        className="relative w-full max-w-xl mx-4 p-8 rounded-2xl overflow-y-auto max-h-[80vh]"
-        style={{
-          background: "var(--bg-secondary)",
-          boxShadow: "var(--shadow-lg)",
-          borderRadius: "var(--radius-xl)",
-        }}
+        className="relative w-full max-w-xl mx-4 p-10 rounded-2xl overflow-y-auto max-h-[85vh] bg-[#0e0e0e] border border-white/5 shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-label="Add content"
@@ -62,10 +57,7 @@ export function AddContentModal() {
             closeAddContent();
             resetForm();
           }}
-          className="absolute top-4 right-4 p-2 rounded-lg transition-colors focus-ring"
-          style={{ color: "var(--text-tertiary)" }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-tertiary)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          className="absolute top-6 right-6 p-2 rounded-lg transition-all duration-300 text-zinc-500 hover:text-white hover:bg-white/5"
           aria-label="Close"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

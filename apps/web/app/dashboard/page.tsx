@@ -27,45 +27,32 @@ export default function DashboardPage() {
   return (
     <div>
       {/* Page header */}
-      <div className="mb-8 flex flex-col pt-2">
-        <h1
-          className="text-4xl font-black tracking-tighter uppercase"
-          style={{ color: "var(--text-primary)" }}
-        >
+      <div className="mb-10 flex flex-col pt-2">
+        <h1 className="text-4xl font-serif text-white tracking-tight">
           Your Knowledge Base
         </h1>
-        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mt-2" style={{ color: "var(--text-tertiary)" }}>
+        <p className="text-sm font-light text-zinc-500 mt-2">
           {totalItems} items saved · {processingCount} processing
         </p>
       </div>
 
-      {/* Memory resurfacing widget mock */}
+      {/* Memory resurfacing widget - Obsidian Style */}
       {items.length > 0 && (
-        <div
-          className="mb-10 p-6 sm:p-8 rounded-4xl relative overflow-hidden backdrop-blur-md"
-          style={{
-            background: "rgba(255, 255, 255, 0.02)",
-            border: "1px solid var(--border)",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-          }}
-        >
-          {/* Top highlight glow - softened */}
-          <div className="absolute top-0 left-1/4 w-1/2 h-px bg-linear-to-r from-transparent via-indigo-400/30 to-transparent opacity-80" />
+        <div className="mb-12 p-8 rounded-2xl relative overflow-hidden bg-[#0e0e0e] border border-white/5 shadow-2xl group transition-all duration-500 hover:border-white/10">
+          {/* Subtle glow effect */}
+          <div className="absolute inset-x-0 bottom-0 top-0 bg-linear-to-tl from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           
-          <div className="flex items-start gap-5">
-            <div className="p-3.5 rounded-2xl shrink-0" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--border)" }}>
-              <Icon name="lightbulb" size={28} className="text-indigo-400" />
+          <div className="flex items-start gap-6 relative z-10">
+            <div className="p-4 rounded-xl shrink-0 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+              <Icon name="lightbulb" size={28} />
             </div>
-            <div>
-              <h2
-                className="text-xl sm:text-2xl font-black tracking-tighter uppercase mb-1"
-                style={{ color: "var(--text-primary)" }}
-              >
+            <div className="flex-1">
+              <h2 className="text-2xl font-serif text-white tracking-tight mb-2">
                 From your memory
               </h2>
-              <p className="text-xs sm:text-sm font-bold uppercase tracking-widest opacity-40 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                You saved '{items[0]?.title || "an item"}'... A whisper of cyan light <br className="hidden sm:block" />
-                reminds you of its value.
+              <p className="text-base font-light text-zinc-400 leading-relaxed max-w-2xl">
+                You saved <span className="text-indigo-300 font-medium">'{items[0]?.title || "an item"}'</span>. 
+                Rethink the connections you've built and how this piece fits into your current workflow.
               </p>
             </div>
           </div>

@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { SourceTypePicker } from "./SourceTypePicker";
 import { ContentDetailsForm } from "./ContentDetailsForm";
 import { MetadataForm } from "./MetadataForm";
+import { cn } from "@/lib/utils";
 
 export function AddContentStepper() {
   const { step, resetForm, resetForAnotherSave } = useAddContentStore();
@@ -69,19 +70,16 @@ export function AddContentStepper() {
 
   return (
     <div className="w-full max-w-lg mx-auto">
-      {/* Progress dots */}
-      <div className="flex items-center justify-center gap-2 mb-8">
+      {/* Progress indicators - Obsidian Style */}
+      <div className="flex items-center justify-center gap-2.5 mb-10">
         {(["type", "input", "metadata"] as const).map((s, i) => (
           <div
             key={s}
-            className="rounded-full transition-all duration-200"
-            style={{
-              width: step === s ? 24 : 8,
-              height: 8,
-              background: step === s ? "var(--accent-500)" :
-                (["type", "input", "metadata"].indexOf(step) > i ? "var(--accent-100)" : "var(--border)"),
-              borderRadius: 999,
-            }}
+            className={cn(
+               "h-1 transition-all duration-500 rounded-full",
+               step === s ? "w-8 bg-indigo-500/50 shadow-[0_0_10px_rgba(99,102,241,0.3)]" : 
+               (["type", "input", "metadata"].indexOf(step) > i ? "w-4 bg-indigo-500/20" : "w-4 bg-white/5")
+            )}
           />
         ))}
       </div>

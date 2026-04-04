@@ -1,6 +1,7 @@
 "use client";
 
 import { CONTENT_TYPE_FILTERS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 interface ItemFiltersProps {
   activeFilter: string;
@@ -16,29 +17,19 @@ export function ItemFilters({
   onViewModeChange,
 }: ItemFiltersProps) {
   return (
-    <div className="flex items-center justify-between gap-4 mb-6">
+    <div className="flex items-center justify-between gap-4 mb-10 overflow-hidden">
       {/* Filter pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
         {CONTENT_TYPE_FILTERS.map((filter) => (
           <button
             key={filter.value}
             onClick={() => onFilterChange(filter.value)}
-            className="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 focus-ring"
-            style={{
-              background:
-                activeFilter === filter.value
-                  ? "var(--accent-500)"
-                  : "transparent",
-              color:
-                activeFilter === filter.value
-                  ? "#fff"
-                  : "var(--text-secondary)",
-              border:
-                activeFilter === filter.value
-                  ? "1px solid var(--accent-500)"
-                  : "1px solid var(--border)",
-              boxShadow: activeFilter === filter.value ? "0 4px 12px rgba(0,0,0,0.15)" : "none"
-            }}
+            className={cn(
+              "px-5 py-1.5 rounded-full text-xs font-light tracking-tight transition-all duration-300 border",
+              activeFilter === filter.value
+                ? "bg-indigo-500/10 text-white border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.1)]"
+                : "bg-transparent text-zinc-500 border-white/4 hover:border-white/10 hover:text-zinc-400"
+            )}
           >
             {filter.label}
           </button>
@@ -46,17 +37,13 @@ export function ItemFilters({
       </div>
 
       {/* View mode toggle */}
-      <div
-        className="flex items-center rounded-lg overflow-hidden shrink-0"
-        style={{ border: "1px solid var(--border)" }}
-      >
+      <div className="flex items-center rounded-lg overflow-hidden shrink-0 border border-white/4 bg-black/20">
         <button
           onClick={() => onViewModeChange("grid")}
-          className="p-2 transition-colors focus-ring"
-          style={{
-            background: viewMode === "grid" ? "var(--accent-50)" : "transparent",
-            color: viewMode === "grid" ? "var(--accent-600)" : "var(--text-tertiary)",
-          }}
+          className={cn(
+            "p-2 transition-all duration-300",
+            viewMode === "grid" ? "bg-indigo-500/10 text-indigo-400" : "text-zinc-600 hover:text-zinc-400"
+          )}
           title="Grid view"
           aria-label="Grid view"
         >
@@ -69,11 +56,10 @@ export function ItemFilters({
         </button>
         <button
           onClick={() => onViewModeChange("list")}
-          className="p-2 transition-colors focus-ring"
-          style={{
-            background: viewMode === "list" ? "var(--accent-50)" : "transparent",
-            color: viewMode === "list" ? "var(--accent-600)" : "var(--text-tertiary)",
-          }}
+          className={cn(
+            "p-2 transition-all duration-300",
+            viewMode === "list" ? "bg-indigo-500/10 text-indigo-400" : "text-zinc-600 hover:text-zinc-400"
+          )}
           title="List view"
           aria-label="List view"
         >

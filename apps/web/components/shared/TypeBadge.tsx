@@ -16,10 +16,10 @@ export function TypeBadge({ type, size = "sm" }: TypeBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full font-bold uppercase tracking-wider border shadow-sm ${sizeClasses} ${TYPE_BG_CLASSES[type]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-serif text-[10px] tracking-tight border shadow-sm ${sizeClasses} ${TYPE_BG_CLASSES[type]}`}
       style={{
         borderWidth: "1px",
-        borderColor: "rgba(0,0,0,0.05)",
+        borderColor: "rgba(255,255,255,0.05)",
       }}
     >
       <Icon name={TYPE_ICONS[type]} size={iconSize} />
