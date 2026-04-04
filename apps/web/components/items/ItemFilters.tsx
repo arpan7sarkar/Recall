@@ -37,7 +37,7 @@ export function ItemFilters({
                 activeFilter === filter.value
                   ? "1px solid var(--accent-500)"
                   : "1px solid var(--border)",
-              boxShadow: activeFilter === filter.value ? "0 0 15px rgba(6,182,212,0.3)" : "none"
+              boxShadow: activeFilter === filter.value ? "0 4px 12px rgba(0,0,0,0.15)" : "none"
             }}
           >
             {filter.label}

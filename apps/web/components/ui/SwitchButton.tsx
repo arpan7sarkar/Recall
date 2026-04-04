@@ -84,8 +84,7 @@ export default function SwitchButton({
             size === "lg" && "h-5 w-5",
             "group-hover:rotate-360 group-hover:scale-110",
             theme === "dark" ? "rotate-180" : "rotate-0",
-            "transform-gpu",
-            "drop-shadow-[0_0_12px_rgba(99,102,241,0.4)]",
+            "transform-gpu shadow-sm",
             theme === "dark"
               ? "text-zinc-500 group-hover:text-indigo-400"
               : "text-indigo-500 group-hover:text-indigo-600",

@@ -61,7 +61,7 @@ export function Topbar() {
             style={{
               background: "var(--bg-primary)",
               borderColor: showDropdown && searchQuery.length >= 2 ? "var(--accent-500)" : "var(--border)",
-              boxShadow: showDropdown ? "0 0 20px rgba(99,102,241,0.1)" : "none",
+              boxShadow: showDropdown ? "0 4px 12px rgba(0,0,0,0.15)" : "none",
             }}
           >
             <div className="flex items-center justify-center opacity-40" style={{ width: 16 }}>
@@ -127,7 +127,7 @@ export function Topbar() {
         {/* Add Content CTA */}
         <button
           onClick={openAddContent}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-full font-black uppercase tracking-widest text-[10px] text-white transition-all duration-300 hover:scale-105 shadow-[0_0_15px_rgba(99,102,241,0.3)] active:scale-95"
+          className="flex items-center gap-2 px-6 py-2.5 rounded-full font-black uppercase tracking-widest text-[10px] text-white transition-all duration-300 hover:scale-105 shadow-md active:scale-95"
           style={{
             background: "var(--accent-500)",
           }}

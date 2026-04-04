@@ -16,12 +16,12 @@
   --text-secondary: hsl(240, 5%, 34%); /* zinc-500 */
   --text-tertiary: hsl(240, 5%, 65%); /* zinc-400 */
 
-  /* Accent — Premium Indigo */
-  --accent-50: hsl(238, 100%, 97%);
-  --accent-100: hsl(238, 100%, 92%);
-  --accent-500: hsl(238, 83%, 66%); /* Tailwind indigo-500 */
-  --accent-600: hsl(238, 83%, 56%);
-  --accent-700: hsl(238, 83%, 46%);
+  /* Accent — Enterprise Blue */
+  --accent-50: hsl(214, 100%, 97%);
+  --accent-100: hsl(214, 100%, 93%);
+  --accent-500: hsl(221, 83%, 53%); /* Tailwind blue-600 */
+  --accent-600: hsl(221, 83%, 43%);
+  --accent-700: hsl(221, 83%, 33%);
 
   /* Special Highlight — Premium Gold */
   --warm-100: hsl(38, 92%, 95%);
@@ -68,9 +68,9 @@
   --border: hsla(0, 0%, 100%, 0.1); /* white/10 border from switch */
   --shadow-card: 0 1px 2px -1px rgba(0, 0, 0, 0.3); /* Match dark switch card shadow */
   
-  /* Shiny Accents */
-  --accent-500: hsl(238, 100%, 65%);
-  --accent-600: hsl(238, 100%, 55%);
+  /* Shiny Accents (Reduced) */
+  --accent-500: hsl(221, 83%, 53%);
+  --accent-600: hsl(221, 83%, 43%);
 }
 
 /* ── Tailwind v4 Theme ──────────────────────────────────────── */

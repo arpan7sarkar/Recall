@@ -45,16 +45,16 @@ export default function DashboardPage() {
           className="mb-10 p-6 sm:p-8 rounded-4xl relative overflow-hidden backdrop-blur-md"
           style={{
             background: "rgba(255, 255, 255, 0.02)",
-            border: "1px solid rgba(6,182,212,0.15)",
-            boxShadow: "inset 0 0 30px rgba(6,182,212,0.05), 0 10px 30px rgba(0,0,0,0.2)",
+            border: "1px solid var(--border)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
           }}
         >
-          {/* Top highlight glow */}
-          <div className="absolute top-0 left-1/4 w-1/2 h-px bg-linear-to-r from-transparent via-cyan-500 to-transparent opacity-80 shadow-[0_0_15px_rgba(6,182,212,0.8)]" />
+          {/* Top highlight glow - softened */}
+          <div className="absolute top-0 left-1/4 w-1/2 h-px bg-linear-to-r from-transparent via-indigo-400/30 to-transparent opacity-80" />
           
           <div className="flex items-start gap-5">
-            <div className="p-3.5 rounded-2xl shrink-0" style={{ background: "rgba(6,182,212,0.1)", boxShadow: "0 0 20px rgba(6,182,212,0.2)" }}>
-              <Icon name="lightbulb" size={28} className="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
+            <div className="p-3.5 rounded-2xl shrink-0" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--border)" }}>
+              <Icon name="lightbulb" size={28} className="text-indigo-400" />
             </div>
             <div>
               <h2
