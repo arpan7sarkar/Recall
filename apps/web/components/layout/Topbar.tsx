@@ -36,10 +36,10 @@ export function Topbar() {
 
   return (
     <header
-      className="sticky top-0 z-20 flex items-center gap-4 px-6 border-b"
+      className="sticky top-0 z-20 flex items-center gap-4 px-6 border-b backdrop-blur-xl"
       style={{
         height: "var(--topbar-height)",
-        background: "var(--bg-secondary)",
+        background: "rgba(var(--bg-secondary-rgb), 0.8)",
         borderColor: "var(--border)",
       }}
     >
@@ -57,11 +57,11 @@ export function Topbar() {
       <div className="relative flex-1 max-w-xl">
         <form onSubmit={handleSearch}>
           <div
-            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-shadow"
+            className="flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all duration-300 border"
             style={{
               background: "var(--bg-primary)",
-              border: `1px solid ${showDropdown && searchQuery.length >= 2 ? "var(--accent-300, var(--accent-500))" : "var(--border)"}`,
-              transition: "border-color 0.15s",
+              borderColor: showDropdown && searchQuery.length >= 2 ? "var(--accent-500)" : "var(--border)",
+              boxShadow: showDropdown ? "0 0 20px rgba(6,182,212,0.1)" : "none",
             }}
           >
             <div className="flex items-center justify-center opacity-40" style={{ width: 16 }}>
@@ -77,8 +77,8 @@ export function Topbar() {
               onFocus={() => {
                 if (searchQuery.length >= 2) setShowDropdown(true);
               }}
-              placeholder="Search your knowledge…"
-              className="flex-1 bg-transparent text-sm outline-none"
+              placeholder="INITIALIZE SEARCH..."
+              className="flex-1 bg-transparent text-[10px] font-black uppercase tracking-widest outline-none"
               style={{ color: "var(--text-primary)" }}
               id="global-search"
               autoComplete="off"
@@ -90,7 +90,7 @@ export function Topbar() {
                   setSearchQuery("");
                   setShowDropdown(false);
                 }}
-                className="flex items-center justify-center p-1 rounded-md hover:bg-slate-100 transition-colors"
+                className="flex items-center justify-center p-1 rounded-md hover:bg-white/10 transition-colors"
                 style={{ color: "var(--text-tertiary)" }}
                 aria-label="Clear search"
               >
@@ -127,16 +127,13 @@ export function Topbar() {
         {/* Add Content CTA */}
         <button
           onClick={openAddContent}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-white transition-all duration-150 focus-ring"
+          className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] text-white transition-all duration-300 hover:scale-105 shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95"
           style={{
             background: "var(--accent-500)",
-            borderRadius: "var(--radius-md)",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-600)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent-500)")}
           id="add-content-btn"
         >
-          <Icon name="plus" size={18} />
+          <Icon name="plus" size={16} />
           <span className="hidden sm:inline">Add Content</span>
         </button>
 

@@ -19,10 +19,8 @@ interface ItemCardProps {
 export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   const router = useRouter();
   const isProcessing = item.status === "processing" || item.status === "pending";
-  const isFailed = item.status === "failed";
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking an interactive element like a tweet link or heart
     if ((e.target as HTMLElement).closest("a, button, blockquote")) return;
     router.push(ROUTES.item(item.id));
   };
@@ -31,41 +29,38 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
     return (
       <div
         onClick={handleCardClick}
-        className="flex items-center gap-4 p-4 rounded-xl cursor-pointer card-hover focus-ring"
+        className="flex items-center gap-4 p-5 cursor-pointer card-hover focus-ring backdrop-blur-md border"
         style={{
           background: "var(--bg-secondary)",
           boxShadow: "var(--shadow-card)",
-          borderRadius: "var(--radius-lg)",
+          borderColor: "var(--border)",
         }}
         id={`item-card-${item.id}`}
       >
-        {/* ... existing thumbnail logic ... */}
         <div
-          className="flex items-center justify-center shrink-0 rounded-lg text-2xl"
+          className="flex items-center justify-center shrink-0"
           style={{
-            width: 56,
-            height: 56,
-            background: `linear-gradient(135deg, var(--accent-50), var(--bg-tertiary))`,
-            borderRadius: "var(--radius-md)",
+            width: 48,
+            height: 48,
+            background: "var(--bg-tertiary)",
           }}
         >
           {isProcessing ? (
-            <div className="skeleton" style={{ width: 32, height: 32, borderRadius: "50%" }} />
+            <div className="skeleton" style={{ width: 24, height: 24 }} />
           ) : (
             <TypeBadge type={item.itemType} />
           )}
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
+          <h3 className="text-[11px] font-black uppercase tracking-[0.1em] truncate" style={{ color: "var(--text-primary)" }}>
             {item.title || "Untitled"}
           </h3>
-          <p className="text-xs truncate mt-0.5" style={{ color: "var(--text-tertiary)" }}>
+          <p className="text-[9px] font-black uppercase tracking-widest mt-1 opacity-50" style={{ color: "var(--text-tertiary)" }}>
             {extractDomain(item.url)} · {timeAgo(item.savedAt)}
           </p>
         </div>
 
-        {/* Favourite */}
         {item.isFavourite && (
           <div className="flex items-center justify-center shrink-0" style={{ color: "var(--accent-500)" }}>
              <Heart size={14} fill="currentColor" />
@@ -75,15 +70,14 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
     );
   }
 
-  // Grid mode
   return (
     <div
       onClick={handleCardClick}
-      className="flex flex-col rounded-xl overflow-hidden cursor-pointer card-hover focus-ring"
+      className="flex flex-col overflow-hidden cursor-pointer card-hover focus-ring backdrop-blur-md border"
       style={{
         background: "var(--bg-secondary)",
         boxShadow: "var(--shadow-card)",
-        borderRadius: "var(--radius-lg)",
+        borderColor: "var(--border)",
         height: "100%",
       }}
       id={`item-card-${item.id}`}

@@ -1,47 +1,52 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ── Design Tokens ─────────────────────────────────────────── */
 :root {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 
-  /* Base neutrals */
-  --bg-primary: hsl(220, 14%, 96%);
+  /* Base neutrals — Minimal Studio Light */
+  --bg-primary: hsl(210, 20%, 98%);
   --bg-secondary: hsl(0, 0%, 100%);
-  --bg-tertiary: hsl(220, 13%, 91%);
+  --bg-tertiary: hsl(210, 16%, 93%);
   --bg-elevated: hsl(0, 0%, 100%);
 
-  --text-primary: hsl(220, 14%, 10%);
-  --text-secondary: hsl(220, 9%, 46%);
-  --text-tertiary: hsl(220, 9%, 64%);
+  --text-primary: hsl(222, 47%, 11%);
+  --text-secondary: hsl(215, 16%, 47%);
+  --text-tertiary: hsl(215, 13%, 65%);
 
-  /* Accent — muted teal */
-  --accent-50: hsl(168, 30%, 95%);
-  --accent-100: hsl(168, 30%, 89%);
-  --accent-500: hsl(168, 32%, 42%);
-  --accent-600: hsl(168, 34%, 35%);
-  --accent-700: hsl(168, 36%, 28%);
+  /* Accent — Refined Indigo & Amber */
+  --accent-50: hsl(226, 100%, 97%);
+  --accent-100: hsl(226, 100%, 94%);
+  --accent-500: hsl(226, 70%, 50%); /* Professional Indigo */
+  --accent-600: hsl(226, 70%, 40%);
+  --accent-700: hsl(226, 70%, 30%);
 
-  /* Warm */
-  --warm-100: hsl(30, 40%, 92%);
-  --warm-500: hsl(30, 42%, 52%);
+  /* Special Highlight — Premium Gold */
+  --warm-100: hsl(38, 92%, 95%);
+  --warm-500: hsl(38, 92%, 50%);
 
   /* Status */
-  --success: hsl(152, 30%, 42%);
-  --warning: hsl(38, 40%, 52%);
-  --error: hsl(0, 35%, 52%);
+  --success: hsl(152, 57%, 30%);
+  --warning: hsl(38, 92%, 50%);
+  --error: hsl(0, 84%, 44%);
 
-  /* Border & shadow */
-  --border: hsl(220, 13%, 87%);
+  /* Border & shadow — Diffused Premium */
+  --border: hsl(214, 32%, 91%);
   --border-focus: var(--accent-500);
-  --shadow-card: 0 2px 8px hsla(220, 14%, 10%, 0.06);
-  --shadow-md: 0 4px 12px hsla(220, 14%, 10%, 0.08);
-  --shadow-lg: 0 8px 24px hsla(220, 14%, 10%, 0.10);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 
   /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Animation Easing */
+  --ease-premium: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Sidebar */
   --sidebar-width: 260px;
@@ -49,17 +54,19 @@
   --topbar-height: 64px;
 }
 
-/* Dark mode */
+/* Dark mode — Sophisticated Noir */
 [data-theme="dark"] {
-  --bg-primary: hsl(220, 14%, 10%);
-  --bg-secondary: hsl(220, 14%, 14%);
-  --bg-tertiary: hsl(220, 13%, 18%);
-  --bg-elevated: hsl(220, 14%, 16%);
-  --text-primary: hsl(220, 14%, 92%);
-  --text-secondary: hsl(220, 9%, 62%);
-  --text-tertiary: hsl(220, 9%, 45%);
-  --border: hsl(220, 13%, 22%);
-  --shadow-card: 0 2px 8px hsla(0, 0%, 0%, 0.3);
+  --bg-primary: hsl(222, 47%, 7%);
+  --bg-secondary: hsl(222, 47%, 10%);
+  --bg-tertiary: hsl(222, 47%, 13%);
+  --bg-elevated: hsl(222, 47%, 15%);
+  
+  --text-primary: hsl(210, 40%, 98%);
+  --text-secondary: hsl(215, 20%, 75%);
+  --text-tertiary: hsl(215, 20%, 55%);
+  
+  --border: hsl(217, 33%, 17%);
+  --shadow-card: 0 8px 16px -4px rgba(0, 0, 0, 0.5);
 }
 
 /* ── Tailwind v4 Theme ──────────────────────────────────────── */

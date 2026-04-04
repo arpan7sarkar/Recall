@@ -7,6 +7,7 @@ import { useUIStore } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { Icon } from "@/components/shared/Icon";
+import SwitchButton from "@/components/ui/SwitchButton";
 
 export function Sidebar() {
 
@@ -48,7 +49,17 @@ export function Sidebar() {
           }}
         >
           <div
-            className="flex items-center justify-center rounded-lg font-bold text-white"
+            className={cn(
+              "flex items-center justify-center rounded-lg font-bold text-white transition-all duration-500",
+              "group-hover:rotate-360 group-hover:scale-110",
+              theme === "dark" ? "rotate-180" : "rotate-0",
+              "transform-gpu",
+              "drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]",
+              theme === "dark"
+                ? "text-zinc-500 group-hover:text-cyan-400"
+                : "text-cyan-600 group-hover:text-cyan-700",
+              "group-active:scale-95"
+            )}
             style={{
               width: 36,
               height: 36,
@@ -61,7 +72,7 @@ export function Sidebar() {
           </div>
           {!sidebarCollapsed && (
             <span
-              className="font-semibold text-lg tracking-tight"
+              className="font-black text-xl tracking-tighter uppercase"
               style={{ color: "var(--text-primary)" }}
             >
               Recall
@@ -92,9 +103,9 @@ export function Sidebar() {
                   if (window.innerWidth < 1024) toggleSidebar();
                 }}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150 focus-ring",
-                  "text-sm font-medium",
-                  isActive ? "text-white" : "hover:opacity-80"
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 focus-ring",
+                  "text-xs font-black uppercase tracking-widest",
+                  isActive ? "text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]" : "hover:bg-white/5 opacity-60 hover:opacity-100"
                 )}
                 style={{
                   background: isActive ? "var(--accent-500)" : "transparent",
@@ -113,21 +124,11 @@ export function Sidebar() {
 
         {/* Bottom actions */}
         <div className="px-3 pb-2 space-y-1">
-          {/* Dark mode toggle */}
-          <button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors focus-ring"
-            style={{ color: "var(--text-tertiary)", background: "transparent" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-tertiary)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <span className="flex items-center justify-center shrink-0" style={{ width: 24 }}>
-              <Icon name={theme === "light" ? "moon" : "sun"} size={18} />
-            </span>
-            {!sidebarCollapsed && (
-              <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
-            )}
-          </button>
+          <SwitchButton
+            showLabel={!sidebarCollapsed}
+            size={sidebarCollapsed ? "sm" : "default"}
+            className="w-full justify-start"
+          />
 
           {/* Collapse toggle — desktop only */}
           <button
