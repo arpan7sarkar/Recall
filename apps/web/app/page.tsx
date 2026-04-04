@@ -9,6 +9,8 @@ import { BackgroundPaths } from "@/components/ui/background-paths";
 import { InfiniteSlider } from "@/components/ui/infinite-slider";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 
+import { HoverFooter } from "@/components/blocks/hover-footer";
+
 export default function LandingPage() {
   const { isLoaded, isSignedIn } = useAuth();
   
@@ -213,20 +215,7 @@ export default function LandingPage() {
 
       </main>
 
-      {/* FOOTER */}
-      <footer className="relative z-10 border-t border-white/4 py-12 px-6 lg:px-12 w-full mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-         <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded bg-zinc-800 text-zinc-400 flex items-center justify-center font-serif font-black text-xs">R</div>
-            <span className="font-serif text-sm text-zinc-500">Recall Inc. © 2026</span>
-         </div>
-         <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-zinc-500 font-light">
-            <Link href="#" className="hover:text-zinc-300 transition-colors">Platform</Link>
-            <Link href="#" className="hover:text-zinc-300 transition-colors">Pricing</Link>
-            <Link href="#" className="hover:text-zinc-300 transition-colors">Twitter</Link>
-            <Link href="#" className="hover:text-zinc-300 transition-colors">Terms of Service</Link>
-            <Link href="#" className="hover:text-zinc-300 transition-colors">Privacy Policy</Link>
-         </div>
-      </footer>
+      <HoverFooter />
     </div>
   );
 }
