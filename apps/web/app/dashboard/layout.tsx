@@ -19,19 +19,17 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
-      <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
+      <div className="h-screen w-screen flex p-4 lg:p-6 gap-6 overflow-hidden bg-[var(--bg-primary)] text-[var(--text-secondary)] font-sans selection:bg-[var(--accent-500)]/30 relative">
+        {/* Subtle Silver Pour in Dark Mode */}
+        <div className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-20 bg-[radial-gradient(circle_at_top_right,rgba(192,192,192,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-10 bg-[radial-gradient(circle_at_bottom_left,rgba(192,192,192,0.1),transparent_50%)]" />
+        
         <Sidebar />
 
-        <div
-          className={cn(
-            "flex flex-col min-h-screen transition-all duration-200",
-            "lg:ml-[260px]",
-            sidebarCollapsed && "lg:ml-[72px]"
-          )}
-        >
+        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
           <Topbar />
 
-          <main className="flex-1 p-6 lg:p-8">
+          <main className="flex-1 overflow-auto mt-6 pb-24 lg:pb-0 scroll-smooth">
             {children}
           </main>
         </div>

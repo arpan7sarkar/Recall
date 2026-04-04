@@ -8,6 +8,7 @@ import { ItemFilters } from "@/components/items/ItemFilters";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useUIStore } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
+import { Icon } from "@/components/shared/Icon";
 import type { Item } from "@/types";
 
 export default function DashboardPage() {
@@ -26,41 +27,32 @@ export default function DashboardPage() {
   return (
     <div>
       {/* Page header */}
-      <div className="mb-6">
-        <h1
-          className="text-2xl font-bold"
-          style={{ color: "var(--text-primary)" }}
-        >
+      <div className="mb-10 flex flex-col pt-2">
+        <h1 className="text-4xl font-serif text-[var(--text-primary)] tracking-tight">
           Your Knowledge Base
         </h1>
-        <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+        <p className="text-sm font-light text-[var(--text-secondary)] mt-2">
           {totalItems} items saved · {processingCount} processing
         </p>
       </div>
 
-      {/* Memory resurfacing widget mock */}
+      {/* Memory resurfacing widget - Clean & Flat */}
       {items.length > 0 && (
-        <div
-          className="mb-8 p-5 rounded-xl"
-          style={{
-            background: "linear-gradient(135deg, var(--accent-50), var(--warm-100))",
-            borderRadius: "var(--radius-lg)",
-          }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <span>💡</span>
-            <h2
-              className="text-sm font-semibold"
-              style={{ color: "var(--text-primary)" }}
-            >
-              From your memory
-            </h2>
+        <div className="mb-12 p-8 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border)] transition-all duration-300">
+          <div className="flex items-start gap-6 relative z-10">
+            <div className="p-4 rounded-xl shrink-0 bg-[var(--accent-500)]/10 border border-[var(--accent-500)]/20 text-[var(--accent-500)]">
+              <Icon name="lightbulb" size={28} />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-serif text-[var(--text-primary)] tracking-tight mb-2">
+                From your memory
+              </h2>
+              <p className="text-base font-light text-[var(--text-secondary)] leading-relaxed max-w-2xl">
+                You saved <span className="text-[var(--accent-500)] font-medium">'{items[0]?.title || "an item"}'</span>. 
+                Rethink the connections you've built and how this piece fits into your current workflow.
+              </p>
+            </div>
           </div>
-          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            You saved &quot;{items[0]?.title || "an item"}&quot; {" "}
-            <span style={{ color: "var(--accent-600)" }}>some time ago</span>. Maybe it&apos;s
-            worth another look?
-          </p>
         </div>
       )}
 
@@ -90,7 +82,7 @@ export default function DashboardPage() {
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          icon="📚"
+          icon="library"
           title="No items yet"
           description={
             activeFilter === "all"

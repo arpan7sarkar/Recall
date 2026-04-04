@@ -6,6 +6,8 @@ import { TypeBadge } from "@/components/shared/TypeBadge";
 import { TagChip } from "@/components/shared/TagChip";
 import { timeAgo, extractDomain, formatReadingTime } from "@/lib/utils";
 import { RelatedItems } from "@/components/items/RelatedItems";
+import { Icon } from "@/components/shared/Icon";
+import { TweetPreview } from "@/components/items/TweetPreview";
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -48,32 +50,40 @@ export default function ItemDetailPage() {
       {/* Back button */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-1 text-sm font-medium mb-6 focus-ring"
-        style={{ color: "var(--accent-500)" }}
+        className="flex items-center gap-2 text-sm font-semibold mb-6 focus-ring group"
+        style={{ color: "var(--text-secondary)" }}
       >
-        ← Back
+        <Icon name="left" size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+        Back
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
         {/* Left column — content */}
         <div>
-          {/* Thumbnail / header */}
-          <div
-            className="flex items-center justify-center rounded-xl mb-6"
-            style={{
-              height: 200,
-              background: item.thumbnailUrl
-                ? `url(${item.thumbnailUrl}) center/cover`
-                : "linear-gradient(135deg, var(--accent-50), var(--bg-tertiary))",
-              borderRadius: "var(--radius-lg)",
-            }}
-          >
-            {!item.thumbnailUrl && (
-              <span className="text-5xl opacity-20">
-                {item.itemType === "article" ? "📄" : item.itemType === "youtube" ? "▶️" : item.itemType === "pdf" ? "📁" : "🔗"}
-              </span>
-            )}
-          </div>
+          {/* Showcase: Specialized rendering by type */}
+          {item.itemType === "tweet" ? (
+            <div className="mb-8">
+              <TweetPreview item={item} />
+            </div>
+          ) : (
+            <div
+              className="flex items-center justify-center rounded-xl mb-6 shadow-sm overflow-hidden"
+              style={{
+                height: 240,
+                background: item.thumbnailUrl
+                  ? `url(${item.thumbnailUrl}) center/cover`
+                  : "linear-gradient(135deg, var(--accent-50), var(--bg-tertiary))",
+                borderRadius: "var(--radius-lg)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              {!item.thumbnailUrl && (
+                <div className="opacity-20 translate-y-3">
+                  <Icon name={item.itemType} size={84} />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Type + Domain */}
           <div className="flex items-center gap-3 mb-3">
@@ -98,19 +108,31 @@ export default function ItemDetailPage() {
             <span>· {item.viewCount} views</span>
           </div>
 
-          {/* Description */}
-          {item.description && (
+          {/* Content Body */}
+          {(item.description || item.contentText) && (
             <div
-              className="p-5 rounded-xl mb-6"
+              className="p-6 rounded-2xl mb-8 space-y-4"
               style={{
                 background: "var(--bg-secondary)",
                 borderRadius: "var(--radius-lg)",
-                boxShadow: "var(--shadow-card)",
+                boxShadow: "var(--shadow-sm)",
+                border: "1px solid var(--border)",
               }}
             >
-              <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                {item.description}
-              </p>
+              <h3 className="text-sm font-bold uppercase tracking-tight opacity-40">Main Content</h3>
+              {item.description && (
+                <p className="text-base leading-relaxed" style={{ color: "var(--text-primary)" }}>
+                  {item.description}
+                </p>
+              )}
+              {item.contentText && item.itemType !== "tweet" && (
+                <div 
+                  className="text-sm leading-relaxed whitespace-pre-wrap pt-4 border-t opacity-80" 
+                  style={{ color: "var(--text-secondary)", borderColor: "var(--border)" }}
+                >
+                  {item.contentText}
+                </div>
+              )}
             </div>
           )}
 
@@ -170,39 +192,42 @@ export default function ItemDetailPage() {
             </h3>
             <div className="flex flex-wrap gap-2">
               <button
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors focus-ring"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 focus-ring shadow-sm"
                 style={{
-                  background: item.isFavourite ? "var(--error)" : "var(--bg-tertiary)",
+                  background: item.isFavourite ? "var(--accent-500)" : "var(--bg-tertiary)",
                   color: item.isFavourite ? "#fff" : "var(--text-secondary)",
-                  borderRadius: "var(--radius-md)",
+                  border: item.isFavourite ? "none" : "1px solid var(--border)",
                 }}
               >
-                {item.isFavourite ? "♥ Favourited" : "♡ Favourite"}
+                <Icon name={item.isFavourite ? "check" : "plus"} size={16} />
+                {item.isFavourite ? "Saved" : "Save to Favorites"}
               </button>
               {item.url && (
                 <a
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors focus-ring"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border shadow-sm focus-ring"
                   style={{
-                    background: "var(--bg-tertiary)",
-                    color: "var(--text-secondary)",
-                    borderRadius: "var(--radius-md)",
+                    background: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    borderColor: "var(--border)",
                   }}
                 >
-                  ↗ Open Original
+                  <Icon name="external" size={16} />
+                  Open Original
                 </a>
               )}
               <button
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors focus-ring"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border shadow-sm focus-ring"
                 style={{
-                  background: "var(--bg-tertiary)",
+                  background: "var(--bg-primary)",
                   color: "var(--text-secondary)",
-                  borderRadius: "var(--radius-md)",
+                  borderColor: "var(--border)",
                 }}
               >
-                📑 Archive
+                <Icon name="archive" size={16} />
+                Archive
               </button>
             </div>
           </div>

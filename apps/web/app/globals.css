@@ -1,65 +1,76 @@
 @import "tailwindcss";
 
-/* ── Design Tokens ─────────────────────────────────────────── */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ── Design Tokens (Light Mode - Violet White) ──────────────── */
 :root {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 
-  /* Base neutrals */
-  --bg-primary: hsl(220, 14%, 96%);
-  --bg-secondary: hsl(0, 0%, 100%);
-  --bg-tertiary: hsl(220, 13%, 91%);
-  --bg-elevated: hsl(0, 0%, 100%);
+  /* Whiter, similar to violet, but not 100% white */
+  --bg-primary: #fbfbfe; 
+  --bg-secondary: #ffffff; 
+  --bg-tertiary: #f1f1f8; 
+  --bg-elevated: #ffffff;
 
-  --text-primary: hsl(220, 14%, 10%);
-  --text-secondary: hsl(220, 9%, 46%);
-  --text-tertiary: hsl(220, 9%, 64%);
+  --text-primary: #0f172a; 
+  --text-secondary: #64748b; 
+  --text-tertiary: #94a3b8; 
 
-  /* Accent — muted teal */
-  --accent-50: hsl(168, 30%, 95%);
-  --accent-100: hsl(168, 30%, 89%);
-  --accent-500: hsl(168, 32%, 42%);
-  --accent-600: hsl(168, 34%, 35%);
-  --accent-700: hsl(168, 36%, 28%);
-
-  /* Warm */
-  --warm-100: hsl(30, 40%, 92%);
-  --warm-500: hsl(30, 42%, 52%);
-
-  /* Status */
-  --success: hsl(152, 30%, 42%);
-  --warning: hsl(38, 40%, 52%);
-  --error: hsl(0, 35%, 52%);
+  /* Sky Blue Accents for Light Mode */
+  --accent-50: #f0f9ff;
+  --accent-100: #e0f2fe;
+  --accent-500: #38bdf8; 
+  --accent-600: #0ea5e9;
+  --accent-700: #0369a1;
 
   /* Border & shadow */
-  --border: hsl(220, 13%, 87%);
-  --border-focus: var(--accent-500);
-  --shadow-card: 0 2px 8px hsla(220, 14%, 10%, 0.06);
-  --shadow-md: 0 4px 12px hsla(220, 14%, 10%, 0.08);
-  --shadow-lg: 0 8px 24px hsla(220, 14%, 10%, 0.10);
+  --border: rgba(0, 0, 0, 0.05);
+  --border-hover: rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 
   /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Animation Easing */
+  --ease-premium: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Sidebar */
   --sidebar-width: 260px;
   --sidebar-collapsed: 72px;
   --topbar-height: 64px;
+
+  /* Sparkles & CTA Tokens */
+  --gradient-color: #8350e8;
+  --sparkles-color: #8350e8;
 }
 
-/* Dark mode */
+/* Dark mode — Black with Silver Highlights */
 [data-theme="dark"] {
-  --bg-primary: hsl(220, 14%, 10%);
-  --bg-secondary: hsl(220, 14%, 14%);
-  --bg-tertiary: hsl(220, 13%, 18%);
-  --bg-elevated: hsl(220, 14%, 16%);
-  --text-primary: hsl(220, 14%, 92%);
-  --text-secondary: hsl(220, 9%, 62%);
-  --text-tertiary: hsl(220, 9%, 45%);
-  --border: hsl(220, 13%, 22%);
-  --shadow-card: 0 2px 8px hsla(0, 0%, 0%, 0.3);
+  --bg-primary: #000000; /* Pure Black Background */
+  --bg-secondary: #080808; /* Deepest black elevation */
+  --bg-tertiary: #121212; 
+  --bg-elevated: #1a1a1a;
+  
+  --text-primary: #f2f2f2; /* Silver/Off-white Text */
+  --text-secondary: #888888; 
+  --text-tertiary: #555555; 
+  
+  --border: rgba(255, 255, 255, 0.06); 
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.9);
+  
+  /* Silver Button/Accent Palette */
+  --accent-50: #ffffff;
+  --accent-500: #c0c0c0; /* Brushed Silver */
+  --accent-600: #a0a0a0;
+  --accent-700: #808080;
+  
+  --silver-gradient: linear-gradient(135deg, #c0c0c0 0%, #ffffff 50%, #c0c0c0 100%);
 }
 
 /* ── Tailwind v4 Theme ──────────────────────────────────────── */
@@ -130,4 +141,13 @@ body {
 .focus-ring:focus-visible {
   outline: 2px solid var(--accent-500);
   outline-offset: 2px;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon } from "./Icon";
+
 interface EmptyStateProps {
   icon?: string;
   title: string;
@@ -14,7 +16,9 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
       {icon && (
-        <span className="text-5xl mb-4 opacity-40">{icon}</span>
+        <div className="mb-4 opacity-40">
+          <Icon name={icon} size={48} />
+        </div>
       )}
       <h3
         className="text-lg font-semibold mb-2"

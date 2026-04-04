@@ -4,20 +4,18 @@ import { useAddContentStore } from "@/store/addContentStore";
 import { SOURCE_TYPE_OPTIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { ItemType } from "@/types";
+import { Icon } from "@/components/shared/Icon";
 
 export function SourceTypePicker() {
   const { selectedType, setSelectedType, setUrl } = useAddContentStore();
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h2
-          className="text-2xl font-bold tracking-tight mb-1"
-          style={{ color: "var(--text-primary)" }}
-        >
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-serif text-[var(--text-primary)] tracking-tight mb-2">
           What are you saving?
         </h2>
-        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+        <p className="text-sm font-light text-[var(--text-secondary)]">
           Pick a source type or paste any link below
         </p>
       </div>
@@ -45,7 +43,9 @@ export function SourceTypePicker() {
               borderRadius: "var(--radius-lg)",
             }}
           >
-            <span className="text-2xl">{opt.icon}</span>
+            <div className="flex items-center justify-center p-3 rounded-full mb-1" style={{ background: "var(--bg-primary)", color: "var(--accent-500)" }}>
+              <Icon name={opt.icon} size={28} />
+            </div>
             <span
               className="text-sm font-semibold"
               style={{ color: "var(--text-primary)" }}
@@ -63,21 +63,15 @@ export function SourceTypePicker() {
       </div>
 
       {/* Fallback URL paste */}
-      <div className="pt-2">
-        <div
-          className="flex items-center gap-3 px-4 py-3 rounded-xl shadow-sm transition-all focus-within:ring-2 focus-within:ring-accent-500"
-          style={{
-            background: "var(--bg-primary)",
-            border: "1px dashed var(--border)",
-            borderRadius: "var(--radius-lg)",
-          }}
-        >
-          <span className="text-lg opacity-40">🔗</span>
+      <div className="pt-4">
+        <div className="flex items-center gap-3 px-5 py-4 rounded-xl border border-[var(--border)] bg-[var(--bg-primary)]/40 transition-all duration-300 focus-within:border-[var(--accent-500)]/30 focus-within:shadow-[0_0_15px_rgba(192,192,192,0.05)]">
+          <div className="flex items-center justify-center text-[var(--text-tertiary)]" style={{ width: 24 }}>
+            <Icon name="link" size={18} />
+          </div>
           <input
             type="url"
-            placeholder="Or just paste any URL and we'll detect it automatically ▼"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-50"
-            style={{ color: "var(--text-primary)" }}
+            placeholder="Or just paste any URL here..."
+            className="flex-1 bg-transparent text-sm font-light text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)]"
             onChange={(e) => {
               const val = e.target.value.trim();
               setUrl(val);
