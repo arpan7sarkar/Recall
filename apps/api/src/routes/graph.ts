@@ -42,7 +42,7 @@ router.get("/", async (req: Request, res: Response) => {
     // 3. Build nodes array (PRD 4.1.2 step 3)
     const nodes = items.map(item => ({
       id: item.id,
-      label: item.title,
+      label: item.title || "Untitled",
       type: item.itemType,
       saveSource: item.saveSource,
       tags: item.tags.map(t => t.tag.name),
@@ -78,7 +78,7 @@ router.get("/", async (req: Request, res: Response) => {
           // Top 4 to include itself
           const matches = await queryEmbedding(userId, embedding, 4);
           matches.forEach(match => {
-            if (match.id !== item.id && match.score !== undefined && match.score > 0.7) { // Only strong semantic relationships
+            if (match.id !== item.id && match.score !== undefined && match.score > 0.6) { // Include moderate semantic relationships
                addEdge(item.id, match.id, match.score, 'similarity');
             }
           });

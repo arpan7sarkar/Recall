@@ -15,6 +15,7 @@ interface ItemCardProps {
 
 export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   const isProcessing = item.status === "processing" || item.status === "pending";
+  const isFailed = item.status === "failed";
 
   if (viewMode === "list") {
     return (
@@ -128,6 +129,20 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
               }}
             >
               Processing…
+            </span>
+          </div>
+        )}
+        {isFailed && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+            <span
+              className="px-3 py-1 rounded-full text-xs font-medium"
+              style={{
+                background: "hsl(0, 70%, 96%)",
+                color: "hsl(0, 60%, 42%)",
+                boxShadow: "var(--shadow-md)",
+              }}
+            >
+              Failed
             </span>
           </div>
         )}

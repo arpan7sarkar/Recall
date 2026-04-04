@@ -102,6 +102,53 @@ const mapItemWithTags = (item: any) => ({
   })) || [],
 });
 
+async function requeueStaleItems(userId: string) {
+  const staleThreshold = new Date(Date.now() - 15 * 60 * 1000);
+  const staleItems = await prisma.item.findMany({
+    where: {
+      userId,
+      status: { in: ["pending", "processing"] },
+      savedAt: { lt: staleThreshold },
+    },
+    select: {
+      id: true,
+      url: true,
+      title: true,
+      description: true,
+      contentText: true,
+      status: true,
+    },
+    take: 10,
+  });
+
+  for (const stale of staleItems) {
+    const hasUsefulScrapeData = Boolean(
+      stale.contentText || stale.description || (stale.title && stale.title !== "Untitled")
+    );
+
+    try {
+      if (stale.url && !hasUsefulScrapeData) {
+        await scrapeQueue.add(
+          "retry-stale-scrape",
+          { itemId: stale.id, url: stale.url, userId },
+          { jobId: `scrape-${stale.id}` }
+        );
+      } else {
+        await aiQueue.add(
+          "retry-stale-ai",
+          { itemId: stale.id, userId },
+          { jobId: `ai-${stale.id}` }
+        );
+      }
+    } catch (error: any) {
+      // Ignore duplicate-job errors; another worker/job may already be handling it.
+      if (!String(error?.message || "").toLowerCase().includes("job id")) {
+        console.warn(`[Items] Failed to requeue stale item ${stale.id}:`, error.message);
+      }
+    }
+  }
+}
+
 /**
  * @route   GET /items
  * @desc    List all items for user
@@ -111,6 +158,8 @@ router.get("/", async (req: Request, res: Response) => {
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
+    await requeueStaleItems(userId);
+
     const { type, status, favorite, archived, page, limit, sort } = req.query;
     
     const pageNum = parseInt(page as string) || 1;
@@ -305,18 +354,53 @@ router.delete("/:id", async (req: Request, res: Response) => {
 router.get("/:id/related", async (req: Request, res: Response) => {
   const userId = (req as any).auth?.userId;
   const { id: itemId } = req.params;
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
+    const currentItem = await prisma.item.findUnique({
+      where: { id: itemId },
+      include: { tags: { include: { tag: true } } },
+    });
+
+    if (!currentItem || currentItem.userId !== userId) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const tagFallback = async () => {
+      const tagIds = currentItem.tags.map((t) => t.tagId);
+      if (tagIds.length === 0) return [];
+
+      const byTags = await prisma.item.findMany({
+        where: {
+          userId,
+          id: { not: itemId },
+          isArchived: false,
+          tags: {
+            some: {
+              tagId: { in: tagIds },
+            },
+          },
+        },
+        include: {
+          tags: { include: { tag: true } },
+        },
+        orderBy: { savedAt: "desc" },
+        take: 5,
+      });
+
+      return byTags.map(mapItemWithTags);
+    };
+
     // 1. Fetch the item's embedding from Pinecone
     const embedding = await fetchEmbedding(itemId);
     
     if (!embedding) {
-      // If no embedding yet, maybe item isn't processed. Returning empty or fallback.
-      return res.json([]);
+      // If no embedding yet, fallback to tag overlap.
+      return res.json(await tagFallback());
     }
 
     // 2. Query Pinecone for top 6 similar items (one might be the item itself)
-    const matches = await queryEmbedding(userId!, embedding, 6);
+    const matches = await queryEmbedding(userId, embedding, 6);
 
     // 3. Filter out the current item itself
     const relatedIds = matches
@@ -324,11 +408,11 @@ router.get("/:id/related", async (req: Request, res: Response) => {
       .slice(0, 5)
       .map(m => m.id);
 
-    if (relatedIds.length === 0) return res.json([]);
+    if (relatedIds.length === 0) return res.json(await tagFallback());
 
     // 4. Fetch from PostgreSQL
     const relatedItems = await prisma.item.findMany({
-      where: { id: { in: relatedIds } },
+      where: { id: { in: relatedIds }, userId, isArchived: false },
       include: {
         tags: { include: { tag: true } }
       }
@@ -341,6 +425,56 @@ router.get("/:id/related", async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error(`[Related] Error:`, error.message);
     res.status(500).json({ error: "Failed to fetch related items" });
+  }
+});
+
+/**
+ * @route   POST /items/:id/retry
+ * @desc    Retry processing pipeline for a stuck/failed item
+ */
+router.post("/:id/retry", async (req: Request, res: Response) => {
+  const userId = (req as any).auth?.userId;
+  const { id } = req.params;
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    const item = await prisma.item.findUnique({
+      where: { id },
+      include: { tags: { include: { tag: true } } },
+    });
+
+    if (!item || item.userId !== userId) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const hasUsefulScrapeData = Boolean(item.contentText || item.description || (item.title && item.title !== "Untitled"));
+
+    if (item.url && !hasUsefulScrapeData) {
+      await prisma.item.update({
+        where: { id },
+        data: { status: "pending" },
+      });
+      await scrapeQueue.add("retry-scrape", { itemId: id, url: item.url, userId }, { jobId: `scrape-${id}` });
+    } else {
+      await prisma.item.update({
+        where: { id },
+        data: { status: "processing" },
+      });
+      await aiQueue.add("retry-ai", { itemId: id, userId }, { jobId: `ai-${id}` });
+    }
+
+    const refreshed = await prisma.item.findUnique({
+      where: { id },
+      include: { tags: { include: { tag: true } } },
+    });
+    if (!refreshed) {
+      return res.status(404).json({ error: "Item not found after retry" });
+    }
+
+    res.json(mapItemWithTags(refreshed));
+  } catch (error: any) {
+    console.error(`[Retry] Error:`, error.message);
+    res.status(500).json({ error: "Failed to retry item processing" });
   }
 });
 
