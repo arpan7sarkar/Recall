@@ -125,41 +125,11 @@ export function HeroSection() {
 
                 <section className="bg-[#070707] pb-32 pt-20">
                     <div className="group relative m-auto max-w-5xl px-6">
-                        <div className="absolute inset-0 z-10 flex scale-95 items-center justify-center opacity-0 duration-500 group-hover:scale-100 group-hover:opacity-100">
-                            <Link
-                                href="#customers"
-                                className="px-6 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-sm font-medium text-white hover:bg-white/10 transition-all flex items-center gap-2">
-                                <span>Learn our methodology</span>
-                                <ArrowRight className="size-3" />
-                            </Link>
-                        </div>
+                       
                         
-                        <div className="mb-12 text-center opacity-20 group-hover:opacity-10 group-hover:blur-sm transition-all duration-500">
-                             <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white">Trusted by teams at</p>
-                        </div>
+                
 
-                        <div className="group-hover:blur-xs mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-12 transition-all duration-500 group-hover:opacity-30">
-                            <div className="flex justify-center opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
-                                <span className="text-xl font-serif font-black tracking-tighter text-white flex items-center gap-2">
-                                    <Zap className="size-5 fill-current" /> FAST
-                                </span>
-                            </div>
-                            <div className="flex justify-center opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
-                                <span className="text-xl font-serif font-black tracking-tighter text-white flex items-center gap-2">
-                                    <Brain className="size-5 fill-current" /> SCALE
-                                </span>
-                            </div>
-                            <div className="flex justify-center opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
-                                <span className="text-xl font-serif font-black tracking-tighter text-white flex items-center gap-2">
-                                    <Search className="size-5" /> INDEX
-                                </span>
-                            </div>
-                            <div className="flex justify-center opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
-                                <span className="text-xl font-serif font-black tracking-tighter text-white flex items-center gap-2">
-                                    <Github className="size-5 fill-current" /> REPO
-                                </span>
-                            </div>
-                        </div>
+                    
                     </div>
                 </section>
             </main>

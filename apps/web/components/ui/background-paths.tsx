@@ -80,7 +80,7 @@ export function BackgroundPaths({
                     transition={{ duration: 2 }}
                     className="max-w-4xl mx-auto"
                 >
-                    <h2 className="text-4xl sm:text-6xl md:text-7xl font-serif text-white mb-8 tracking-tighter italic">
+                    <h2 className="text-4xl sm:text-6xl md:text-7xl font-serif text-white mb-12 tracking-tighter italic leading-[1.1]">
                         {words.map((word, wordIndex) => (
                             <span
                                 key={wordIndex}
@@ -116,7 +116,7 @@ export function BackgroundPaths({
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: 0.5, duration: 1 }}
-                            className="text-zinc-400 text-lg mb-10 font-light max-w-2xl mx-auto"
+                            className="text-zinc-400 text-lg mb-14 font-light max-w-2xl mx-auto leading-relaxed"
                         >
                             {subtitle}
                         </motion.p>

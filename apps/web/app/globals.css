@@ -52,6 +52,10 @@
   --sidebar-width: 260px;
   --sidebar-collapsed: 72px;
   --topbar-height: 64px;
+
+  /* Sparkles & CTA Tokens */
+  --gradient-color: #8350e8;
+  --sparkles-color: #8350e8;
 }
 
 /* Dark mode — Zinc Dark */
@@ -71,6 +75,10 @@
   /* Shiny Accents (Reduced) */
   --accent-500: hsl(221, 83%, 53%);
   --accent-600: hsl(221, 83%, 43%);
+
+  /* Sparkles & CTA Tokens - Dark */
+  --gradient-color: #8350e8;
+  --sparkles-color: #ffffff;
 }
 
 /* ── Tailwind v4 Theme ──────────────────────────────────────── */
