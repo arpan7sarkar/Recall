@@ -6,20 +6,20 @@ export const AboutSection = () => {
   return (
     <section id="about" className="relative py-32 bg-transparent overflow-hidden">
       {/* Subtle Grid Background */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-size-[40px_40px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         <div className="flex flex-col lg:flex-row gap-16 items-center">
           {/* Left Side: Philosophy Heading */}
           <div className="w-full lg:w-1/2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/5 bg-white/5 backdrop-blur-md mb-8">
-              <Brain size={12} className="text-[#0059ff]" />
+              <Brain size={12} className="text-accent" />
               <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-zinc-400">Why Recall</span>
             </div>
             
             <h2 className="text-4xl md:text-6xl font-serif text-white mb-8 italic leading-[1.1] tracking-tight">
               Built for minds <br />
-              <span className="text-[#0059ff]">that never stop.</span>
+              <span className="text-accent">that never stop.</span>
             </h2>
             
             <p className="text-xl text-zinc-400 font-light leading-relaxed mb-10 max-w-xl">

@@ -5,12 +5,14 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { ForceGraphMethods } from "react-force-graph-2d";
 
+import { LoaderFour } from "@/components/ui/unique-loader-components";
+
 // ForceGraph must be dynamically imported for SSR compatibility in Next.js
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center bg-slate-50/50 animate-pulse rounded-2xl h-[600px]">
-      <p className="text-slate-400 font-medium">Initialising Knowledge Graph…</p>
+    <div className="flex flex-col items-center justify-center bg-card animate-in fade-in duration-1000 rounded-2xl h-[600px] border border-border">
+      <LoaderFour text="Graph engine in preparation" />
     </div>
   ),
 });

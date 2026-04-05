@@ -7,6 +7,7 @@ import type { Item } from "@/types";
 import { TypeBadge } from "@/components/shared/TypeBadge";
 import { timeAgo, extractDomain } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
+import { LoaderFive } from "@/components/ui/unique-loader-components";
 
 interface SearchDropdownProps {
   results: Item[];
@@ -51,8 +52,8 @@ export function SearchDropdown({ results, isLoading, query, onClose }: SearchDro
       id="search-dropdown"
     >
       {isLoading ? (
-        <div className="px-4 py-6 text-center text-sm" style={{ color: "var(--text-tertiary)" }}>
-          <span className="inline-block animate-pulse">Searching&hellip;</span>
+        <div className="px-4 py-8 flex flex-col items-center justify-center gap-4">
+          <LoaderFive text="Searching your mind" />
         </div>
       ) : results.length === 0 ? (
         <div className="px-4 py-6 text-center text-sm" style={{ color: "var(--text-tertiary)" }}>

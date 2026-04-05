@@ -23,7 +23,9 @@ export function Topbar() {
     "semantic"
   );
 
-  useKeyboardShortcut("k", openAddContent);
+  useKeyboardShortcut("k", () => {
+    document.getElementById("global-search")?.focus();
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,12 +39,12 @@ export function Topbar() {
 
   return (
     <header
-      className="shrink-0 flex items-center justify-between gap-4 px-6 rounded-2xl border border-[var(--border)] shadow-sm bg-[var(--bg-secondary)]/80 backdrop-blur-xl relative z-20 h-16"
+      className="shrink-0 flex items-center justify-between gap-4 px-6 rounded-2xl border border-border shadow-sm bg-(--bg-secondary)/80 backdrop-blur-xl relative z-20 h-16"
     >
       {/* Mobile hamburger */}
       <button
         onClick={toggleSidebar}
-        className="lg:hidden p-2 rounded-lg focus-ring transition-colors bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        className="lg:hidden p-2 rounded-lg focus-ring transition-colors bg-muted text-muted-foreground hover:text-(--text-primary)"
         aria-label="Toggle sidebar"
       >
         <Menu size={20} />
@@ -53,8 +55,8 @@ export function Topbar() {
         <form onSubmit={handleSearch} className="w-full max-w-xl">
           <div
             className={cn(
-              "flex items-center gap-3 px-5 py-2 rounded-full transition-all duration-300 border bg-[var(--bg-primary)]/40",
-              showDropdown && searchQuery.length >= 2 ? "border-[var(--accent-500)]/50 shadow-[0_0_15px_rgba(192,192,192,0.1)]" : "border-[var(--border)]"
+              "flex items-center gap-3 px-5 py-2 rounded-full transition-all duration-300 border bg-(--bg-primary)/40",
+              showDropdown && searchQuery.length >= 2 ? "border-(--accent-500)/50 shadow-[0_0_15px_rgba(192,192,192,0.1)]" : "border-border"
             )}
           >
             <div className="flex items-center justify-center opacity-40" style={{ width: 16 }}>
@@ -71,7 +73,7 @@ export function Topbar() {
                 if (searchQuery.length >= 2) setShowDropdown(true);
               }}
               placeholder="Search your mind..."
-              className="flex-1 bg-transparent text-sm font-light text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)]"
+              className="flex-1 bg-transparent text-sm font-light text-(--text-primary) outline-none placeholder:text-(--text-tertiary)"
               id="global-search"
               autoComplete="off"
             />
@@ -91,7 +93,7 @@ export function Topbar() {
             )}
             {!searchQuery && (
               <kbd
-                className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--bg-tertiary)]/50 text-[var(--text-tertiary)] border border-[var(--border)]"
+                className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-(--bg-tertiary)/50 text-(--text-tertiary) border border-border"
               >
                 ⌘K
               </kbd>
@@ -115,19 +117,20 @@ export function Topbar() {
         <button
           onClick={openAddContent}
           className={cn(
-            "flex items-center gap-2 px-6 py-2 rounded-full font-serif text-sm transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(var(--accent-500-rgb),0.3)] dark:shadow-[0_0_30px_rgba(255,255,255,0.05)]",
-            "bg-[var(--accent-500)] text-[var(--bg-primary)] hover:opacity-90"
+            "flex items-center gap-2 px-6 py-2 rounded-full font-serif text-sm transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-accent/20",
+            "bg-accent text-background hover:opacity-90"
           )}
           id="add-content-btn"
         >
           <Icon name="plus" size={16} />
           <span className="hidden sm:inline">Add Content</span>
+          <span className="hidden lg:inline ml-1 px-1.5 py-0.5 text-[8px] rounded bg-white/20 uppercase tracking-tighter">Alt+N</span>
         </button>
 
         <UserButton
           appearance={{
             elements: {
-              avatarBox: "w-9 h-9 rounded-full border border-[var(--border)] shadow-sm",
+              avatarBox: "w-9 h-9 rounded-full border border-border shadow-sm",
             },
           }}
         />

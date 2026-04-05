@@ -2,6 +2,7 @@
 
 import { useTags } from "@/hooks/useTags";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { LoaderFive } from "@/components/ui/unique-loader-components";
 
 export default function TagsPage() {
   const { data: tags, isLoading, error } = useTags();
@@ -22,10 +23,8 @@ export default function TagsPage() {
           Failed to load tags.
         </div>
       ) : isLoading ? (
-        <div className="flex flex-wrap gap-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="w-24 h-10 border border-slate-100 rounded-xl bg-slate-50 animate-pulse" />
-          ))}
+        <div className="flex flex-col items-center justify-center py-20 w-full">
+          <LoaderFive text="Analyzing your tags" />
         </div>
       ) : tags?.length === 0 ? (
         <EmptyState

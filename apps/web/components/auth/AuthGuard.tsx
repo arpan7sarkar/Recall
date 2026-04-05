@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ROUTES } from "@/lib/constants";
 import { api } from "@/lib/api";
+import { LoaderFive } from "@/components/ui/unique-loader-components";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
@@ -42,22 +43,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!isLoaded || (isSignedIn && !synced && !clerkUser)) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--bg-primary)" }}
+        className="min-h-screen flex flex-col items-center justify-center bg-background"
       >
-        <div className="flex flex-col items-center gap-3">
-          <div
-            className="flex items-center justify-center rounded-xl font-bold text-white text-lg"
-            style={{ width: 44, height: 44, background: "var(--accent-500)" }}
-          >
-            R
-          </div>
-          <div className="flex gap-1">
-            <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse" />
-            <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse delay-75" />
-            <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse delay-150" />
-          </div>
-        </div>
+        <LoaderFive text="Initializing your Second Brain" />
       </div>
     );
   }

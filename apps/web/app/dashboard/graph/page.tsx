@@ -3,21 +3,15 @@
 import { useGraphData } from "@/hooks/useGraphData";
 import { KnowledgeGraph } from "@/components/graph/KnowledgeGraph";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { LoaderFive } from "@/components/ui/unique-loader-components";
 
 export default function GraphPage() {
   const { data, isLoading, error, refetch } = useGraphData();
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <h2 className="text-xl font-bold animate-pulse" style={{ color: "var(--text-tertiary)" }}>
-          Building your knowledge graph…
-        </h2>
-        <div className="flex gap-2">
-          <div className="w-3 h-3 rounded-full bg-indigo-400 animate-bounce delay-0" />
-          <div className="w-3 h-3 rounded-full bg-indigo-400 animate-bounce delay-75" />
-          <div className="w-3 h-3 rounded-full bg-indigo-400 animate-bounce delay-150" />
-        </div>
+      <div className="flex flex-col items-center justify-center py-32 animate-in fade-in duration-700">
+        <LoaderFive text="Architecting your Knowledge Graph" />
       </div>
     );
   }
