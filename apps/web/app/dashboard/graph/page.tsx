@@ -8,6 +8,15 @@ import { MousePointer2, Maximize2, Pointer } from "lucide-react";
 
 export default function GraphPage() {
   const { data, isLoading, error, refetch } = useGraphData();
+  const legendItems = [
+    { label: "LinkedIn", color: "#0a66c2", shadow: "rgba(10,102,194,0.5)" },
+    { label: "Article", color: "#3b82f6", shadow: "rgba(59,130,246,0.5)" },
+    { label: "Video", color: "#e11d48", shadow: "rgba(225,29,72,0.5)" },
+    { label: "Tweet", color: "#94a3b8", shadow: "rgba(148,163,184,0.5)" },
+    { label: "PDF", color: "#ca8a04", shadow: "rgba(202,138,4,0.5)" },
+    { label: "Image", color: "#27272a", shadow: "rgba(39,39,42,0.5)", withBorder: true },
+    { label: "Instagram", color: "#d946ef", shadow: "rgba(217,70,239,0.5)", withBorder: true },
+  ];
 
   if (isLoading) {
     return (
@@ -56,30 +65,15 @@ export default function GraphPage() {
 
         {/* Legend */}
         <div className="hidden md:flex items-center gap-5 px-5 py-2.5 rounded-2xl bg-muted/50 border border-border backdrop-blur-sm shadow-sm group/legend">
-           <div className="flex items-center gap-2 group-hover/legend:opacity-100 transition-opacity">
-             <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" style={{ background: "#3b82f6" }} />
-             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Article</span>
-           </div>
-           <div className="flex items-center gap-2">
-             <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(225,29,72,0.5)]" style={{ background: "#e11d48" }} />
-             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Video</span>
-           </div>
-           <div className="flex items-center gap-2">
-             <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(148,163,184,0.5)]" style={{ background: "#94a3b8" }} />
-             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Tweet</span>
-           </div>
-           <div className="flex items-center gap-2">
-             <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(202,138,4,0.5)]" style={{ background: "#ca8a04" }} />
-             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">PDF</span>
-           </div>
-           <div className="flex items-center gap-2">
-             <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(39,39,42,0.5)] border border-white/10" style={{ background: "#27272a" }} />
-             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Image</span>
-           </div>
-           <div className="flex items-center gap-2">
-             <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(217,70,239,0.5)] border border-white/10" style={{ background: "#d946ef" }} />
-             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Instagram</span>
-           </div>
+           {legendItems.map((item) => (
+             <div key={item.label} className="flex items-center gap-2 group-hover/legend:opacity-100 transition-opacity">
+               <div
+                 className={`w-2.5 h-2.5 rounded-full ${item.withBorder ? "border border-white/10" : ""}`}
+                 style={{ background: item.color, boxShadow: `0 0 8px ${item.shadow}` }}
+               />
+               <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{item.label}</span>
+             </div>
+           ))}
            <div className="h-4 w-px bg-border/50 mx-1" />
            <div className="flex items-center gap-2">
              <div className="w-5 h-px border-t border-dashed border-muted-foreground/30" />
