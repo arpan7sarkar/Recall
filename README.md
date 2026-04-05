@@ -1,231 +1,336 @@
-﻿# Recall (SecondBrain)
+# Recall
+
+<div align="center">
 
 ![Status](https://img.shields.io/badge/status-active-success)
-![Monorepo](https://img.shields.io/badge/structure-monorepo-0f172a)
-![Frontend](https://img.shields.io/badge/frontend-Next.js_16-111827)
+![Architecture](https://img.shields.io/badge/architecture-modular_monolith-111827)
+![Frontend](https://img.shields.io/badge/frontend-Next.js_16-0f172a)
 ![Backend](https://img.shields.io/badge/backend-Express_%2B_BullMQ-1f2937)
-![Database](https://img.shields.io/badge/database-PostgreSQL-336791)
+![Search](https://img.shields.io/badge/search-semantic_%2B_keyword-334155)
 
-Recall is a personal knowledge platform for saving web content, enriching it with AI, and retrieving it through semantic search and graph exploration.
+Personal knowledge infrastructure for saving content, enriching it with AI, and retrieving it through search, relationships, and graph exploration.
 
-## Table of Contents
+</div>
 
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Repository Structure](#repository-structure)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [Available Scripts](#available-scripts)
-- [Route Map](#route-map)
-- [How It Works](#how-it-works)
-- [Deployment](#deployment)
-- [Troubleshooting](#troubleshooting)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [Security](#security)
-- [License](#license)
-- [Support](#support)
+## Overview
 
-## Features
+Recall is a full-stack product for capturing web content from a dashboard or Chrome extension, processing it asynchronously, and turning it into a searchable personal knowledge base.
 
-- Save content from web UI and Chrome extension
-- URL ingestion and file upload ingestion (PDF/image)
-- Async processing pipeline (scrape -> AI tags -> embeddings)
-- Semantic search (Pinecone + OpenAI embeddings)
-- Keyword search fallback
-- Related content recommendations
-- Knowledge graph visualization
-- Tags and collections management
-- Clerk-based authentication for web app
+It is built to feel like a real production system, not a demo:
+- multi-surface capture
+- asynchronous worker pipeline
+- semantic retrieval
+- graph visualization
+- production deployment split across Vercel and Render
+
+## Snapshot
+
+| Area | What it does |
+|---|---|
+| Capture | Save links, upload PDFs/images, one-click browser extension save |
+| Enrichment | Scrape metadata with `metascraper`, generate AI tags with OpenAI |
+| Retrieval | Semantic search, keyword fallback, related items |
+| Organization | Tags, collections, archive states |
+| Exploration | Knowledge graph view of connected saved content |
+| Runtime | Web app, API, worker process, browser extension |
+
+## Why It Stands Out
+
+- End-to-end product thinking: capture, process, organize, retrieve
+- Real backend workflow: queue-based workers instead of synchronous everything
+- Production-minded architecture: Vercel frontend, Render API/worker, external managed services
+- Strong technical breadth: frontend UX, APIs, auth, storage, jobs, vector search
+
+## Core Features
+
+- Save URL content
+- Upload PDF and image content
+- Metadata scraping using `metascraper`
+- AI tag generation using OpenAI
+- Semantic search
+- Related items
+- Tag management
+- Collection management
+- Knowledge graph view
+- One-click extension save
+- Authentication and user sync
 
 ## Architecture
 
-### Architecture Style
+### Style
 
 This project is a **modular monolith with worker processes**.
 
-- Single API codebase and shared domain model
-- Single primary relational database (PostgreSQL)
-- Separate runtime roles for API and queue workers
-- Shared infrastructure (Redis, Pinecone, R2)
-
-It is not a microservices setup yet (no independent service-owned databases/domains).
+- One core API codebase
+- One primary relational schema
+- Separate runtime roles for API and workers
+- Shared infrastructure across ingestion, processing, and retrieval
 
 ### System Diagram
 
 ```mermaid
 flowchart LR
-    U[User] --> W[Web App - Next.js]
-    U --> X[Extension - Plasmo]
+    U[User] --> W[Web App]
+    U --> X[Chrome Extension]
 
-    W --> A[API - Express /v1]
+    W --> A[Express API]
     X --> A
 
     A --> PG[(PostgreSQL)]
-    A --> R[(Redis)]
-    A --> Q[Queues: scrape / ai / embed]
+    A --> R[(Redis / BullMQ)]
+    A --> S3[(Cloudflare R2)]
+    A --> V[(Pinecone)]
 
-    Q --> S[Scraper Worker]
-    Q --> T[AI Worker]
-    Q --> E[Embed Worker]
+    R --> SW[Scraper Worker]
+    R --> AW[AI Worker]
+    R --> EW[Embed Worker]
 
-    S --> O[(Cloudflare R2)]
-    T --> L[OpenAI]
-    E --> L
-    E --> P[(Pinecone)]
+    SW --> S3
+    AW --> OAI[OpenAI]
+    EW --> OAI
+    EW --> V
+```
+
+### Processing Flow
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as API
+    participant DB as PostgreSQL
+    participant Q as BullMQ
+    participant S as Scraper
+    participant AI as AI Worker
+    participant E as Embed Worker
+    participant P as Pinecone
+
+    C->>API: Save URL / Upload file
+    API->>DB: Create item
+    API->>Q: Queue processing
+    Q->>S: Scrape metadata
+    S->>DB: Update item
+    S->>Q: Queue AI step
+    Q->>AI: Generate tags
+    AI->>DB: Save tags
+    AI->>Q: Queue embedding step
+    Q->>E: Generate embedding
+    E->>P: Index vector
+    E->>DB: Mark item ready
 ```
 
 ## Tech Stack
 
-### Frontend (`apps/web`)
+### Frontend
 
-- Next.js 16 (App Router)
-- React 19 + TypeScript
-- Clerk (`@clerk/nextjs`)
-- React Query (`@tanstack/react-query`)
-- Zustand
-- Tailwind CSS
-- Graph/visual libs (`react-force-graph-2d`, `three`, `tsparticles`)
+- `Next.js 16`
+- `React 19`
+- `TypeScript`
+- `@clerk/nextjs`
+- `@tanstack/react-query`
+- `zustand`
+- `Tailwind CSS`
+- `react-force-graph-2d`
 
-### Backend (`apps/api`)
+### Backend
 
-- Node.js + Express + TypeScript
-- Prisma ORM + PostgreSQL (Neon)
-- BullMQ + Redis (Upstash supported)
-- OpenAI API
-- Pinecone vector DB
-- Cloudflare R2 (S3 compatible)
+- `Node.js`
+- `Express`
+- `TypeScript`
+- `Prisma`
+- `PostgreSQL`
+- `BullMQ`
+- `ioredis`
+- `OpenAI`
+- `Pinecone`
+- `Cloudflare R2`
+- `metascraper`
 
-### Extension (`apps/extension`)
+### Extension
 
-- Plasmo + React 18
-- Chrome MV3 permissions
+- `Plasmo`
+- `React 18`
+- `Chrome MV3`
 
 ## Repository Structure
 
 ```text
 .
 ├─ apps/
-│  ├─ api/
-│  ├─ web/
-│  └─ extension/
+│  ├─ api/        # Express API, Prisma, workers
+│  ├─ web/        # Next.js application
+│  └─ extension/  # Browser extension
 ├─ docs/
-│  └─ prd.md
+│  └─ prd.md      # Product and rollout planning
 └─ packages/
-   └─ shared/
+   └─ shared/     # Reserved shared package space
 ```
+
+## Route Map
+
+### Web
+
+- `/`
+- `/dashboard`
+- `/dashboard/add`
+- `/dashboard/items/[id]`
+- `/dashboard/search`
+- `/dashboard/graph`
+- `/dashboard/tags`
+- `/dashboard/collections`
+- `/dashboard/archive`
+- `/login/[[...rest]]`
+- `/register/[[...rest]]`
+
+### API
+
+Base path: `/v1`
+
+- `/auth/extension/login`
+- `/auth/sync`
+- `/auth/me`
+- `/items`
+- `/items/upload`
+- `/items/:id`
+- `/items/:id/related`
+- `/items/:id/retry`
+- `/tags`
+- `/tags/:id`
+- `/tags/attach/:itemId`
+- `/collections`
+- `/collections/:id`
+- `/collections/:id/items`
+- `/collections/:id/items/:itemId`
+- `/search`
+- `/graph`
+- `/health`
+
+## API Endpoints
+
+### Auth
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/v1/auth/extension/login` | Sign in the browser extension and return an extension token |
+| `POST` | `/v1/auth/sync` | Sync the authenticated Clerk user into the local database |
+| `GET` | `/v1/auth/me` | Return the current authenticated user |
+
+### Items
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/v1/items` | List user items with filters and pagination |
+| `POST` | `/v1/items` | Save a new URL-based item |
+| `POST` | `/v1/items/upload` | Upload a PDF or image item |
+| `GET` | `/v1/items/:id` | Get one item with tags and highlights |
+| `PATCH` | `/v1/items/:id` | Update title, description, archive state, favorite state, or note |
+| `DELETE` | `/v1/items/:id` | Delete an item |
+| `GET` | `/v1/items/:id/related` | Fetch related items using vectors with tag fallback |
+| `POST` | `/v1/items/:id/retry` | Re-run processing for a failed or stale item |
+
+### Tags
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/v1/tags` | List all tags for the current user |
+| `POST` | `/v1/tags` | Create a tag |
+| `PATCH` | `/v1/tags/:id` | Update a tag |
+| `DELETE` | `/v1/tags/:id` | Delete a tag |
+| `POST` | `/v1/tags/attach/:itemId` | Attach an existing or new tag to an item |
+
+### Collections
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/v1/collections` | List collections |
+| `POST` | `/v1/collections` | Create a collection |
+| `GET` | `/v1/collections/:id` | Get one collection with its items |
+| `PATCH` | `/v1/collections/:id` | Update collection details |
+| `DELETE` | `/v1/collections/:id` | Delete a collection |
+| `POST` | `/v1/collections/:id/items` | Add an item to a collection |
+| `DELETE` | `/v1/collections/:id/items/:itemId` | Remove an item from a collection |
+
+### Search and Graph
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/v1/search?q=&type=semantic|keyword` | Search items by meaning or keyword |
+| `GET` | `/v1/graph` | Return graph nodes and edges for the current user |
+| `GET` | `/health` | Health check endpoint |
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 20+
-- npm 10+
-- PostgreSQL connection string
-- Redis connection string
-- OpenAI key
-- Pinecone key/index
-- Clerk keys
+- `Node.js 20+`
+- `npm 10+`
+- PostgreSQL database
+- Redis instance
+- OpenAI API key
+- Pinecone API key and index
+- Clerk credentials
 - Cloudflare R2 credentials
 
-### 1) Install dependencies
+### Install
 
 ```bash
-cd apps/api && npm install
-cd ../web && npm install
-cd ../extension && npm install
+cd apps/api
+npm install
+
+cd ../web
+npm install
+
+cd ../extension
+npm install
 ```
 
-### 2) Configure environment files
+### Configure
 
-- API: `apps/api/.env`
-- Web: `apps/web/.env.local`
-- Extension: set `PLASMO_PUBLIC_API_URL` as needed
+- API env: `apps/api/.env`
+- Web env: `apps/web/.env.local`
+- Extension env: `PLASMO_PUBLIC_API_URL`
 
-Templates:
+Templates already present:
 - `apps/api/.env.example`
 - `apps/web/.env.example`
 
-### 3) Run locally (3 terminals)
+### Run Locally
 
 ```bash
-# Terminal 1
 cd apps/api
 npm run dev
 ```
 
 ```bash
-# Terminal 2
 cd apps/api
 npm run worker
 ```
 
 ```bash
-# Terminal 3
 cd apps/web
 npm run dev
 ```
 
-### 4) Open app
-
+Local endpoints:
 - Web: `http://localhost:3000`
 - API health: `http://localhost:4000/health`
 
-## Configuration
+## Environment Notes
 
-### API (`apps/api/.env`)
-
-Required:
-
-- `DATABASE_URL`
-- `REDIS_URL`
-- `OPENAI_API_KEY`
-- `PINECONE_API_KEY`
-- `PINECONE_INDEX`
-- `CLOUDFLARE_R2_BUCKET`
-- `CLOUDFLARE_R2_ACCESS_KEY`
-- `CLOUDFLARE_R2_SECRET_KEY`
-- `CLOUDFLARE_R2_ENDPOINT`
-- `CLERK_SECRET_KEY`
-
-Recommended:
-
-- `CORS_ORIGINS`
-- `EXTENSION_JWT_SECRET` (or `JWT_SECRET`)
-- `MAX_FILE_UPLOAD_MB`
-- `CLOUDFLARE_R2_PUBLIC_URL`
-
-Important constraint:
-
-- Embeddings are generated at **1024 dimensions** (`text-embedding-3-small`), so your Pinecone index must also be `1024`.
-
-### Web (`apps/web/.env.local`)
-
-- `NEXT_PUBLIC_API_URL_DEV=http://localhost:4000/v1`
-- `NEXT_PUBLIC_RENDER_API_URL=https://<your-render-api>/v1`
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-- `CLERK_SECRET_KEY`
-
-Routing behavior:
-
-- `NODE_ENV=development` -> uses local API URL
-- `NODE_ENV=production` -> uses Render API URL
-
-### Extension
-
-- `PLASMO_PUBLIC_API_URL` (defaults to `http://localhost:4000/v1`)
+- `NODE_ENV=development` uses `NEXT_PUBLIC_API_URL_DEV`
+- `NODE_ENV=production` uses `NEXT_PUBLIC_RENDER_API_URL`
+- Pinecone must use **1024 dimensions** because embeddings are generated with `text-embedding-3-small` at `1024`
 
 ## Available Scripts
 
 ### `apps/api`
 
-- `npm run dev` -> start API in watch mode
-- `npm run worker` -> start workers in watch mode
-- `npm run build` -> `prisma generate && tsc`
-- `npm run start` -> run compiled API (`dist/index.js`)
-- `npm run prisma:generate` -> generate Prisma client
-- `npm run db:push` -> push Prisma schema changes
+- `npm run dev`
+- `npm run worker`
+- `npm run build`
+- `npm run start`
+- `npm run start:worker`
+- `npm run prisma:generate`
+- `npm run db:push`
 
 ### `apps/web`
 
@@ -240,62 +345,15 @@ Routing behavior:
 - `npm run build`
 - `npm run package`
 
-## Route Map
-
-### Web Routes
-
-- `/`
-- `/dashboard`
-- `/dashboard/add`
-- `/dashboard/items/[id]`
-- `/dashboard/search`
-- `/dashboard/graph`
-- `/dashboard/tags`
-- `/dashboard/collections`
-- `/dashboard/archive`
-- `/login/[[...rest]]`
-- `/register/[[...rest]]`
-
-### API Routes
-
-Base: `/v1`
-
-- Auth: `/auth/extension/login`, `/auth/sync`, `/auth/me`
-- Items: `/items`, `/items/upload`, `/items/:id`, `/items/:id/related`, `/items/:id/retry`
-- Tags: `/tags`, `/tags/:id`, `/tags/attach/:itemId`
-- Collections: `/collections`, `/collections/:id`, `/collections/:id/items`, `/collections/:id/items/:itemId`
-- Search: `/search`
-- Graph: `/graph`
-- Health: `/health`
-
-## How It Works
-
-### URL Save Flow
-
-1. Client calls `POST /v1/items`
-2. API creates item with `pending` status
-3. API queues scrape job
-4. Scraper enriches metadata and queues AI job
-5. AI worker creates tags and queues embedding job
-6. Embed worker writes vector to Pinecone
-7. Item status becomes `ready`
-
-### Upload Flow
-
-1. Client calls `POST /v1/items/upload`
-2. API uploads file to R2 and creates item
-3. API queues AI job directly
-4. AI + embed pipeline completes item processing
-
 ## Deployment
 
-### Production topology
+| Surface | Platform | Start command |
+|---|---|---|
+| Frontend | Vercel | `next build` / `next start` |
+| API | Render Web Service | `node dist/index.js` |
+| Worker | Render Background Worker | `node dist/workers/index.js` |
 
-- API: **Render Web Service** (`node dist/index.js`)
-- Worker: **Render Background Worker** (`node dist/workers/index.js`)
-- Frontend: **Vercel** (`apps/web` root)
-
-### Build command (API + worker)
+Build command for API and worker:
 
 ```bash
 npm install && npm run build
@@ -303,45 +361,43 @@ npm install && npm run build
 
 ## Troubleshooting
 
-### `Cannot find module '@/lib/...'` on Render
+### `Cannot find module '@/lib/...'`
 
-- Ensure latest code is deployed with runtime alias configuration
-- Rebuild using fresh cache if necessary
-- Confirm start command points to `dist/index.js`
+- Deploy the latest API runtime alias changes
+- Rebuild with cleared cache if Render is holding old artifacts
+- Confirm the service starts from `dist/index.js`
 
-### `Port scan timeout` on Render
+### `Port scan timeout`
 
-- API must be a **Web Service**
-- Worker must be a **Background Worker**
-- API start command must be `node dist/index.js`
+- API must be a Render **Web Service**
+- Worker must be a Render **Background Worker**
+- API must bind to `0.0.0.0:$PORT`
 
-### Queue jobs not processing
+### Jobs not processing
 
 - Check `REDIS_URL`
-- Ensure worker process is running
-- Verify worker service env vars match API env vars
+- Confirm the worker service is running
+- Confirm API and worker share the same queue configuration
 
 ## Roadmap
 
-- Additional ingestion sources
+- More ingestion sources
 - Better graph relevance controls
-- Public collections and sharing
-- More analytics and observability
+- Public collections
+- Improved observability
 
 ## Contributing
 
-Contributions are welcome.
-
 Recommended workflow:
 
-1. Create a feature branch from `develop`
-2. Make changes with focused commits
-3. Run lint/build locally
-4. Open PR to `develop`
+1. Branch from `develop`
+2. Make focused changes
+3. Run build and lint locally
+4. Open a PR into `develop`
 
 ## Security
 
-If you discover a security issue, do not open a public issue with exploit details. Share privately with the maintainers.
+If you find a security issue, avoid posting exploit details publicly. Share it privately with the maintainers.
 
 ## License
 
@@ -349,5 +405,6 @@ No license file is currently published in this repository.
 
 ## Support
 
-- Product and implementation planning: `docs/prd.md`
-- App-specific docs: `apps/web/README.md`, `apps/extension/README.md`
+- Product planning: `docs/prd.md`
+- App-specific docs: `apps/web/README.md`
+- Extension docs: `apps/extension/README.md`
