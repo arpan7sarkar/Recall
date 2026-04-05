@@ -82,6 +82,8 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
       case "tweet": return "#94a3b8"; // Silver
       case "pdf": return "#ca8a04"; // Gold
       case "image": return "#27272a"; // Obsidian
+      case "instagram": return "#d946ef"; // Amethyst
+      case "linkedin": return "#0a66c2"; // LinkedIn Blue
       default: return "#18181b"; // Obsidian Deep
     }
   };

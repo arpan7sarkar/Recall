@@ -17,6 +17,18 @@ interface TweetFallbackData {
   thumbnailUrl: string | null;
 }
 
+interface InstagramFallbackData {
+  text: string | null;
+  author: string | null;
+  thumbnailUrl: string | null;
+}
+
+interface LinkedInFallbackData {
+  text: string | null;
+  author: string | null;
+  thumbnailUrl: string | null;
+}
+
 const metascraper = createMetascraper([
   metascraperTitle(),
   metascraperDescription(),
@@ -38,8 +50,10 @@ function detectTypeFromUrl(url: string, currentType?: string): string {
 
   if (host.includes("youtube.com") || host.includes("youtu.be")) return "youtube";
   if (host.includes("twitter.com") || host.includes("x.com")) return "tweet";
+  if (host.includes("instagram.com")) return "instagram";
+  if (host.includes("linkedin.com")) return "linkedin";
   if (path.endsWith(".pdf")) return "pdf";
-  
+
   return "article";
 }
 
@@ -49,7 +63,7 @@ function normalizeText(value: string | null | undefined): string {
 
 function shorten(value: string, max = 180): string {
   if (value.length <= max) return value;
-  return `${value.slice(0, max - 1)}…`;
+  return `${value.slice(0, max - 3)}...`;
 }
 
 function buildFallbackTitle(url: string, type: string, mainText: string): string {
@@ -59,6 +73,23 @@ function buildFallbackTitle(url: string, type: string, mainText: string): string
     const username = parts[0] ? `@${parts[0]}` : "tweet";
     if (mainText) return shorten(mainText, 80);
     return `Tweet by ${username}`;
+  }
+
+  if (type === "instagram") {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const contentType = parts[0] === "reel" ? "Reel" : "Post";
+    const shortcode = parts[1] || "Unknown";
+    if (mainText) return shorten(mainText, 80);
+    return `Instagram ${contentType} ${shortcode}`;
+  }
+
+  if (type === "linkedin") {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const node = parts.at(-1) || "post";
+    if (mainText) return shorten(mainText, 80);
+    return `LinkedIn ${node}`;
   }
 
   const parsed = new URL(url);
@@ -93,6 +124,75 @@ async function fetchTweetFallback(url: string): Promise<TweetFallbackData> {
   }
 }
 
+function buildInstagramTextFromUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const format = parts[0] === "reel" ? "reel" : "post";
+    const shortcode = parts[1] || "unknown";
+    return `Instagram ${format} ${shortcode}`;
+  } catch {
+    return "Instagram content";
+  }
+}
+
+async function fetchInstagramFallback(url: string): Promise<InstagramFallbackData> {
+  const endpoint = `https://www.instagram.com/oembed/?url=${encodeURIComponent(url)}`;
+
+  try {
+    const { data } = await axios.get(endpoint, { timeout: 8000 });
+    const title = typeof data?.title === "string" ? normalizeText(data.title) : "";
+    const author = typeof data?.author_name === "string" ? normalizeText(data.author_name) : "";
+    const thumbnailUrl = typeof data?.thumbnail_url === "string" ? data.thumbnail_url : null;
+
+    return {
+      text: title || buildInstagramTextFromUrl(url),
+      author: author || null,
+      thumbnailUrl,
+    };
+  } catch {
+    return {
+      text: buildInstagramTextFromUrl(url),
+      author: null,
+      thumbnailUrl: null,
+    };
+  }
+}
+
+function buildLinkedInTextFromUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const node = parts.at(-1) || "post";
+    return `LinkedIn post ${node}`;
+  } catch {
+    return "LinkedIn content";
+  }
+}
+
+async function fetchLinkedInFallback(url: string): Promise<LinkedInFallbackData> {
+  const endpoint = `https://www.linkedin.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+
+  try {
+    const { data } = await axios.get(endpoint, { timeout: 8000 });
+    const title = typeof data?.title === "string" ? normalizeText(data.title) : "";
+    const author = typeof data?.author_name === "string" ? normalizeText(data.author_name) : "";
+    const thumbnailUrl = typeof data?.thumbnail_url === "string" ? data.thumbnail_url : null;
+
+    return {
+      text: title || buildLinkedInTextFromUrl(url),
+      author: author || null,
+      thumbnailUrl,
+    };
+  } catch {
+    return {
+      text: buildLinkedInTextFromUrl(url),
+      author: null,
+      thumbnailUrl: null,
+    };
+  }
+}
+
 export async function processScrape(job: any) {
   const { itemId, url, userId } = job.data;
 
@@ -113,6 +213,8 @@ export async function processScrape(job: any) {
     // 4. Fetch URL content
     let html = "";
     let tweetFallback: TweetFallbackData = { text: null, author: null, thumbnailUrl: null };
+    let instagramFallback: InstagramFallbackData = { text: null, author: null, thumbnailUrl: null };
+    let linkedInFallback: LinkedInFallbackData = { text: null, author: null, thumbnailUrl: null };
 
     try {
       console.log(`[Scrape] Fetching ${url}...`);
@@ -124,14 +226,20 @@ export async function processScrape(job: any) {
       });
       html = response.data;
     } catch (error: any) {
-      if (finalType !== "tweet") {
+      if (finalType !== "tweet" && finalType !== "instagram" && finalType !== "linkedin") {
         throw error;
       }
-      console.warn(`[Scrape] Direct tweet fetch failed for ${itemId}; using oEmbed fallback.`);
+      console.warn(`[Scrape] Direct ${finalType} fetch failed for ${itemId}; using fallback metadata.`);
     }
 
     if (finalType === "tweet") {
       tweetFallback = await fetchTweetFallback(url);
+    }
+    if (finalType === "instagram") {
+      instagramFallback = await fetchInstagramFallback(url);
+    }
+    if (finalType === "linkedin") {
+      linkedInFallback = await fetchLinkedInFallback(url);
     }
 
     // 4. Extract metadata with metascraper
@@ -155,10 +263,20 @@ export async function processScrape(job: any) {
     if (!mainText && tweetFallback.text) {
       mainText = tweetFallback.text;
     }
+    if (!mainText && instagramFallback.text) {
+      mainText = instagramFallback.text;
+    }
+    if (!mainText && linkedInFallback.text) {
+      mainText = linkedInFallback.text;
+    }
 
     // 6. Handle thumbnail re-upload to R2
     let thumbnailUrl = item.thumbnailUrl;
-    const candidateImage = (metadata as any).image || tweetFallback.thumbnailUrl;
+    const candidateImage =
+      (metadata as any).image ||
+      tweetFallback.thumbnailUrl ||
+      instagramFallback.thumbnailUrl ||
+      linkedInFallback.thumbnailUrl;
     if (candidateImage && !thumbnailUrl) {
       try {
         const key = buildKey(userId, "thumbnails", `item_${itemId}.jpg`);
@@ -172,8 +290,18 @@ export async function processScrape(job: any) {
     }
 
     const title = item.title || (metadata as any).title || buildFallbackTitle(url, finalType, mainText) || "Untitled";
-    const description = item.description || (metadata as any).description || (mainText ? shorten(mainText, 240) : null);
-    const author = (metadata as any).author || tweetFallback.author || null;
+    const description =
+      item.description ||
+      (metadata as any).description ||
+      (instagramFallback.text && finalType === "instagram" ? instagramFallback.text : null) ||
+      (linkedInFallback.text && finalType === "linkedin" ? linkedInFallback.text : null) ||
+      (mainText ? shorten(mainText, 240) : null);
+    const author =
+      (metadata as any).author ||
+      tweetFallback.author ||
+      instagramFallback.author ||
+      linkedInFallback.author ||
+      null;
     const publishedAtRaw = (metadata as any).date ? new Date((metadata as any).date) : null;
     const publishedAt = publishedAtRaw && !Number.isNaN(publishedAtRaw.getTime()) ? publishedAtRaw : null;
 
@@ -199,7 +327,7 @@ export async function processScrape(job: any) {
     return { success: true };
   } catch (error: any) {
     console.error(`[Scrape] Failed to scrape ${url}:`, error.message);
-    
+
     // Update status to failed
     await prisma.item.update({
       where: { id: itemId },

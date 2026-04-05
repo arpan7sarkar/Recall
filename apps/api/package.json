@@ -4,6 +4,8 @@
   "private": true,
   "main": "dist/index.js",
   "scripts": {
+    "prisma:generate": "prisma generate",
+    "db:push": "prisma db push",
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
     "worker": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/workers/index.ts",
     "build": "tsc",

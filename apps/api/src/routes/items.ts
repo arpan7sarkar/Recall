@@ -1,16 +1,78 @@
 import { Router, Request, Response } from "express";
+import type { ItemType } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { authenticateClerk } from "@/middleware/auth";
 import { fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
-// Types should come from @prisma/client, but defining locally to fix generation/lint issues
-export type ItemType = "article" | "tweet" | "youtube" | "pdf" | "image" | "podcast" | "link";
-export type SaveSource = "extension" | "web_url" | "web_upload";
-
 import { upload } from "@/middleware/upload";
 import { scrapeQueue, aiQueue } from "@/queues";
 import { buildKey, uploadFile } from "@/lib/storage";
 
 const router = Router();
+const ITEM_TYPES: ItemType[] = ["article", "tweet", "youtube", "pdf", "image", "podcast", "instagram", "linkedin", "link"];
+
+function isItemType(value: unknown): value is ItemType {
+  return typeof value === "string" && ITEM_TYPES.includes(value as ItemType);
+}
+
+function normalizeTagsInput(value: unknown): string[] {
+  if (!Array.isArray(value) && typeof value !== "string") return [];
+  const raw = Array.isArray(value) ? value : [value];
+
+  return Array.from(
+    new Set(
+      raw
+        .filter((entry): entry is string => typeof entry === "string")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0)
+    )
+  );
+}
+
+function normalizeUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim();
+
+  try {
+    const parsed = new URL(trimmed);
+    parsed.hash = "";
+
+    const host = parsed.hostname.toLowerCase();
+
+    // Remove noisy tracking params for Instagram URLs so the same reel/post dedupes cleanly.
+    if (host.includes("instagram.com")) {
+      parsed.search = "";
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      if (parts.length >= 2 && ["reel", "p", "tv"].includes(parts[0])) {
+        parsed.pathname = `/${parts[0]}/${parts[1]}/`;
+      }
+    }
+    // LinkedIn links are commonly shared with tracking query params.
+    if (host.includes("linkedin.com")) {
+      parsed.search = "";
+    }
+
+    return parsed.toString();
+  } catch {
+    return trimmed;
+  }
+}
+
+function detectItemTypeFromUrl(rawUrl: string): ItemType {
+  try {
+    const parsed = new URL(rawUrl);
+    const host = parsed.hostname.toLowerCase();
+    const path = parsed.pathname.toLowerCase();
+
+    if (host.includes("youtube.com") || host.includes("youtu.be")) return "youtube";
+    if (host.includes("twitter.com") || host.includes("x.com")) return "tweet";
+    if (host.includes("instagram.com")) return "instagram";
+    if (host.includes("linkedin.com")) return "linkedin";
+    if (path.endsWith(".pdf")) return "pdf";
+  } catch {
+    // Ignore URL parsing failures and fallback to generic link.
+  }
+
+  return "link";
+}
 
 // Apply auth to all item routes
 router.use(authenticateClerk);
@@ -37,7 +99,9 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
   }
 
   try {
-    const inferredType = (itemType as ItemType) || (file.mimetype.startsWith("image") ? "image" : "pdf");
+    const normalizedTags = normalizeTagsInput(tags);
+    const inferredType: ItemType =
+      isItemType(itemType) ? itemType : file.mimetype.startsWith("image") ? "image" : "pdf";
     const key = buildKey(userId, "files", file.originalname);
     const uploaded = await uploadFile(file.buffer, key, file.mimetype);
 
@@ -59,9 +123,9 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
           },
         }),
         // If tags provided manually
-        ...(tags && tags.length > 0 && {
+        ...(normalizedTags.length > 0 && {
           tags: {
-            create: (Array.isArray(tags) ? tags : [tags]).map((tagName: string) => ({
+            create: normalizedTags.map((tagName: string) => ({
               tag: {
                 connectOrCreate: {
                   where: { userId_name: { userId, name: tagName } },
@@ -161,6 +225,7 @@ router.get("/", async (req: Request, res: Response) => {
     await requeueStaleItems(userId);
 
     const { type, status, favorite, archived, page, limit, sort } = req.query;
+    const normalizedType = isItemType(type) ? type : undefined;
     
     const pageNum = parseInt(page as string) || 1;
     const limitNum = parseInt(limit as string) || 20;
@@ -168,7 +233,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     const where = {
       userId,
-      ...(type && { itemType: type as ItemType }),
+      ...(normalizedType && { itemType: normalizedType }),
       ...(status && { status: status as any }),
       ...(favorite === "true" && { isFavourite: true }),
       ...(archived === "true" && { isArchived: true }),
@@ -218,15 +283,20 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   try {
+    const normalizedUrl = normalizeUrl(url);
+    const normalizedTags = normalizeTagsInput(tags);
+    const normalizedItemType = isItemType(itemType) ? itemType : detectItemTypeFromUrl(normalizedUrl);
+    const parsedYoutubeTimestamp = youtubeTimestamp ? parseInt(String(youtubeTimestamp), 10) : null;
+
     // Initial creation - metadata will be filled by worker later
     const item = await prisma.item.create({
       data: {
         userId,
-        url,
-        itemType: (itemType as ItemType) || "link",
+        url: normalizedUrl,
+        itemType: normalizedItemType,
         saveSource: "web_url", // Default for this endpoint
         userNote: note,
-        youtubeTimestamp: youtubeTimestamp ? parseInt(youtubeTimestamp) : null,
+        youtubeTimestamp: Number.isFinite(parsedYoutubeTimestamp) ? parsedYoutubeTimestamp : null,
         status: "pending",
         // If collection provided
         ...(collectionId && {
@@ -235,9 +305,9 @@ router.post("/", async (req: Request, res: Response) => {
           },
         }),
         // If tags provided manually
-        ...(tags && tags.length > 0 && {
+        ...(normalizedTags.length > 0 && {
           tags: {
-            create: tags.map((tagName: string) => ({
+            create: normalizedTags.map((tagName: string) => ({
               tag: {
                 connectOrCreate: {
                   where: { userId_name: { userId, name: tagName } },
@@ -255,7 +325,7 @@ router.post("/", async (req: Request, res: Response) => {
     });
 
     // 3.1.4 Push to scrapeQueue
-    await scrapeQueue.add("scrape-url", { itemId: item.id, url, userId });
+    await scrapeQueue.add("scrape-url", { itemId: item.id, url: normalizedUrl, userId });
 
     res.status(201).json(mapItemWithTags(item));
   } catch (error) {

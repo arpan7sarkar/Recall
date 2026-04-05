@@ -77,8 +77,8 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       <div
         className={cn(
           "relative flex items-center justify-center overflow-hidden bg-(--bg-primary)/40 border-b border-border transition-all duration-500",
-          item.itemType === "tweet" ? "h-auto min-h-48 p-4" : "h-48",
-          !item.thumbnailUrl && item.itemType !== "tweet" && "bg-linear-to-br from-indigo-500/5 to-transparent",
+          (item.itemType === "tweet" || item.itemType === "instagram") ? "h-auto min-h-48 p-4" : "h-48",
+          !item.thumbnailUrl && item.itemType !== "tweet" && item.itemType !== "instagram" && "bg-linear-to-br from-indigo-500/5 to-transparent",
           isProcessing && "bg-muted animate-pulse"
         )}
         style={{
@@ -100,6 +100,24 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
                 if (window.twttr) window.twttr.widgets.load();
               }}
             />
+          </div>
+        ) : item.itemType === "instagram" && !isProcessing ? (
+          <div className="w-full flex justify-center pointer-events-auto max-h-[350px] overflow-hidden">
+             <blockquote 
+               className="instagram-media" 
+               data-instgrm-permalink={item.url} 
+               data-instgrm-version="14"
+               style={{ width: '100%', margin: '0', border: 'none' }}
+             >
+             </blockquote>
+             <Script 
+               src="//www.instagram.com/embed.js" 
+               strategy="afterInteractive"
+               onLoad={() => {
+                 // @ts-ignore
+                 if (window.instgrm) window.instgrm.Embeds.process();
+               }}
+             />
           </div>
         ) : !item.thumbnailUrl && !isProcessing ? (
           <div className="opacity-10">

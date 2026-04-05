@@ -42,7 +42,7 @@ export function extractDomain(url: string | null): string {
 /** Truncate text to max length with ellipsis */
 export function truncate(text: string, maxLen: number): string {
   if (text.length <= maxLen) return text;
-  return text.slice(0, maxLen).trimEnd() + "…";
+  return text.slice(0, maxLen).trimEnd() + "...";
 }
 
 /** Content-type icon map */
@@ -53,6 +53,8 @@ export const TYPE_ICONS: Record<ItemType, string> = {
   pdf: "pdf",
   podcast: "podcast",
   image: "image",
+  instagram: "instagram",
+  linkedin: "linkedin",
   link: "link",
 };
 
@@ -64,5 +66,7 @@ export const TYPE_LABELS: Record<ItemType, string> = {
   pdf: "PDF",
   podcast: "Podcast",
   image: "Image",
+  instagram: "Instagram",
+  linkedin: "LinkedIn",
   link: "Link",
 };

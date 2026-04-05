@@ -18,16 +18,21 @@ router.post("/sync", authenticateClerk, async (req: Request, res: Response) => {
   }
 
   try {
+    const normalizedEmail =
+      typeof email === "string" && email.trim().length > 0
+        ? email.trim().toLowerCase()
+        : `${auth.userId}@clerk.local`;
+
     const user = await prisma.user.upsert({
       where: { id: auth.userId },
       update: {
-        email: email || undefined,
+        email: normalizedEmail,
         name: name || undefined,
         avatarUrl: avatarUrl || undefined,
       },
       create: {
         id: auth.userId,
-        email: email || "",
+        email: normalizedEmail,
         name: name || "Anonymous",
         avatarUrl: avatarUrl || null,
       },

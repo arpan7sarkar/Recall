@@ -1,8 +1,8 @@
+import "dotenv/config";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import dotenv from "dotenv";
 import { clerkMiddleware } from "@clerk/express";
 import authRoutes from "./routes/auth";
 import itemRoutes from "./routes/items";
@@ -11,14 +11,16 @@ import collectionsRoutes from "./routes/collections";
 import searchRoutes from "./routes/search";
 import graphRoutes from "./routes/graph";
 
-// Load environment variables
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 4000;
+const clerkClockSkewInMs = Number(process.env.CLERK_CLOCK_SKEW_MS ?? 15000);
 
 // Standard middleware
-app.use(clerkMiddleware()); // Clerk sessions
+app.use(
+  clerkMiddleware({
+    clockSkewInMs: Number.isFinite(clerkClockSkewInMs) ? clerkClockSkewInMs : 15000,
+  })
+); // Clerk sessions
 app.use(helmet()); // Security headers
 app.use(morgan("dev")); // Logging
 app.use(cors()); // CORS support

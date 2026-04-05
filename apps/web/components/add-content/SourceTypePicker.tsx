@@ -12,10 +12,10 @@ export function SourceTypePicker() {
   return (
     <div className="space-y-6">
       <div className="text-center mb-10">
-        <h2 className="text-3xl font-serif text-[var(--text-primary)] tracking-tight mb-2">
+        <h2 className="text-3xl font-serif text-(--text-primary) tracking-tight mb-2">
           What are you saving?
         </h2>
-        <p className="text-sm font-light text-[var(--text-secondary)]">
+        <p className="text-sm font-light text-muted-foreground">
           Pick a source type or paste any link below
         </p>
       </div>
@@ -54,7 +54,7 @@ export function SourceTypePicker() {
             </span>
             <span
               className="text-[11px] leading-tight opacity-70"
-              style={{ color: "var(--text-secondary)" }}
+              style={{ color: "var(--text-primary)" }}
             >
               {opt.description}
             </span>
@@ -64,14 +64,14 @@ export function SourceTypePicker() {
 
       {/* Fallback URL paste */}
       <div className="pt-4">
-        <div className="flex items-center gap-3 px-5 py-4 rounded-xl border border-[var(--border)] bg-[var(--bg-primary)]/40 transition-all duration-300 focus-within:border-[var(--accent-500)]/30 focus-within:shadow-[0_0_15px_rgba(192,192,192,0.05)]">
-          <div className="flex items-center justify-center text-[var(--text-tertiary)]" style={{ width: 24 }}>
+        <div className="flex items-center gap-3 px-5 py-4 rounded-xl border border-border bg-(--bg-primary)/40 transition-all duration-300 focus-within:border-(--accent-500)/30 focus-within:shadow-[0_0_15px_rgba(192,192,192,0.05)]">
+          <div className="flex items-center justify-center text-(--text-tertiary)" style={{ width: 24 }}>
             <Icon name="link" size={18} />
           </div>
           <input
             type="url"
             placeholder="Or just paste any URL here..."
-            className="flex-1 bg-transparent text-sm font-light text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)]"
+            className="flex-1 bg-transparent text-sm font-light text-(--text-primary) outline-none placeholder:text-(--text-tertiary)"
             onChange={(e) => {
               const val = e.target.value.trim();
               setUrl(val);
@@ -82,6 +82,8 @@ export function SourceTypePicker() {
                 
                 if (urlLower.includes("youtube.com") || urlLower.includes("youtu.be")) detected = "youtube";
                 else if (urlLower.includes("twitter.com") || urlLower.includes("x.com")) detected = "tweet";
+                else if (urlLower.includes("instagram.com")) detected = "instagram";
+                else if (urlLower.includes("linkedin.com")) detected = "linkedin";
                 else if (urlLower.endsWith(".pdf")) detected = "pdf";
                 else if (/\.(jpg|jpeg|png|gif|webp|avif)$/.test(urlLower)) detected = "image";
                 else if (urlLower.includes("spotify.com") || urlLower.includes("apple.com/podcast") || urlLower.includes("podcasts.")) detected = "podcast";

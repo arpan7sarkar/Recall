@@ -34,6 +34,8 @@ export const CONTENT_TYPE_FILTERS: { label: string; value: ItemType | "all" }[] 
   { label: "Tweets", value: "tweet" },
   { label: "Podcasts", value: "podcast" },
   { label: "Images", value: "image" },
+  { label: "Instagram", value: "instagram" },
+  { label: "LinkedIn", value: "linkedin" },
   { label: "Links", value: "link" },
 ];
 
@@ -45,6 +47,8 @@ export const TYPE_COLORS: Record<ItemType, string> = {
   pdf: "hsl(35, 30%, 55%)",
   podcast: "hsl(280, 12%, 55%)",
   image: "hsl(100, 18%, 50%)",
+  instagram: "hsl(330, 45%, 55%)",
+  linkedin: "hsl(210, 65%, 45%)",
   link: "hsl(220, 10%, 55%)",
 };
 
@@ -56,6 +60,8 @@ export const TYPE_BG_CLASSES: Record<ItemType, string> = {
   pdf: "bg-amber-50 text-amber-700",
   podcast: "bg-purple-50 text-purple-700",
   image: "bg-green-50 text-green-700",
+  instagram: "bg-pink-50 text-pink-700",
+  linkedin: "bg-sky-50 text-sky-700",
   link: "bg-gray-100 text-gray-600",
 };
 
@@ -108,6 +114,20 @@ export const SOURCE_TYPE_OPTIONS: {
     label: "Image / GIF",
     description: "Upload an image or paste a link",
     inputMode: "both",
+  },
+  {
+    type: "instagram",
+    icon: "instagram",
+    label: "Instagram Reel / Post",
+    description: "Save an Instagram reel or post",
+    inputMode: "url",
+  },
+  {
+    type: "linkedin",
+    icon: "linkedin",
+    label: "LinkedIn Post",
+    description: "Save a LinkedIn post URL",
+    inputMode: "url",
   },
   {
     type: "link",
