@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import type { ItemType } from "@prisma/client";
+import type { ItemType, SaveSource } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { authenticateClerk } from "@/middleware/auth";
 import { fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
@@ -272,7 +272,7 @@ router.get("/", async (req: Request, res: Response) => {
  */
 router.post("/", async (req: Request, res: Response) => {
   const userId = (req as any).auth?.userId;
-  const { url, itemType, tags, collectionId, note, youtubeTimestamp } = req.body;
+  const { url, itemType, tags, collectionId, note, youtubeTimestamp, saveSource } = req.body;
 
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -287,6 +287,8 @@ router.post("/", async (req: Request, res: Response) => {
     const normalizedTags = normalizeTagsInput(tags);
     const normalizedItemType = isItemType(itemType) ? itemType : detectItemTypeFromUrl(normalizedUrl);
     const parsedYoutubeTimestamp = youtubeTimestamp ? parseInt(String(youtubeTimestamp), 10) : null;
+    const normalizedSaveSource: SaveSource =
+      saveSource === "extension" || saveSource === "web_url" ? saveSource : "web_url";
 
     // Initial creation - metadata will be filled by worker later
     const item = await prisma.item.create({
@@ -294,7 +296,7 @@ router.post("/", async (req: Request, res: Response) => {
         userId,
         url: normalizedUrl,
         itemType: normalizedItemType,
-        saveSource: "web_url", // Default for this endpoint
+        saveSource: normalizedSaveSource,
         userNote: note,
         youtubeTimestamp: Number.isFinite(parsedYoutubeTimestamp) ? parsedYoutubeTimestamp : null,
         status: "pending",

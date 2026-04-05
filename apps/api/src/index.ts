@@ -14,6 +14,12 @@ import graphRoutes from "./routes/graph";
 const app = express();
 const PORT = process.env.PORT || 4000;
 const clerkClockSkewInMs = Number(process.env.CLERK_CLOCK_SKEW_MS ?? 15000);
+const configuredCorsOrigins = (process.env.CORS_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const defaultCorsOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
+const allowedCorsOrigins = new Set([...defaultCorsOrigins, ...configuredCorsOrigins]);
 
 // Standard middleware
 app.use(
@@ -23,7 +29,29 @@ app.use(
 ); // Clerk sessions
 app.use(helmet()); // Security headers
 app.use(morgan("dev")); // Logging
-app.use(cors()); // CORS support
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (origin.startsWith("chrome-extension://")) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedCorsOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+); // CORS support for web app + extension
 app.use(express.json()); // JSON body parser
 app.use(express.urlencoded({ extended: true }));
 
