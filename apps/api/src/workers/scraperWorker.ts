@@ -18,6 +18,7 @@ interface TweetFallbackData {
 }
 
 interface InstagramFallbackData {
+  title: string | null;
   text: string | null;
   author: string | null;
   thumbnailUrl: string | null;
@@ -66,6 +67,21 @@ function shorten(value: string, max = 180): string {
   return `${value.slice(0, max - 3)}...`;
 }
 
+function firstMeaningfulTitle(type: string, ...candidates: Array<string | null | undefined>): string | null {
+  for (const candidate of candidates) {
+    const normalized = normalizeText(candidate);
+    if (!normalized) continue;
+
+    if (type === "instagram" && normalized.toLowerCase() === "instagram") {
+      continue;
+    }
+
+    return normalized;
+  }
+
+  return null;
+}
+
 function buildFallbackTitle(url: string, type: string, mainText: string): string {
   if (type === "tweet") {
     const parsed = new URL(url);
@@ -73,15 +89,6 @@ function buildFallbackTitle(url: string, type: string, mainText: string): string
     const username = parts[0] ? `@${parts[0]}` : "tweet";
     if (mainText) return shorten(mainText, 80);
     return `Tweet by ${username}`;
-  }
-
-  if (type === "instagram") {
-    const parsed = new URL(url);
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    const contentType = parts[0] === "reel" ? "Reel" : "Post";
-    const shortcode = parts[1] || "Unknown";
-    if (mainText) return shorten(mainText, 80);
-    return `Instagram ${contentType} ${shortcode}`;
   }
 
   if (type === "linkedin") {
@@ -124,18 +131,6 @@ async function fetchTweetFallback(url: string): Promise<TweetFallbackData> {
   }
 }
 
-function buildInstagramTextFromUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    const format = parts[0] === "reel" ? "reel" : "post";
-    const shortcode = parts[1] || "unknown";
-    return `Instagram ${format} ${shortcode}`;
-  } catch {
-    return "Instagram content";
-  }
-}
-
 async function fetchInstagramFallback(url: string): Promise<InstagramFallbackData> {
   const endpoint = `https://www.instagram.com/oembed/?url=${encodeURIComponent(url)}`;
 
@@ -146,13 +141,15 @@ async function fetchInstagramFallback(url: string): Promise<InstagramFallbackDat
     const thumbnailUrl = typeof data?.thumbnail_url === "string" ? data.thumbnail_url : null;
 
     return {
-      text: title || buildInstagramTextFromUrl(url),
+      title: title || null,
+      text: title || null,
       author: author || null,
       thumbnailUrl,
     };
   } catch {
     return {
-      text: buildInstagramTextFromUrl(url),
+      title: null,
+      text: null,
       author: null,
       thumbnailUrl: null,
     };
@@ -213,7 +210,7 @@ export async function processScrape(job: any) {
     // 4. Fetch URL content
     let html = "";
     let tweetFallback: TweetFallbackData = { text: null, author: null, thumbnailUrl: null };
-    let instagramFallback: InstagramFallbackData = { text: null, author: null, thumbnailUrl: null };
+    let instagramFallback: InstagramFallbackData = { title: null, text: null, author: null, thumbnailUrl: null };
     let linkedInFallback: LinkedInFallbackData = { text: null, author: null, thumbnailUrl: null };
 
     try {
@@ -289,7 +286,16 @@ export async function processScrape(job: any) {
       }
     }
 
-    const title = item.title || (metadata as any).title || buildFallbackTitle(url, finalType, mainText) || "Untitled";
+    const title =
+      finalType === "instagram"
+        ? firstMeaningfulTitle(finalType, item.title, (metadata as any).title, instagramFallback.title)
+        : firstMeaningfulTitle(
+            finalType,
+            item.title,
+            (metadata as any).title,
+            finalType === "linkedin" ? linkedInFallback.text : null,
+            buildFallbackTitle(url, finalType, mainText)
+          );
     const description =
       item.description ||
       (metadata as any).description ||

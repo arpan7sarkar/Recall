@@ -8,21 +8,24 @@ import { timeAgo, extractDomain, formatReadingTime } from "@/lib/utils";
 import { RelatedItems } from "@/components/items/RelatedItems";
 import { Icon } from "@/components/shared/Icon";
 import { TweetPreview } from "@/components/items/TweetPreview";
+import { SocialPostPreview } from "@/components/items/SocialPostPreview";
+import { InstagramAutoEmbed } from "@/components/items/InstagramAutoEmbed";
+import { LoaderFive, LoaderTwo } from "@/components/ui/unique-loader-components";
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   
   const { data: item, isLoading, error } = useItem(id as string);
+  const isInstagram = item?.itemType === "instagram";
+  const isStaticSocialPreview = item?.itemType === "linkedin";
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="flex items-center justify-center rounded-xl font-bold text-white text-lg w-12 h-12 bg-indigo-500">R</div>
-        <div className="flex gap-1">
-          <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse" />
-          <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse delay-75" />
-          <span className="w-2 h-2 rounded-full bg-slate-300 animate-pulse delay-150" />
+      <div className="flex flex-col items-center justify-center py-32 animate-in fade-in duration-700">
+        <LoaderFive text="Loading your content" />
+        <div className="mt-4 opacity-50">
+          <LoaderTwo />
         </div>
       </div>
     );
@@ -64,6 +67,14 @@ export default function ItemDetailPage() {
           {item.itemType === "tweet" ? (
             <div className="mb-8">
               <TweetPreview item={item} />
+            </div>
+          ) : isInstagram ? (
+            <div className="mb-8">
+              <InstagramAutoEmbed item={item} className="h-[420px]" />
+            </div>
+          ) : isStaticSocialPreview ? (
+            <div className="mb-8">
+              <SocialPostPreview item={item} className="h-[280px]" />
             </div>
           ) : (
             <div
