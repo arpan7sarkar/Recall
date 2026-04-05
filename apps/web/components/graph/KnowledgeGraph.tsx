@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { ForceGraphMethods } from "react-force-graph-2d";
 
+import { useUIStore } from "@/store/uiStore";
 import { LoaderFour } from "@/components/ui/unique-loader-components";
 
 // ForceGraph must be dynamically imported for SSR compatibility in Next.js
@@ -49,6 +50,7 @@ interface KnowledgeGraphProps {
 
 export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
   const router = useRouter();
+  const theme = useUIStore((s) => s.theme);
   const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
@@ -75,12 +77,12 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
 
   const getNodeColor = (type: string) => {
     switch (type) {
-      case "article": return "#6366f1"; // Indigo
-      case "youtube": return "#ef4444"; // Red
-      case "tweet": return "#38bdf8"; // Sky
-      case "pdf": return "#f59e0b"; // Amber
-      case "image": return "#22c55e"; // Green
-      default: return "#94a3b8"; // Slate
+      case "article": return "#3b82f6"; // Sapphire
+      case "youtube": return "#e11d48"; // Ruby
+      case "tweet": return "#94a3b8"; // Silver
+      case "pdf": return "#ca8a04"; // Gold
+      case "image": return "#27272a"; // Obsidian
+      default: return "#18181b"; // Obsidian Deep
     }
   };
 
@@ -104,9 +106,11 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
     return typeof strength === "number" ? strength : 1;
   };
 
+  const isDark = theme === "dark";
+
   return (
     <div 
-      className="rounded-2xl overflow-hidden border bg-white shadow-sm" 
+      className="rounded-2xl overflow-hidden border bg-background shadow-sm transition-colors duration-500" 
       style={{ borderColor: "var(--border)" }}
       id="knowledge-graph-container"
     >
@@ -115,7 +119,7 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
         graphData={graphData}
         width={dimensions.width}
         height={dimensions.height}
-        backgroundColor="#ffffff"
+        backgroundColor={isDark ? "#000000" : "#ffffff"}
         
         // Node styling
         nodeLabel={(node) => getNodeLabel(node)}
@@ -123,9 +127,13 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
         nodeColor={(node) => getNodeColor(getNodeType(node))}
         
         // Link styling
-        linkColor={(link) =>
-          getLinkType(link) === "similarity" ? "rgba(0,0,0,0.08)" : "rgba(99, 102, 241, 0.15)"
-        }
+        linkColor={(link) => {
+          const type = getLinkType(link);
+          if (type === "similarity") {
+            return isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)";
+          }
+          return isDark ? "rgba(99, 102, 241, 0.2)" : "rgba(99, 102, 241, 0.15)";
+        }}
         linkWidth={(link) => (getLinkType(link) === "similarity" ? 1 : 1.5)}
         linkLineDash={(link) => (getLinkType(link) === "similarity" ? [3, 2] : null)}
         
@@ -133,7 +141,7 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
         linkDirectionalParticles={1}
         linkDirectionalParticleSpeed={(link) => getLinkStrength(link) * 0.005}
         linkDirectionalParticleWidth={1.5}
-        linkDirectionalParticleColor={() => "rgba(99, 102, 241, 0.4)"}
+        linkDirectionalParticleColor={() => isDark ? "rgba(255,255,255,0.2)" : "rgba(99, 102, 241, 0.4)"}
 
         // Interaction
         onNodeClick={(node) => {
