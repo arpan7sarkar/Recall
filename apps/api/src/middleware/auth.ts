@@ -1,12 +1,32 @@
 import { Request, Response, NextFunction } from "express";
 import { getAuth } from "@clerk/express";
 import prisma from "@/lib/prisma";
+import { type ExtensionAuthSource, verifyExtensionToken } from "@/lib/extensionJwt";
 
 export const authenticateClerk = async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = getAuth(req);
+  const { userId: clerkUserId } = getAuth(req);
+
+  let userId: string | null = clerkUserId ?? null;
+  let source: ExtensionAuthSource = clerkUserId ? "clerk" : "extension";
 
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized: No session found" });
+    const authHeader = req.headers.authorization;
+    const token =
+      typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")
+        ? authHeader.slice("bearer ".length).trim()
+        : "";
+
+    if (token) {
+      const payload = verifyExtensionToken(token);
+      if (payload?.sub) {
+        userId = payload.sub;
+        source = "extension";
+      }
+    }
+  }
+
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized: No valid session or extension token found" });
   }
 
   try {
@@ -16,8 +36,8 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
       return next(); 
     }
 
-    // 2. Attach clerk userId to request
-    (req as any).auth = { userId };
+    // 2. Attach auth identity to request
+    (req as any).auth = { userId, source };
     
     // 3. Find/Attach local user record
     let user = await prisma.user.findFirst({
@@ -33,7 +53,7 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
     });
 
     // 4. Ensure a local user row exists so downstream writes never fail on FK constraints.
-    if (!user) {
+    if (!user && source === "clerk") {
       user = await prisma.user.upsert({
         where: { id: userId },
         update: {},
@@ -46,6 +66,10 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
         console.error("[Auth] Failed to create fallback local user:", err.message);
         return null;
       });
+    }
+
+    if (!user && source === "extension") {
+      return res.status(401).json({ error: "Unauthorized: Extension token user no longer exists" });
     }
 
     if (user) {
