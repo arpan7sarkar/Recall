@@ -1,11 +1,17 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 
-const pc = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY!,
-});
-
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
 const indexName = process.env.PINECONE_INDEX || "second-brain";
-const index = pc.index(indexName);
+
+let pc: Pinecone | null = null;
+let index: ReturnType<Pinecone["index"]> | null = null;
+
+if (PINECONE_API_KEY) {
+  pc = new Pinecone({ apiKey: PINECONE_API_KEY });
+  index = pc.index(indexName);
+} else {
+  console.warn("[VectorDB] PINECONE_API_KEY not set — vector features will be unavailable");
+}
 
 export interface VectorMetadata {
   userId: string;
@@ -24,6 +30,10 @@ export async function upsertEmbedding(
   vector: number[],
   metadata: VectorMetadata
 ) {
+  if (!index) {
+    console.warn(`[VectorDB] Skipping upsert for ${itemId} — no Pinecone connection`);
+    return { success: false };
+  }
   try {
     await index.upsert({
       records: [
@@ -50,6 +60,10 @@ export async function queryEmbedding(
   topK: number = 20,
   filter?: any
 ) {
+  if (!index) {
+    console.warn("[VectorDB] Skipping query — no Pinecone connection");
+    return [];
+  }
   try {
     // Always filter by userId for security/privacy
     const baseFilter = { userId: { $eq: userId } };
@@ -73,6 +87,10 @@ export async function queryEmbedding(
  * Fetch a single vector by its ID
  */
 export async function fetchEmbedding(itemId: string) {
+  if (!index) {
+    console.warn(`[VectorDB] Skipping fetch for ${itemId} — no Pinecone connection`);
+    return null;
+  }
   try {
     const response = await index.fetch({ ids: [itemId] });
     const record = response.records[itemId];
@@ -87,6 +105,10 @@ export async function fetchEmbedding(itemId: string) {
  * Delete an embedding from Pinecone
  */
 export async function deleteEmbedding(itemId: string) {
+  if (!index) {
+    console.warn(`[VectorDB] Skipping delete for ${itemId} — no Pinecone connection`);
+    return { success: false };
+  }
   try {
     await index.deleteOne({ id: itemId });
     return { success: true };

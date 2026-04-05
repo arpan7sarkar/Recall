@@ -1,6 +1,6 @@
 import "module-alias/register";
 import "dotenv/config";
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -13,7 +13,8 @@ import searchRoutes from "./routes/search";
 import graphRoutes from "./routes/graph";
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = parseInt(process.env.PORT || "4000", 10);
+const HOST = process.env.HOST || "0.0.0.0";
 const clerkClockSkewInMs = Number(process.env.CLERK_CLOCK_SKEW_MS ?? 15000);
 const configuredCorsOrigins = (process.env.CORS_ORIGINS ?? "")
   .split(",")
@@ -83,13 +84,32 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 // Error handling middleware
-app.use((err: Error, _req: Request, res: Response, _next: Function) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ error: "Something went wrong!" });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📡 Health check: http://localhost:${PORT}/health`);
+// Start server — bind the port FIRST so Render detects it
+const server = app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on http://${HOST}:${PORT}`);
+  console.log(`📡 Health check: http://${HOST}:${PORT}/health`);
+});
+
+// Graceful shutdown
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down gracefully...");
+  server.close(() => {
+    console.log("Server closed");
+    process.exit(0);
+  });
+});
+
+// Catch unhandled errors to prevent silent crashes
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("[Unhandled Rejection]", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("[Uncaught Exception]", err);
+  // Don't exit — let the server keep running so the port stays bound
 });
