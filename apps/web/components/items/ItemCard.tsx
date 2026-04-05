@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
@@ -35,7 +35,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
     return (
       <div
         onClick={handleCardClick}
-        className="flex items-center gap-4 p-5 cursor-pointer transition-all duration-300 border rounded-xl bg-card border-border hover:border-(--border-hover) hover:bg-muted shadow-sm"
+        className="flex items-center gap-4 p-6 cursor-pointer transition-all duration-500 border rounded-xl bg-card/60 backdrop-blur-sm border-border hover:border-accent/30 hover:bg-zinc-900/40 group/list"
         id={`item-card-${item.id}`}
       >
         <div
@@ -60,8 +60,8 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
               {trimmedTitle || "Untitled"}
             </h3>
           )}
-          <p className="text-[10px] font-light text-muted-foreground mt-1">
-            {extractDomain(item.url)} | {timeAgo(item.savedAt)}
+          <p className="text-[10px] font-serif italic text-zinc-500 mt-1.5 group-hover/list:text-zinc-400 transition-colors">
+            {extractDomain(item.url)} <span className="mx-1 opacity-30">|</span> {timeAgo(item.savedAt)}
           </p>
         </div>
 
@@ -77,7 +77,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   return (
     <div
       onClick={handleCardClick}
-      className="flex flex-col overflow-hidden cursor-pointer transition-all duration-300 border rounded-2xl bg-card border-border hover:border-(--border-hover) shadow-sm group min-h-[400px] h-full"
+      className="flex flex-col overflow-hidden cursor-pointer transition-all duration-700 border rounded-2xl bg-card/40 backdrop-blur-md border-border hover:border-accent/40 group min-h-[420px] h-full"
       id={`item-card-${item.id}`}
     >
       <div
@@ -121,7 +121,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
 
         {item.isFavourite && (
           <div
-            className="absolute top-3 right-3 z-10 flex items-center justify-center rounded-full text-xs shadow-sm bg-(--bg-elevated)/90 backdrop-blur-sm"
+            className="absolute top-4 right-4 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md"
             style={{ width: 32, height: 32, color: "var(--accent-500)" }}
           >
             <Heart size={16} fill="currentColor" />
@@ -138,13 +138,13 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         </div>
 
         {shouldShowTitle && (
-          <h3 className="text-base font-serif text-(--text-primary) tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-indigo-400 transition-colors duration-300">
+          <h3 className="text-lg font-serif italic text-white/90 tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-accent transition-colors duration-500">
             {trimmedTitle || "Untitled"}
           </h3>
         )}
 
         {item.description && item.itemType !== "tweet" && (
-          <p className="text-xs font-light text-muted-foreground line-clamp-2 mt-1 relative z-10 leading-relaxed">
+          <p className="text-xs font-serif italic text-zinc-500 line-clamp-3 mt-2 relative z-10 leading-relaxed group-hover:text-zinc-400 transition-colors duration-500">
             {item.description}
           </p>
         )}

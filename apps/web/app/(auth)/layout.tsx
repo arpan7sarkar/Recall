@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Brain } from "lucide-react";
 import { AnimatedShaderBackground } from "@/components/ui/animated-shader-background";
 import { ROUTES } from "@/lib/constants";
 
@@ -23,8 +24,8 @@ export default function AuthLayout({
             href={ROUTES.home}
             className="group flex items-center gap-3 rounded-full border border-white/10 bg-white/3 pr-4 pl-2 py-1.5 text-sm font-medium tracking-tight text-zinc-300 transition-all duration-300 hover:border-white/20 hover:bg-white/6 hover:text-white"
           >
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-[10px] font-bold text-black group-hover:scale-110 transition-transform duration-300">
-              R
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-zinc-100 overflow-hidden group-hover:scale-110 transition-transform duration-300">
+              <img src="/favicon.png" alt="Recall" className="w-full h-full object-cover" />
             </div>
             Recall
           </Link>
@@ -59,8 +60,8 @@ export default function AuthLayout({
         {/* Auth Content */}
         <section className="mx-auto w-full max-w-lg">
           <div className="mb-10 flex flex-col items-center space-y-4 lg:hidden">
-            <Link href={ROUTES.home} className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100 text-xl font-bold text-black">
-              R
+            <Link href={ROUTES.home} className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100 overflow-hidden">
+              <img src="/favicon.png" alt="Recall" className="w-full h-full object-cover scale-110" />
             </Link>
             <div className="text-center">
               <h1 className="text-2xl font-bold text-white">Welcome Back</h1>

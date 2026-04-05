@@ -85,10 +85,10 @@
   --accent-700: #808080;
   --accent-foreground: #050505;
 
-  --button-primary-bg: #9a9a9a;
-  --button-primary-bg-hover: #ababab;
+  --button-primary-bg: #d4d4d4;
+  --button-primary-bg-hover: #e5e5e5;
   --button-primary-text: #050505;
-  --button-primary-border: rgba(255, 255, 255, 0.18);
+  --button-primary-border: rgba(255, 255, 255, 0.22);
   --button-secondary-bg: rgba(255, 255, 255, 0.02);
   --button-secondary-bg-hover: rgba(255, 255, 255, 0.09);
   --button-secondary-text: #e5e5e5;
@@ -192,7 +192,6 @@ body {
   border: 1px solid var(--button-primary-border);
   background: var(--button-primary-bg);
   color: var(--button-primary-text);
-  box-shadow: 0 16px 36px -22px color-mix(in srgb, var(--button-primary-bg) 85%, transparent);
 }
 
 .btn-primary:hover {
@@ -218,106 +217,20 @@ body {
   background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 0 !important;
+  /* padding removed to allow appearance px/py to work */
 }
 
 .cl-headerTitle {
-  color: #ffffff !important;
   font-family: var(--font-sans) !important;
-  font-weight: 700 !important;
-}
-
-.cl-headerSubtitle {
-  color: #a1a1aa !important;
-}
-
-.cl-socialButtonsBlockButton {
-  background-color: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  transition: all 0.2s ease !important;
-}
-
-.cl-socialButtonsBlockButton:hover {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-.cl-socialButtonsBlockButtonText {
-  color: #ffffff !important;
-  font-weight: 600 !important;
-}
-
-.cl-dividerLine {
-  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .cl-dividerText {
-  color: #71717a !important;
-  font-weight: 600 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.1em !important;
-}
-
-.cl-formFieldLabel {
-  color: #a1a1aa !important;
-  font-weight: 500 !important;
-  margin-bottom: 0.5rem !important;
-}
-
-.cl-formFieldInput {
-  background-color: rgba(255, 255, 255, 0.03) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 0.75rem !important;
-  height: 3rem !important;
-}
-
-.cl-formFieldInput:focus {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05) !important;
-}
-
-.cl-formButtonPrimary {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  height: 3rem !important;
-  border-radius: 0.75rem !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.1) !important;
-  transition: all 0.2s ease !important;
+  letter-spacing: 0.2em !important;
 }
 
 .cl-formButtonPrimary:hover {
-  background-color: #f4f4f5 !important;
   transform: translateY(-1px) !important;
-}
-
-.cl-footerActionText {
-  color: #71717a !important;
-}
-
-.cl-footerActionLink {
-  color: #ffffff !important;
-  font-weight: 600 !important;
-}
-
-.cl-footerActionLink:hover {
-  color: #a1a1aa !important;
-}
-
-.cl-identityPreviewText {
-  color: #ffffff !important;
-}
-
-.cl-formFieldAction {
-  color: #ffffff !important;
-}
-
-.cl-formFieldAction:hover {
-  color: #a1a1aa !important;
 }
 
 /* Fix for light-dark() function defaulting to light in some environments */

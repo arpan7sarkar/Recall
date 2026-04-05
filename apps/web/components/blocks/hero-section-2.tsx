@@ -39,7 +39,7 @@ export function HeroSection() {
                 <section>
                     <div className="relative pt-32 pb-20">
                         {/* High-end atmospheric background from previous logic */}
-                        <div className="absolute inset-x-0 top-0 -z-10 h-[800px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0059ff10] via-transparent to-transparent opacity-80"></div>
+                        <div className="absolute inset-x-0 top-0 -z-10 h-[800px] bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-[#0059ff10] via-transparent to-transparent opacity-80"></div>
                         
                         <div className="mx-auto max-w-5xl px-6 text-center">
                             <AnimatedGroup
@@ -124,16 +124,6 @@ export function HeroSection() {
                         </AnimatedGroup>
                     </div>
                 </section>
-
-                <section className="bg-[#070707] pb-32 pt-20">
-                    <div className="group relative m-auto max-w-5xl px-6">
-                       
-                        
-                
-
-                    
-                    </div>
-                </section>
             </main>
         </>
     )
@@ -163,7 +153,7 @@ export const HeroHeader = () => {
         <header>
             <nav
                 data-state={menuState && 'active'}
-                className={cn('group fixed z-[100] w-full transition-all duration-300', scrolled ? 'bg-black/50 backdrop-blur-2xl py-3 border-b border-white/5' : 'py-6')}>
+                className={cn('group fixed z-100 w-full transition-all duration-300', scrolled ? 'bg-black/50 backdrop-blur-2xl py-3 border-b border-white/5' : 'py-6')}>
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="relative flex items-center justify-between">
                         <div className="flex items-center gap-12">
@@ -171,7 +161,7 @@ export const HeroHeader = () => {
                                 href="/"
                                 aria-label="home"
                                 className="flex items-center space-x-3 group">
-                                <div className="w-8 h-8 rounded overflow-hidden flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                                <div className="w-8 h-8 rounded border border-white/10 overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <img src="/favicon.png" alt="Recall" className="w-full h-full object-cover" />
                                 </div>
                                 <span className="font-serif font-medium text-lg tracking-wide text-zinc-100 italic">Recall</span>
@@ -205,7 +195,7 @@ export const HeroHeader = () => {
                                 <Button
                                     asChild
                                     className="rounded-full px-6 py-2 font-medium active:scale-95">
-                                    <Link href={isSignedIn ? ROUTES.dashboard : ROUTES.register}>{isSignedIn ? "Dashboard" : "Get early access"}</Link>
+                                    <Link href={isSignedIn ? ROUTES.dashboard : ROUTES.register}>{isSignedIn ? "Dashboard" : "Get started"}</Link>
                                 </Button>
                              </div>
 

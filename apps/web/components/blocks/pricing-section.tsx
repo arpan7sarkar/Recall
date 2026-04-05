@@ -28,7 +28,7 @@ export const PricingSection = () => {
     },
     {
       name: "Pro",
-      price: isAnnual ? "₹1099" : "₹99",
+      price: isAnnual ? "₹2999" : "₹299",
       description: "For serious knowledge builders",
       features: [
         "Unlimited saved items",
@@ -79,10 +79,10 @@ export const PricingSection = () => {
             Scale your second brain as your ambition grows.
           </p>
 
-          <div className="inline-flex items-center bg-white/5 border border-white/10 backdrop-blur-sm rounded-full p-1.5 shadow-inner">
+          <div className="inline-flex items-center bg-white/5 border border-white/10 backdrop-blur-sm rounded-full p-1.5">
             <button
               className={`px-10 py-2.5 rounded-full text-[10px] font-bold tracking-widest transition-all duration-500 ${!isAnnual
-                  ? 'btn-primary shadow-xl shadow-accent/20'
+                  ? 'btn-primary'
                   : 'text-zinc-500 hover:text-white'
                 }`}
               onClick={() => setIsAnnual(false)}
@@ -91,7 +91,7 @@ export const PricingSection = () => {
             </button>
             <button
               className={`px-10 py-2.5 rounded-full text-[10px] font-bold tracking-widest transition-all duration-500 ${isAnnual
-                  ? 'btn-primary shadow-xl shadow-accent/20'
+                  ? 'btn-primary'
                   : 'text-zinc-500 hover:text-white'
                 }`}
               onClick={() => setIsAnnual(true)}
@@ -108,14 +108,14 @@ export const PricingSection = () => {
               className={cn(
                 "relative flex flex-col rounded-4xl border transition-all duration-700 animate-in fade-in slide-in-from-bottom-8",
                 plan.highlighted
-                  ? "border-accent/40 bg-zinc-950/80 backdrop-blur-xl shadow-2xl shadow-accent/5 scale-105 z-20"
+                  ? "border-accent/40 bg-zinc-950/80 backdrop-blur-xl scale-105 z-20"
                   : "border-white/5 bg-white/2 hover:bg-white/4 z-10"
               )}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                   <div className="px-5 py-1.5 bg-accent text-[9px] font-black text-background rounded-full tracking-[0.2em] uppercase shadow-2xl shadow-accent/30">
+                   <div className="px-5 py-1.5 bg-accent text-[9px] font-black text-background rounded-full tracking-[0.2em] uppercase">
                      SYSTEM RECOGNIZED
                    </div>
                 </div>
@@ -151,7 +151,7 @@ export const PricingSection = () => {
                   className={cn(
                     "w-full py-8 rounded-2xl text-xs font-black tracking-[0.15em] uppercase transition-all duration-500 active:scale-95",
                     plan.highlighted
-                      ? "btn-primary shadow-xl shadow-white/5"
+                      ? "btn-primary"
                       : "btn-secondary"
                   )}
                 >
@@ -167,4 +167,3 @@ export const PricingSection = () => {
     </section>
   );
 };
-
