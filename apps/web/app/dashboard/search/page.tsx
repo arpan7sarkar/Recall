@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSearch } from "@/hooks/useSearch";
 import { ItemCard } from "@/components/items/ItemCard";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { LoaderOne, LoaderThree, LoaderFive } from "@/components/ui/unique-loader-components";
 
 type SearchType = "semantic" | "keyword";
 
@@ -50,16 +51,9 @@ export default function SearchPage() {
             style={{ color: "var(--text-tertiary)" }}
           >
             {isSearching && query.length >= 2 ? (
-              <svg
-                className="animate-spin"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-              >
-                <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
-                <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+              <div className="scale-50 -translate-x-2">
+                <LoaderOne />
+              </div>
             ) : (
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
@@ -72,7 +66,7 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search your knowledge base…"
-            className="w-full pl-9 pr-4 py-3 rounded-xl text-sm outline-none focus-ring"
+            className="w-full pl-9 pr-4 py-3 rounded-xl text-sm outline-none focus-ring transition-all"
             style={{
               background: "var(--bg-secondary)",
               border: "1px solid var(--border)",
@@ -122,14 +116,9 @@ export default function SearchPage() {
           description="Type at least 2 characters to search across titles, descriptions, content, and tags."
         />
       ) : isLoading ? (
-        <div className="flex flex-col gap-3">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="skeleton rounded-xl"
-              style={{ height: 80 }}
-            />
-          ))}
+        <div className="flex flex-col items-center justify-center py-20 gap-6">
+          <LoaderFive text="Searching your brain" />
+          <LoaderThree />
         </div>
       ) : results.length === 0 ? (
         <EmptyState

@@ -1,4 +1,5 @@
-# Second Brain — Product Requirements Document (PRD)
+# Recall — Product Requirements Document (PRD)
+
 **Version:** 1.1  
 **Date:** March 2026  
 **Status:** Ready to Build  
@@ -29,7 +30,7 @@
 
 **One-line pitch:** A personal knowledge base where anything saved from the internet is automatically organised, connected, and surfaced back to you at the right time.
 
-**The core problem:** People save articles, tweets, videos, and PDFs constantly but never revisit them. There is no system that automatically organises this content, connects related ideas, or remembers *for you* what you once found interesting.
+**The core problem:** People save articles, tweets, videos, and PDFs constantly but never revisit them. There is no system that automatically organises this content, connects related ideas, or remembers _for you_ what you once found interesting.
 
 **The solution:** A web app + browser extension that captures any internet content, uses AI to tag and cluster it, builds a visual knowledge graph, and resurfaces relevant memories when you need them. Content can be added both via the browser extension (one-click save) and via a full-featured manual Add Content interface directly in the web app.
 
@@ -37,31 +38,34 @@
 
 ## 2. Goals & Success Metrics
 
-| Goal | Metric | Target |
-|------|--------|--------|
-| Users actively save content | Items saved per user per week | ≥ 10 |
-| AI organisation is useful | % of AI tags accepted by user | ≥ 70% |
-| Resurfacing is valued | Click-through rate on resurface suggestions | ≥ 25% |
-| Search is fast and relevant | Semantic search latency | < 1 second |
-| Graph is used | Users who visit graph view weekly | ≥ 30% |
-| Retention | Day-30 retention | ≥ 40% |
-| Manual saves used | % of saves made via web app Add Content UI | ≥ 30% |
+| Goal                        | Metric                                      | Target     |
+| --------------------------- | ------------------------------------------- | ---------- |
+| Users actively save content | Items saved per user per week               | ≥ 10       |
+| AI organisation is useful   | % of AI tags accepted by user               | ≥ 70%      |
+| Resurfacing is valued       | Click-through rate on resurface suggestions | ≥ 25%      |
+| Search is fast and relevant | Semantic search latency                     | < 1 second |
+| Graph is used               | Users who visit graph view weekly           | ≥ 30%      |
+| Retention                   | Day-30 retention                            | ≥ 40%      |
+| Manual saves used           | % of saves made via web app Add Content UI  | ≥ 30%      |
 
 ---
 
 ## 3. User Personas
 
 **Persona 1 — The Researcher (Primary)**
+
 - Saves academic papers, articles, YouTube lectures
 - Wants to connect ideas across topics
 - Uses semantic search daily
 
 **Persona 2 — The Content Creator**
+
 - Saves tweets, newsletters, inspiration
 - Wants to build collections for projects
 - Uses highlight and re-read features
 
 **Persona 3 — The Casual Learner**
+
 - Saves things impulsively, forgets them
 - Needs resurfacing feature most
 - Wants zero setup, auto-organisation
@@ -71,6 +75,7 @@
 ## 4. Feature List (Full Scope)
 
 ### Core Features (MVP — Phase 1 & 2)
+
 - User authentication (email + Google OAuth)
 - Browser extension (Chrome) to save any URL
 - **Manual content addition via web app — dedicated Add Content page with source type selection and type-specific forms (see Section 4a below)**
@@ -86,6 +91,7 @@
 This is a first-class feature of the web app. Users can add any type of content directly from the website without needing the browser extension.
 
 **Entry Points:**
+
 - Prominent "+ Add Content" button in the top navigation bar (always visible)
 - "+ Add Content" button in the empty state of the dashboard
 - Keyboard shortcut: `Cmd/Ctrl + K` opens the Add Content flow
@@ -118,30 +124,33 @@ When the user clicks "+ Add Content", they are shown a full-screen modal or dedi
 
 Once a source type is selected, the form adapts to show relevant fields for that type:
 
-| Source Type | Fields Shown |
-|-------------|--------------|
-| **Article / Blog** | URL (required), Title (optional override), Author (optional), Note |
-| **YouTube Video** | YouTube URL (required), Note, Start Timestamp (optional, e.g. "1:23:45") |
-| **Tweet / Post** | Tweet/X URL (required), Note |
-| **PDF / Doc** | URL *or* File Upload (drag and drop), Title (required for uploads), Note |
-| **Podcast** | Episode URL (required), Podcast name (optional), Episode title (optional), Note |
-| **Image / GIF** | URL *or* File Upload, Title (required), Source credit (optional), Note |
-| **Other Link** | URL (required), Title (optional override), Note |
+| Source Type        | Fields Shown                                                                    |
+| ------------------ | ------------------------------------------------------------------------------- |
+| **Article / Blog** | URL (required), Title (optional override), Author (optional), Note              |
+| **YouTube Video**  | YouTube URL (required), Note, Start Timestamp (optional, e.g. "1:23:45")        |
+| **Tweet / Post**   | Tweet/X URL (required), Note                                                    |
+| **PDF / Doc**      | URL _or_ File Upload (drag and drop), Title (required for uploads), Note        |
+| **Podcast**        | Episode URL (required), Podcast name (optional), Episode title (optional), Note |
+| **Image / GIF**    | URL _or_ File Upload, Title (required), Source credit (optional), Note          |
+| **Other Link**     | URL (required), Title (optional override), Note                                 |
 
 **Step 3: Quick Tags Before Saving (Optional)**
 
 Below the type-specific form, always show:
+
 - A tag input (typeahead from existing tags) — user can add 1–5 tags before saving
 - A "Add to Collection" dropdown — optionally assign to an existing collection at save time
 - A "Save" button and a "Save & Add Another" button
 
 **Behaviour after Save:**
+
 - Item appears in the feed immediately with a "Processing…" skeleton badge
 - A toast notification confirms: "Saved! We're processing your content."
 - The modal/page resets so the user can add another item if they chose "Save & Add Another"
 - Once background processing completes, the badge updates to show content type and tags
 
 ### AI Features (Phase 3)
+
 - AI tag suggestions (powered by LLM)
 - Topic clustering (group similar items automatically)
 - Related items suggestions (semantic similarity)
@@ -149,6 +158,7 @@ Below the type-specific form, always show:
 - Highlight system (save specific text from articles)
 
 ### Advanced Features (Phase 4)
+
 - Memory resurfacing ("You saved this 2 months ago")
 - Smart notifications / weekly digest email
 - Graph exploration (click a node, see connections)
@@ -160,57 +170,63 @@ Below the type-specific form, always show:
 ## 5. Tech Stack (Detailed)
 
 ### Frontend
-| Tool | Purpose | Why |
-|------|---------|-----|
-| Next.js 16 (App Router) | Web app framework | Server-side rendering, API routes, good DX |
-| TypeScript | Type safety | Fewer runtime bugs |
-| Tailwind CSS | Styling | Fast, consistent UI |
-| D3.js v7 | Knowledge graph | Most powerful graph library for custom visuals |
-| Zustand | Client state management | Lightweight, simple |
-| TanStack | Server state / caching | Handles loading, caching, refetch |
-| shadcn/ui | Component library | Beautiful, accessible, customisable |
+
+| Tool                    | Purpose                 | Why                                            |
+| ----------------------- | ----------------------- | ---------------------------------------------- |
+| Next.js 16 (App Router) | Web app framework       | Server-side rendering, API routes, good DX     |
+| TypeScript              | Type safety             | Fewer runtime bugs                             |
+| Tailwind CSS            | Styling                 | Fast, consistent UI                            |
+| D3.js v7                | Knowledge graph         | Most powerful graph library for custom visuals |
+| Zustand                 | Client state management | Lightweight, simple                            |
+| TanStack                | Server state / caching  | Handles loading, caching, refetch              |
+| shadcn/ui               | Component library       | Beautiful, accessible, customisable            |
 
 ### Browser Extension
-| Tool | Purpose |
-|------|---------|
-| Plasmo Framework | Build Chrome extension with React |
-| Chrome Extension Manifest V3 | Required for Chrome Web Store |
+
+| Tool                         | Purpose                           |
+| ---------------------------- | --------------------------------- |
+| Plasmo Framework             | Build Chrome extension with React |
+| Chrome Extension Manifest V3 | Required for Chrome Web Store     |
 
 ### Backend
-| Tool | Purpose | Why |
-|------|---------|-----|
-| Node.js + Express | REST API server | You likely know JS already |
-| TypeScript | Type safety on backend | |
-| BullMQ | Job queue (background workers) | For async AI processing |
-| Redis | Queue broker + caching | Required by BullMQ |
-| Cheerio + Puppeteer | Web scraping / metadata extraction | Get content from URLs |
-| OpenAI API (or Anthropic) | AI tagging + embeddings | GPT-4 for tags, text-embedding-3 for vectors |
-| Multer | File upload handling | For PDF and image uploads from the web app |
+
+| Tool                      | Purpose                            | Why                                          |
+| ------------------------- | ---------------------------------- | -------------------------------------------- |
+| Node.js + Express         | REST API server                    | You likely know JS already                   |
+| TypeScript                | Type safety on backend             |                                              |
+| BullMQ                    | Job queue (background workers)     | For async AI processing                      |
+| Redis                     | Queue broker + caching             | Required by BullMQ                           |
+| Cheerio + Puppeteer       | Web scraping / metadata extraction | Get content from URLs                        |
+| OpenAI API (or Anthropic) | AI tagging + embeddings            | GPT-4 for tags, text-embedding-3 for vectors |
+| Multer                    | File upload handling               | For PDF and image uploads from the web app   |
 
 ### Database
-| Tool | Purpose | Why |
-|------|---------|-----|
-| PostgreSQL | Primary relational DB | Reliable, powerful |
-| Prisma ORM | Database queries | Type-safe, easy migrations |
-| Pinecone (or pgvector) | Vector/embedding storage | Semantic search |
-| Redis | Caching + sessions | Fast key-value storage |
+
+| Tool                   | Purpose                  | Why                        |
+| ---------------------- | ------------------------ | -------------------------- |
+| PostgreSQL             | Primary relational DB    | Reliable, powerful         |
+| Prisma ORM             | Database queries         | Type-safe, easy migrations |
+| Pinecone (or pgvector) | Vector/embedding storage | Semantic search            |
+| Redis                  | Caching + sessions       | Fast key-value storage     |
 
 ### Infrastructure
-| Tool | Purpose |
-|------|---------|
-| Cloudflare R2 | Object storage (images, PDFs, thumbnails) |
-| **Render** | Backend API + Worker hosting (free tier → paid as needed) |
-| **Vercel** | Frontend hosting (Next.js native, auto-deploys from GitHub) |
-| Upstash Redis | Managed Redis (free tier available) |
-| Neon (or Supabase) | Managed PostgreSQL (free tier available) |
-| Pinecone | Managed vector DB (free tier available) |
+
+| Tool               | Purpose                                                     |
+| ------------------ | ----------------------------------------------------------- |
+| Cloudflare R2      | Object storage (images, PDFs, thumbnails)                   |
+| **Render**         | Backend API + Worker hosting (free tier → paid as needed)   |
+| **Vercel**         | Frontend hosting (Next.js native, auto-deploys from GitHub) |
+| Upstash Redis      | Managed Redis (free tier available)                         |
+| Neon (or Supabase) | Managed PostgreSQL (free tier available)                    |
+| Pinecone           | Managed vector DB (free tier available)                     |
 
 ### DevOps / Tooling
-| Tool | Purpose |
-|------|---------|
-| GitHub Actions | CI/CD pipeline |
-| ESLint + Prettier | Code quality |
-| Husky | Pre-commit hooks |
+
+| Tool              | Purpose          |
+| ----------------- | ---------------- |
+| GitHub Actions    | CI/CD pipeline   |
+| ESLint + Prettier | Code quality     |
+| Husky             | Pre-commit hooks |
 
 ---
 
@@ -300,6 +316,7 @@ Below the type-specific form, always show:
 ### Tables Overview
 
 **users**
+
 ```sql
 id              UUID PRIMARY KEY
 email           VARCHAR UNIQUE NOT NULL
@@ -311,6 +328,7 @@ updated_at      TIMESTAMP
 ```
 
 **items** (the core table — every saved piece of content)
+
 ```sql
 id              UUID PRIMARY KEY
 user_id         UUID REFERENCES users(id)
@@ -338,6 +356,7 @@ youtube_timestamp INTEGER           -- start timestamp in seconds (YouTube saves
 ```
 
 **tags**
+
 ```sql
 id              UUID PRIMARY KEY
 user_id         UUID REFERENCES users(id)
@@ -348,6 +367,7 @@ created_at      TIMESTAMP
 ```
 
 **item_tags** (many-to-many)
+
 ```sql
 item_id         UUID REFERENCES items(id)
 tag_id          UUID REFERENCES tags(id)
@@ -356,6 +376,7 @@ PRIMARY KEY (item_id, tag_id)
 ```
 
 **collections**
+
 ```sql
 id              UUID PRIMARY KEY
 user_id         UUID REFERENCES users(id)
@@ -368,6 +389,7 @@ created_at      TIMESTAMP
 ```
 
 **collection_items** (many-to-many)
+
 ```sql
 collection_id   UUID REFERENCES collections(id)
 item_id         UUID REFERENCES items(id)
@@ -377,6 +399,7 @@ PRIMARY KEY (collection_id, item_id)
 ```
 
 **highlights**
+
 ```sql
 id              UUID PRIMARY KEY
 user_id         UUID REFERENCES users(id)
@@ -390,6 +413,7 @@ created_at      TIMESTAMP
 ```
 
 **resurface_log** (tracks resurfacing for avoiding repeats)
+
 ```sql
 id              UUID PRIMARY KEY
 user_id         UUID REFERENCES users(id)
@@ -405,6 +429,7 @@ was_clicked     BOOLEAN DEFAULT false
 Base URL: `https://api.yourdomain.com/v1`
 
 ### Authentication (Powered by Clerk)
+
 ```
 Middleware will verify Clerk JWT session tokens on every request.
 The frontend handles the login/register flows using Clerk's SDK.
@@ -412,6 +437,7 @@ Backend uses @clerk/express for session verification.
 ```
 
 ### Items
+
 ```
 GET    /items                  List all items (with pagination, filters)
 POST   /items                  Save a new item via URL (extension or web app)
@@ -428,12 +454,14 @@ DELETE /items/:id/tags/:tagId  Remove tag from item
 ```
 
 ### Search
+
 ```
 GET    /search?q=&type=semantic|keyword    Search items
 GET    /search/suggestions?q=             Autocomplete
 ```
 
 ### Collections
+
 ```
 GET    /collections            List user's collections
 POST   /collections            Create collection
@@ -445,6 +473,7 @@ DELETE /collections/:id/items/:itemId  Remove item
 ```
 
 ### Graph
+
 ```
 GET    /graph                  Get full knowledge graph data
                                Returns: { nodes: [...], edges: [...] }
@@ -452,6 +481,7 @@ GET    /graph/node/:id         Get single node's connections
 ```
 
 ### Tags
+
 ```
 GET    /tags                   List all user tags
 POST   /tags                   Create tag
@@ -460,6 +490,7 @@ DELETE /tags/:id               Delete tag
 ```
 
 ### Highlights
+
 ```
 GET    /items/:id/highlights   List highlights for item
 POST   /items/:id/highlights   Create highlight
@@ -467,6 +498,7 @@ DELETE /highlights/:id         Delete highlight
 ```
 
 ### Resurfacing
+
 ```
 GET    /resurface              Get today's resurface suggestions (3 items)
 POST   /resurface/:id/seen     Mark as seen
@@ -617,7 +649,6 @@ POST   /resurface/:id/clicked  Mark as clicked (analytics)
   - Accept PDF (`application/pdf`) and images (`image/*`)
   - Max file size: 20MB (configurable via `MAX_FILE_UPLOAD_MB` env var)
 
-
 ---
 
 ### PHASE 2 — Frontend Core (Week 3–4)
@@ -758,7 +789,7 @@ This step implements the full manual content addition UI described in Section 4a
 
 - [x] 3.4.1 Install OpenAI SDK and PDF parser: `npm i openai pdf-parse`
 - [x] 3.4.2 Create `src/workers/aiWorker.ts`
-- [x] 3.4.3 For each job: 
+- [x] 3.4.3 For each job:
   - Download and parse PDFs from R2 using `pdf-parse`.
   - Build prompt with content snippet.
   - Call `gpt-4o-mini` with JSON response format.
@@ -838,7 +869,7 @@ This step implements the full manual content addition UI described in Section 4a
 
 ---
 
-### PHASE 5 — Browser Extension (Week 8) 
+### PHASE 5 — Browser Extension (Week 8)
 
 **Goal:** One-click save from any browser tab.
 
@@ -854,7 +885,7 @@ This step implements the full manual content addition UI described in Section 4a
 #### Step 5.2 — Extension Authentication
 
 - [ ] 5.2.1 Create `popup.tsx` — shown when user clicks the extension icon
-- [ ] 5.2.2 If not logged in: show "Login to Second Brain" button → opens `auth.tsx` in a new tab
+- [ ] 5.2.2 If not logged in: show "Login to Recall" button → opens `auth.tsx` in a new tab
 - [ ] 5.2.3 `auth.tsx` — shows login form that calls your API, stores JWT in `chrome.storage.local`
 - [ ] 5.2.4 Create `lib/storage.ts` utility that wraps `chrome.storage.local` get/set
 
@@ -863,7 +894,7 @@ This step implements the full manual content addition UI described in Section 4a
 - [ ] 5.3.1 In `popup.tsx`:
   - Get the active tab URL using `chrome.tabs.query({ active: true, currentWindow: true })`
   - Show the current page title and URL
-  - Show "Save to Second Brain" button
+  - Show "Save to Recall" button
 - [ ] 5.3.2 On button click:
   - Get JWT from `chrome.storage.local`
   - Call `POST /items` API with `{ url, saveSource: 'extension' }`
@@ -874,9 +905,9 @@ This step implements the full manual content addition UI described in Section 4a
 #### Step 5.4 — Context Menu Save
 
 - [ ] 5.4.1 Create `background.ts` (service worker)
-- [ ] 5.4.2 Register a right-click context menu item: "Save to Second Brain"
+- [ ] 5.4.2 Register a right-click context menu item: "Save to Recall"
 - [ ] 5.4.3 When triggered, send the current page URL or selected link to the API
-- [ ] 5.4.4 Show a browser notification: "Saved to Second Brain!"
+- [ ] 5.4.4 Show a browser notification: "Saved to Recall!"
 
 #### Step 5.5 — Build & Test Extension
 
@@ -1046,6 +1077,7 @@ fix/*         → bug fixes (e.g. fix/file-upload-mime)
 ```
 
 **Workflow:**
+
 1. Create a branch from `develop`: `git checkout -b feature/your-feature`
 2. Build and test locally
 3. Open a Pull Request to `develop`
@@ -1055,6 +1087,7 @@ fix/*         → bug fixes (e.g. fix/file-upload-mime)
 ### CI/CD with GitHub Actions
 
 Create `.github/workflows/ci.yml`:
+
 ```yaml
 name: CI
 on: [push, pull_request]
@@ -1078,6 +1111,7 @@ jobs:
 Before going live, verify all of these:
 
 ### Security
+
 - [ ] All API routes require authentication
 - [ ] Rate limiting is enabled (stricter limits on file upload endpoint)
 - [ ] File upload MIME types are validated server-side
@@ -1086,6 +1120,7 @@ Before going live, verify all of these:
 - [ ] Input validation is on every endpoint
 
 ### Performance
+
 - [ ] Database indexes are created (including `save_source` index)
 - [ ] Image optimisation is working
 - [ ] Background jobs process within 30 seconds
@@ -1093,6 +1128,7 @@ Before going live, verify all of these:
 - [ ] Search returns results in under 1 second
 
 ### Reliability
+
 - [ ] Failed jobs are retried (BullMQ retry config: 3 attempts, exponential backoff)
 - [ ] File upload failures clean up partial R2 uploads
 - [ ] Error tracking (Sentry) is active
@@ -1100,6 +1136,7 @@ Before going live, verify all of these:
 - [ ] Database backups are enabled
 
 ### User Experience
+
 - [ ] Add Content modal opens instantly (< 100ms)
 - [ ] File upload shows real-time progress bar
 - [ ] All loading states have skeletons
@@ -1108,6 +1145,7 @@ Before going live, verify all of these:
 - [ ] Empty state on the dashboard has a clear "+ Add your first item" CTA
 
 ### Legal / Privacy
+
 - [ ] Privacy policy page exists (required for Chrome Web Store)
 - [ ] Terms of service page exists
 - [ ] User data (including uploaded files) can be exported and deleted (GDPR)
@@ -1179,4 +1217,4 @@ apps/
 
 ---
 
-*End of PRD — Second Brain / Recall v1.1*
+_End of PRD — Recall / Recall v1.1_

@@ -42,17 +42,15 @@ export function Sidebar() {
         >
           <div
             className={cn(
-              "flex items-center justify-center rounded-lg font-serif transition-all duration-500",
-              "group-hover:rotate-360 group-hover:scale-110 transform-gpu",
-              "bg-[var(--accent-500)]/10 text-[var(--accent-500)] border border-[var(--accent-500)]/20 shadow-[0_0_15px_rgba(192,192,192,0.1)] dark:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+              "flex items-center justify-center rounded-lg overflow-hidden transition-all duration-500 bg-[var(--accent-500)]/10 border border-[var(--accent-500)]/20 shadow-sm",
+              "group-hover:rotate-12 group-hover:scale-110 transform-gpu"
             )}
             style={{
               width: 32,
               height: 32,
-              fontSize: 16,
             }}
           >
-            R
+            <img src="/favicon.png" alt="Recall" className="w-full h-full object-cover" />
           </div>
           {!sidebarCollapsed && (
             <span className="font-serif text-xl tracking-tight text-[var(--text-primary)]">

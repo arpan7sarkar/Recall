@@ -24,7 +24,7 @@ export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: true,
   sidebarCollapsed: false,
   viewMode: "grid",
-  theme: "light",
+  theme: "dark",
   addContentModalOpen: false,
 
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),

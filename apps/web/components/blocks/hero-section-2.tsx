@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { ChevronRight, Menu, X, ArrowRight, Sparkles, Brain, Zap, Search, Github } from 'lucide-react'
+import { useAuth } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { AnimatedGroup } from '@/components/ui/animated-group'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,7 @@ const transitionVariants = {
 }
 
 export function HeroSection() {
+    const { isSignedIn } = useAuth()
     return (
         <>
             <HeroHeader />
@@ -37,7 +39,7 @@ export function HeroSection() {
                 <section>
                     <div className="relative pt-32 pb-20">
                         {/* High-end atmospheric background from previous logic */}
-                        <div className="absolute inset-x-0 top-0 -z-10 h-[800px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent opacity-80"></div>
+                        <div className="absolute inset-x-0 top-0 -z-10 h-[800px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0059ff10] via-transparent to-transparent opacity-80"></div>
                         
                         <div className="mx-auto max-w-5xl px-6 text-center">
                             <AnimatedGroup
@@ -55,18 +57,18 @@ export function HeroSection() {
                                 }}
                             >
                                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8">
-                                    <Sparkles size={12} className="text-indigo-400" />
-                                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-zinc-400">Introducing Spatial Intelligence</span>
+                                    <Sparkles size={12} className="text-[#0059ff]" />
+                                    <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-zinc-400">Your knowledge. Elevated.</span>
                                 </div>
                                 
                                 <h1 className="text-5xl sm:text-6xl md:text-8xl font-serif text-white tracking-tight leading-[1.05] mb-8 max-w-4xl mx-auto italic">
-                                    Build your digital <br />
-                                    <span className="text-indigo-400">omniscience</span>
+                                    Where great minds<br />
+                                    <span className="text-[#0059ff]">never forget.</span>
                                 </h1>
                                 
                                 <p className="mt-4 max-w-2xl text-zinc-400 text-lg sm:text-xl font-light leading-relaxed">
-                                    Recall is the spatial knowledge operating system for high-output thinkers. 
-                                    Capture everything, connect deeply, and find insights instantly.
+                                    Recall is the intelligence layer for people who think in systems. 
+                                    Capture what matters, surface what's relevant, and let AI do the heavy lifting.
                                 </p>
                                 
                                 <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
@@ -74,8 +76,8 @@ export function HeroSection() {
                                         asChild
                                         size="lg"
                                         className="rounded-full px-8 py-6 text-base bg-white text-[#070707] hover:bg-zinc-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-95">
-                                        <Link href={ROUTES.register}>
-                                            <span className="flex items-center gap-2">Initialize Node <ArrowRight size={18} /></span>
+                                        <Link href={isSignedIn ? ROUTES.dashboard : ROUTES.register}>
+                                            <span className="flex items-center gap-2">{isSignedIn ? "Go to Dashboard" : "Start building yours"} <ArrowRight size={18} /></span>
                                         </Link>
                                     </Button>
                                     <Button
@@ -84,7 +86,7 @@ export function HeroSection() {
                                         variant="ghost"
                                         className="rounded-full px-8 py-6 text-base text-white border border-white/10 hover:bg-white/5 transition-all active:scale-95">
                                         <Link href="#features">
-                                            <span>View Protocol</span>
+                                            <span>See how it works</span>
                                         </Link>
                                     </Button>
                                 </div>
@@ -111,12 +113,12 @@ export function HeroSection() {
                                 />
                                 <div className="relative mx-auto max-w-6xl overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e0e]/50 backdrop-blur-sm p-2 shadow-2xl ring-1 ring-white/10">
                                     <img
-                                        className="aspect-video w-full rounded-xl object-cover opacity-90 transition-opacity hover:opacity-100"
-                                        src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2700"
+                                        className="h-auto w-full rounded-xl object-contain bg-[#0e0e0e]/50 opacity-90 transition-opacity hover:opacity-100"
+                                        src="/dashboard_mockup.png"
                                         alt="Recall Dashboard Preview"
                                     />
                                     {/* Overlay Subtle Glow */}
-                                    <div className="absolute inset-0 bg-indigo-500/5 mix-blend-overlay pointer-events-none" />
+                                    <div className="absolute inset-0 bg-[#0059ff05] mix-blend-overlay pointer-events-none" />
                                 </div>
                             </div>
                         </AnimatedGroup>
@@ -144,6 +146,7 @@ const menuItems = [
 ]
 
 export const HeroHeader = () => {
+    const { isSignedIn } = useAuth()
     const [menuState, setMenuState] = React.useState(false)
     const [scrolled, setScrolled] = React.useState(false)
 
@@ -168,8 +171,8 @@ export const HeroHeader = () => {
                                 href="/"
                                 aria-label="home"
                                 className="flex items-center space-x-3 group">
-                                <div className="w-8 h-8 rounded bg-linear-to-br from-zinc-200 to-zinc-400 text-[#070707] flex items-center justify-center font-serif font-black text-sm shadow-md group-hover:scale-110 transition-transform">
-                                    R
+                                <div className="w-8 h-8 rounded overflow-hidden flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                                    <img src="/favicon.png" alt="Recall" className="w-full h-full object-cover" />
                                 </div>
                                 <span className="font-serif font-medium text-lg tracking-wide text-zinc-100 italic">Recall</span>
                             </Link>
@@ -191,16 +194,18 @@ export const HeroHeader = () => {
 
                         <div className="flex items-center gap-4">
                              <div className="hidden sm:flex items-center gap-4">
-                                <Button
-                                    asChild
-                                    variant="ghost"
-                                    className="text-zinc-400 hover:text-white text-sm font-medium hover:bg-transparent">
-                                    <Link href={ROUTES.login}>Log in</Link>
-                                </Button>
+                                {!isSignedIn && (
+                                    <Button
+                                        asChild
+                                        variant="ghost"
+                                        className="text-zinc-400 hover:text-white text-sm font-medium hover:bg-transparent">
+                                        <Link href={ROUTES.login}>Sign in</Link>
+                                    </Button>
+                                )}
                                 <Button
                                     asChild
                                     className="rounded-full bg-white text-[#070707] hover:bg-zinc-200 px-6 py-2 shadow-sm font-medium transition-all active:scale-95">
-                                    <Link href={ROUTES.register}>Start free</Link>
+                                    <Link href={isSignedIn ? ROUTES.dashboard : ROUTES.register}>{isSignedIn ? "Dashboard" : "Get early access"}</Link>
                                 </Button>
                              </div>
 
@@ -234,14 +239,16 @@ export const HeroHeader = () => {
                                 <Button
                                     asChild
                                     className="w-full rounded-full bg-white text-black py-6 text-lg font-medium">
-                                    <Link href={ROUTES.register}>Get Started</Link>
+                                    <Link href={isSignedIn ? ROUTES.dashboard : ROUTES.register}>{isSignedIn ? "Dashboard" : "Get Started"}</Link>
                                 </Button>
-                                <Button
-                                    asChild
-                                    variant="outline"
-                                    className="w-full rounded-full border-white/10 text-white py-6 text-lg font-medium">
-                                    <Link href={ROUTES.login}>Sign In</Link>
-                                </Button>
+                                {!isSignedIn && (
+                                    <Button
+                                        asChild
+                                        variant="outline"
+                                        className="w-full rounded-full border-white/10 text-white py-6 text-lg font-medium">
+                                        <Link href={ROUTES.login}>Sign In</Link>
+                                    </Button>
+                                )}
                              </div>
                         </div>
                     </div>

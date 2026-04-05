@@ -86,32 +86,32 @@ export default function SwitchButton({
             theme === "dark" ? "rotate-180" : "rotate-0",
             "transform-gpu shadow-sm",
             theme === "dark"
-              ? "text-zinc-500 group-hover:text-indigo-400"
-              : "text-indigo-500 group-hover:text-indigo-600",
+              ? "text-zinc-500 group-hover:text-[#0059ff]"
+              : "text-[#0059ff] group-hover:text-[#0047cc]",
             "group-active:scale-95"
           )}
         />
         {showLabel && (
           <span
             className={cn(
-              "relative font-medium capitalize min-w-[40px] text-left",
+              "relative font-medium capitalize min-w-[50px] text-left text-[11px] tracking-wide",
               "transition-opacity duration-300 ease-out"
             )}
           >
             <span
               className={cn(
-                "absolute inset-0",
-                theme === "dark" ? "opacity-0" : "opacity-100",
-                "transition-opacity duration-300 ease-out"
+                "absolute inset-0 flex items-center",
+                theme === "dark" ? "opacity-0 invisible" : "opacity-100 visible",
+                "transition-all duration-300 ease-out"
               )}
             >
               Light
             </span>
             <span
               className={cn(
-                "absolute inset-0",
-                theme === "dark" ? "opacity-100" : "opacity-0",
-                "transition-opacity duration-300 ease-out"
+                "absolute inset-0 flex items-center",
+                theme === "dark" ? "opacity-100 visible" : "opacity-0 invisible",
+                "transition-all duration-300 ease-out"
               )}
             >
               Dark

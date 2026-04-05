@@ -10,6 +10,8 @@ import { InfiniteSlider } from "@/components/ui/infinite-slider";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 
 import { Features } from "@/components/blocks/features-8";
+import { PricingSection } from "@/components/blocks/pricing-section";
+import { AboutSection } from "@/components/blocks/about-section";
 import { HoverFooter } from "@/components/blocks/hover-footer";
 import { AnimatedShaderBackground } from "@/components/ui/animated-shader-background";
 
@@ -87,12 +89,15 @@ export default function LandingPage() {
         {/* FEATURES MODULAR GRID */}
         <Features />
 
-      {/* PRICING SECTION */}
-      {/* ... previous content exists ... */}
+        {/* PRICING SECTION */}
+        <PricingSection />
+
+        {/* ABOUT / PHILOSOPHY SECTION */}
+        <AboutSection />
       
       {/* CTA SECTION - Upgraded with Background Paths */}
       <BackgroundPaths 
-        title="Elevate your second brain"
+        title="Elevate your Recall"
         subtitle="Join the vanguard of thinkers building spatial intelligence networks. Find clarity in the noise."
         primaryCTA={{
             label: "Initialize your vault",

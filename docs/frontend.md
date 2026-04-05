@@ -1,4 +1,4 @@
-# Second Brain (Recall) — Frontend Design Document
+# Recall (Recall) — Frontend Design Document
 
 **Version:** 1.0  
 **Date:** March 2026  
@@ -63,16 +63,16 @@
 
 ### Rendering Strategy
 
-| Route Pattern | Rendering | Reason |
-|---|---|---|
-| `/` (landing) | SSG | Static marketing page |
-| `/login`, `/register` | SSR | SEO + fast first paint |
-| `/dashboard` (feed) | CSR with React Query | Real-time data, user-specific |
-| `/items/[id]` | SSR + CSR hydration | SEO for public items, interactive UI |
-| `/graph` | CSR only | Heavy D3.js client-side rendering |
-| `/add` | CSR only | Form-heavy, no SEO value |
-| `/search` | CSR | Dynamic results from user input |
-| `/collections`, `/collections/[id]` | CSR with React Query | User-specific, paginated |
+| Route Pattern                       | Rendering            | Reason                               |
+| ----------------------------------- | -------------------- | ------------------------------------ |
+| `/` (landing)                       | SSG                  | Static marketing page                |
+| `/login`, `/register`               | SSR                  | SEO + fast first paint               |
+| `/dashboard` (feed)                 | CSR with React Query | Real-time data, user-specific        |
+| `/items/[id]`                       | SSR + CSR hydration  | SEO for public items, interactive UI |
+| `/graph`                            | CSR only             | Heavy D3.js client-side rendering    |
+| `/add`                              | CSR only             | Form-heavy, no SEO value             |
+| `/search`                           | CSR                  | Dynamic results from user input      |
+| `/collections`, `/collections/[id]` | CSR with React Query | User-specific, paginated             |
 
 ---
 
@@ -80,15 +80,15 @@
 
 The PRD (Section 5 and Phase 2) specifies `axios` for HTTP requests. **This frontend document removes axios entirely** and replaces it with a typed `fetch` wrapper.
 
-| Area | PRD Says | This Document |
-|---|---|---|
-| **HTTP client** | `axios` with interceptors | Native `fetch` with typed wrapper (`lib/api.ts`) |
-| **Upload progress** | `axios.onUploadProgress` | `XMLHttpRequest` progress events (only for file uploads) |
-| **API instance** | `axios.create({ baseURL })` | Custom `apiFetch<T>()` generic function |
-| **Error handling** | Axios error interceptors | Custom `ApiError` class + `handleResponse()` |
-| **JWT injection** | Axios request interceptor | `getAuthHeaders()` utility merged into every request |
-| **CSS framework** | Tailwind CSS | Tailwind CSS (retained from PRD) |
-| **Component library** | shadcn/ui | shadcn/ui (retained — accessible, customisable) |
+| Area                  | PRD Says                    | This Document                                            |
+| --------------------- | --------------------------- | -------------------------------------------------------- |
+| **HTTP client**       | `axios` with interceptors   | Native `fetch` with typed wrapper (`lib/api.ts`)         |
+| **Upload progress**   | `axios.onUploadProgress`    | `XMLHttpRequest` progress events (only for file uploads) |
+| **API instance**      | `axios.create({ baseURL })` | Custom `apiFetch<T>()` generic function                  |
+| **Error handling**    | Axios error interceptors    | Custom `ApiError` class + `handleResponse()`             |
+| **JWT injection**     | Axios request interceptor   | `getAuthHeaders()` utility merged into every request     |
+| **CSS framework**     | Tailwind CSS                | Tailwind CSS (retained from PRD)                         |
+| **Component library** | shadcn/ui                   | shadcn/ui (retained — accessible, customisable)          |
 
 > **Why no axios?** The native `fetch` API in modern browsers and Next.js is fully capable. Removing axios reduces bundle size by ~13KB (gzipped) and eliminates a dependency. The only trade-off is file upload progress tracking, which we solve with a thin `XMLHttpRequest` wrapper used exclusively in `FileUploadForm.tsx`.
 
@@ -105,43 +105,43 @@ Following the design constraints — muted, neutral, earthy tones. No neon blues
 
 :root {
   /* --- Base neutrals (slate/charcoal range) --- */
-  --color-bg-primary:       hsl(220, 14%, 96%);
-  --color-bg-secondary:     hsl(220, 14%, 100%);
-  --color-bg-tertiary:      hsl(220, 13%, 91%);
-  --color-bg-elevated:      hsl(0, 0%, 100%);
+  --color-bg-primary: hsl(220, 14%, 96%);
+  --color-bg-secondary: hsl(220, 14%, 100%);
+  --color-bg-tertiary: hsl(220, 13%, 91%);
+  --color-bg-elevated: hsl(0, 0%, 100%);
 
-  --color-text-primary:     hsl(220, 14%, 10%);
-  --color-text-secondary:   hsl(220, 9%, 46%);
-  --color-text-tertiary:    hsl(220, 9%, 64%);
-  --color-text-inverse:     hsl(0, 0%, 100%);
+  --color-text-primary: hsl(220, 14%, 10%);
+  --color-text-secondary: hsl(220, 9%, 46%);
+  --color-text-tertiary: hsl(220, 9%, 64%);
+  --color-text-inverse: hsl(0, 0%, 100%);
 
   /* --- Accent: muted teal (not neon, not blue) --- */
-  --color-accent-50:        hsl(168, 30%, 95%);
-  --color-accent-100:       hsl(168, 30%, 89%);
-  --color-accent-200:       hsl(168, 28%, 78%);
-  --color-accent-400:       hsl(168, 26%, 50%);
-  --color-accent-500:       hsl(168, 32%, 42%);
-  --color-accent-600:       hsl(168, 34%, 35%);
-  --color-accent-700:       hsl(168, 36%, 28%);
+  --color-accent-50: hsl(168, 30%, 95%);
+  --color-accent-100: hsl(168, 30%, 89%);
+  --color-accent-200: hsl(168, 28%, 78%);
+  --color-accent-400: hsl(168, 26%, 50%);
+  --color-accent-500: hsl(168, 32%, 42%);
+  --color-accent-600: hsl(168, 34%, 35%);
+  --color-accent-700: hsl(168, 36%, 28%);
 
   /* --- Warm accent (for tags, highlights) --- */
-  --color-warm-100:         hsl(30, 40%, 92%);
-  --color-warm-300:         hsl(30, 38%, 72%);
-  --color-warm-500:         hsl(30, 42%, 52%);
+  --color-warm-100: hsl(30, 40%, 92%);
+  --color-warm-300: hsl(30, 38%, 72%);
+  --color-warm-500: hsl(30, 42%, 52%);
 
   /* --- Status colours (desaturated) --- */
-  --color-success:          hsl(152, 30%, 42%);
-  --color-warning:          hsl(38, 40%, 52%);
-  --color-error:            hsl(0, 35%, 52%);
-  --color-info:             hsl(200, 25%, 50%);
+  --color-success: hsl(152, 30%, 42%);
+  --color-warning: hsl(38, 40%, 52%);
+  --color-error: hsl(0, 35%, 52%);
+  --color-info: hsl(200, 25%, 50%);
 
   /* --- Border & shadow --- */
-  --color-border:           hsl(220, 13%, 87%);
-  --color-border-focus:     var(--color-accent-400);
-  --shadow-sm:              0 1px 2px hsla(220, 14%, 10%, 0.05);
-  --shadow-md:              0 4px 12px hsla(220, 14%, 10%, 0.08);
-  --shadow-lg:              0 8px 24px hsla(220, 14%, 10%, 0.10);
-  --shadow-card:            0 2px 8px hsla(220, 14%, 10%, 0.06);
+  --color-border: hsl(220, 13%, 87%);
+  --color-border-focus: var(--color-accent-400);
+  --shadow-sm: 0 1px 2px hsla(220, 14%, 10%, 0.05);
+  --shadow-md: 0 4px 12px hsla(220, 14%, 10%, 0.08);
+  --shadow-lg: 0 8px 24px hsla(220, 14%, 10%, 0.1);
+  --shadow-card: 0 2px 8px hsla(220, 14%, 10%, 0.06);
 
   /* --- Spacing scale (4px base) --- */
   --space-1: 0.25rem;
@@ -163,63 +163,63 @@ Following the design constraints — muted, neutral, earthy tones. No neon blues
   --radius-full: 9999px;
 
   /* --- Typography --- */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
-  --text-xs:   0.75rem;
-  --text-sm:   0.875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
   --text-base: 1rem;
-  --text-lg:   1.125rem;
-  --text-xl:   1.25rem;
-  --text-2xl:  1.5rem;
-  --text-3xl:  1.875rem;
-  --text-4xl:  2.25rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
 
   /* --- Transitions --- */
-  --transition-fast:   150ms ease;
-  --transition-base:   200ms ease;
-  --transition-slow:   300ms ease;
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
 }
 
 /* Dark mode */
 [data-theme="dark"] {
-  --color-bg-primary:     hsl(220, 14%, 10%);
-  --color-bg-secondary:   hsl(220, 14%, 14%);
-  --color-bg-tertiary:    hsl(220, 13%, 18%);
-  --color-bg-elevated:    hsl(220, 14%, 16%);
-  --color-text-primary:   hsl(220, 14%, 92%);
+  --color-bg-primary: hsl(220, 14%, 10%);
+  --color-bg-secondary: hsl(220, 14%, 14%);
+  --color-bg-tertiary: hsl(220, 13%, 18%);
+  --color-bg-elevated: hsl(220, 14%, 16%);
+  --color-text-primary: hsl(220, 14%, 92%);
   --color-text-secondary: hsl(220, 9%, 62%);
-  --color-text-tertiary:  hsl(220, 9%, 45%);
-  --color-border:         hsl(220, 13%, 22%);
-  --shadow-card:          0 2px 8px hsla(0, 0%, 0%, 0.3);
+  --color-text-tertiary: hsl(220, 9%, 45%);
+  --color-border: hsl(220, 13%, 22%);
+  --shadow-card: 0 2px 8px hsla(0, 0%, 0%, 0.3);
 }
 ```
 
 ### 3.2 Typography Scale
 
-| Token | Size | Weight | Usage |
-|---|---|---|---|
-| `heading-1` | 36px | 700 | Page titles |
-| `heading-2` | 24px | 600 | Section headers |
-| `heading-3` | 20px | 600 | Card titles |
-| `body-lg` | 18px | 400 | Featured text |
-| `body` | 16px | 400 | Default body |
-| `body-sm` | 14px | 400 | Secondary text, metadata |
-| `caption` | 12px | 500 | Labels, tags, timestamps |
+| Token       | Size | Weight | Usage                    |
+| ----------- | ---- | ------ | ------------------------ |
+| `heading-1` | 36px | 700    | Page titles              |
+| `heading-2` | 24px | 600    | Section headers          |
+| `heading-3` | 20px | 600    | Card titles              |
+| `body-lg`   | 18px | 400    | Featured text            |
+| `body`      | 16px | 400    | Default body             |
+| `body-sm`   | 14px | 400    | Secondary text, metadata |
+| `caption`   | 12px | 500    | Labels, tags, timestamps |
 
 ### 3.3 Content Type Colour Map
 
 Each content type gets a distinct muted tag colour for badges and graph nodes:
 
-| Type | Colour | HSL |
-|---|---|---|
-| Article | Slate blue (muted) | `hsl(215, 20%, 55%)` |
-| YouTube | Warm terracotta | `hsl(8, 30%, 55%)` |
-| Tweet | Sage grey-green | `hsl(160, 15%, 50%)` |
-| PDF | Sandy amber | `hsl(35, 30%, 55%)` |
-| Podcast | Dusty mauve | `hsl(280, 12%, 55%)` |
-| Image | Moss green | `hsl(100, 18%, 50%)` |
-| Other Link | Neutral grey | `hsl(220, 10%, 55%)` |
+| Type       | Colour             | HSL                  |
+| ---------- | ------------------ | -------------------- |
+| Article    | Slate blue (muted) | `hsl(215, 20%, 55%)` |
+| YouTube    | Warm terracotta    | `hsl(8, 30%, 55%)`   |
+| Tweet      | Sage grey-green    | `hsl(160, 15%, 50%)` |
+| PDF        | Sandy amber        | `hsl(35, 30%, 55%)`  |
+| Podcast    | Dusty mauve        | `hsl(280, 12%, 55%)` |
+| Image      | Moss green         | `hsl(100, 18%, 50%)` |
+| Other Link | Neutral grey       | `hsl(220, 10%, 55%)` |
 
 ---
 
@@ -385,7 +385,7 @@ This is the **single most important difference from the PRD**.
 ```typescript
 // lib/api.ts
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/v1";
 
 export class ApiError extends Error {
   constructor(
@@ -394,13 +394,13 @@ export class ApiError extends Error {
     public body: unknown,
   ) {
     super(`API ${status}: ${statusText}`);
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
 function getAuthHeaders(): Record<string, string> {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('jwt');
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("jwt");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -419,13 +419,13 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...getAuthHeaders(),
-    ...(options.headers as Record<string, string> ?? {}),
+    ...((options.headers as Record<string, string>) ?? {}),
   };
 
   if (options.body instanceof FormData) {
-    delete headers['Content-Type'];
+    delete headers["Content-Type"];
   }
 
   const res = await fetch(url, { ...options, headers });
@@ -433,14 +433,14 @@ export async function apiFetch<T>(
 }
 
 export const api = {
-  get:    <T>(url: string) => apiFetch<T>(url, { method: 'GET' }),
-  post:   <T>(url: string, body?: unknown) =>
-    apiFetch<T>(url, { method: 'POST', body: JSON.stringify(body) }),
-  patch:  <T>(url: string, body?: unknown) =>
-    apiFetch<T>(url, { method: 'PATCH', body: JSON.stringify(body) }),
-  delete: <T>(url: string) => apiFetch<T>(url, { method: 'DELETE' }),
+  get: <T>(url: string) => apiFetch<T>(url, { method: "GET" }),
+  post: <T>(url: string, body?: unknown) =>
+    apiFetch<T>(url, { method: "POST", body: JSON.stringify(body) }),
+  patch: <T>(url: string, body?: unknown) =>
+    apiFetch<T>(url, { method: "PATCH", body: JSON.stringify(body) }),
+  delete: <T>(url: string) => apiFetch<T>(url, { method: "DELETE" }),
   upload: <T>(url: string, formData: FormData) =>
-    apiFetch<T>(url, { method: 'POST', body: formData }),
+    apiFetch<T>(url, { method: "POST", body: formData }),
 };
 ```
 
@@ -450,7 +450,7 @@ The PRD uses `axios.onUploadProgress`. Since we removed axios, file uploads that
 
 ```typescript
 // hooks/useUploadProgress.ts
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface UploadState {
   progress: number;
@@ -460,38 +460,49 @@ interface UploadState {
 
 export function useUploadProgress() {
   const [state, setState] = useState<UploadState>({
-    progress: 0, uploading: false, error: null,
+    progress: 0,
+    uploading: false,
+    error: null,
   });
 
-  const upload = useCallback(<T>(url: string, formData: FormData): Promise<T> => {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      const apiBase = process.env.NEXT_PUBLIC_API_URL ?? '';
-      const token = localStorage.getItem('jwt');
+  const upload = useCallback(
+    <T>(url: string, formData: FormData): Promise<T> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
+        const token = localStorage.getItem("jwt");
 
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          setState(s => ({ ...s, progress: Math.round((e.loaded / e.total) * 100) }));
-        }
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            setState((s) => ({
+              ...s,
+              progress: Math.round((e.loaded / e.total) * 100),
+            }));
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          setState({ progress: 100, uploading: false, error: null });
+          try {
+            resolve(JSON.parse(xhr.responseText) as T);
+          } catch {
+            resolve(undefined as T);
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          setState((s) => ({ ...s, uploading: false, error: "Upload failed" }));
+          reject(new Error("Upload failed"));
+        });
+
+        xhr.open("POST", `${apiBase}${url}`);
+        if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        setState({ progress: 0, uploading: true, error: null });
+        xhr.send(formData);
       });
-
-      xhr.addEventListener('load', () => {
-        setState({ progress: 100, uploading: false, error: null });
-        try { resolve(JSON.parse(xhr.responseText) as T); }
-        catch { resolve(undefined as T); }
-      });
-
-      xhr.addEventListener('error', () => {
-        setState(s => ({ ...s, uploading: false, error: 'Upload failed' }));
-        reject(new Error('Upload failed'));
-      });
-
-      xhr.open('POST', `${apiBase}${url}`);
-      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      setState({ progress: 0, uploading: true, error: null });
-      xhr.send(formData);
-    });
-  }, []);
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
     setState({ progress: 0, uploading: false, error: null });
@@ -504,7 +515,7 @@ export function useUploadProgress() {
 ### 6.3 `lib/queryClient.ts`
 
 ```typescript
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient } from "@tanstack/react-query";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -522,25 +533,26 @@ export const queryClient = new QueryClient({
 ### 6.4 `lib/validators.ts`
 
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
-export const urlSchema = z.string().url('Enter a valid URL');
+export const urlSchema = z.string().url("Enter a valid URL");
 
 export const addContentUrlSchema = z.object({
   url: urlSchema,
-  itemType: z.enum(['article', 'youtube', 'tweet', 'podcast', 'link']),
+  itemType: z.enum(["article", "youtube", "tweet", "podcast", "link"]),
   title: z.string().optional(),
   note: z.string().optional(),
-  youtubeTimestamp: z.string()
-    .regex(/^\d{1,2}:\d{2}(:\d{2})?$/, 'Format: MM:SS or HH:MM:SS')
+  youtubeTimestamp: z
+    .string()
+    .regex(/^\d{1,2}:\d{2}(:\d{2})?$/, "Format: MM:SS or HH:MM:SS")
     .optional(),
   tags: z.array(z.string()).max(5).optional(),
   collectionId: z.string().uuid().optional(),
 });
 
 export const addContentFileSchema = z.object({
-  itemType: z.enum(['pdf', 'image']),
-  title: z.string().min(1, 'Title is required for file uploads'),
+  itemType: z.enum(["pdf", "image"]),
+  title: z.string().min(1, "Title is required for file uploads"),
   note: z.string().optional(),
   tags: z.array(z.string()).max(5).optional(),
   collectionId: z.string().uuid().optional(),
@@ -548,11 +560,11 @@ export const addContentFileSchema = z.object({
 
 export const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export const registerSchema = loginSchema.extend({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
+  name: z.string().min(2, "Name must be at least 2 characters"),
 });
 ```
 
@@ -563,9 +575,9 @@ export const registerSchema = loginSchema.extend({
 ### 7.1 `store/authStore.ts` (Zustand + Persist)
 
 ```typescript
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { User } from '@/types/user';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { User } from "@/types/user";
 
 interface AuthState {
   user: User | null;
@@ -582,15 +594,15 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       setAuth: (user, token) => {
-        localStorage.setItem('jwt', token);
+        localStorage.setItem("jwt", token);
         set({ user, token, isAuthenticated: true });
       },
       logout: () => {
-        localStorage.removeItem('jwt');
+        localStorage.removeItem("jwt");
         set({ user: null, token: null, isAuthenticated: false });
       },
     }),
-    { name: 'auth-storage' },
+    { name: "auth-storage" },
   ),
 );
 ```
@@ -598,10 +610,10 @@ export const useAuthStore = create<AuthState>()(
 ### 7.2 `store/uiStore.ts`
 
 ```typescript
-import { create } from 'zustand';
+import { create } from "zustand";
 
-type ViewMode = 'grid' | 'list';
-type Theme = 'light' | 'dark';
+type ViewMode = "grid" | "list";
+type Theme = "light" | "dark";
 
 interface UIState {
   sidebarOpen: boolean;
@@ -617,8 +629,8 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: true,
-  viewMode: 'grid',
-  theme: 'light',
+  viewMode: "grid",
+  theme: "light",
   addContentModalOpen: false,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -631,10 +643,10 @@ export const useUIStore = create<UIState>((set) => ({
 ### 7.3 `store/addContentStore.ts`
 
 ```typescript
-import { create } from 'zustand';
-import type { ItemType } from '@/types/item';
+import { create } from "zustand";
+import type { ItemType } from "@/types/item";
 
-type AddStep = 'type' | 'input' | 'metadata';
+type AddStep = "type" | "input" | "metadata";
 
 interface AddContentState {
   step: AddStep;
@@ -660,13 +672,13 @@ interface AddContentState {
 }
 
 const initialState = {
-  step: 'type' as AddStep,
+  step: "type" as AddStep,
   selectedType: null,
-  url: '',
+  url: "",
   file: null,
-  title: '',
-  note: '',
-  youtubeTimestamp: '',
+  title: "",
+  note: "",
+  youtubeTimestamp: "",
   tags: [],
   collectionId: null,
 };
@@ -674,7 +686,7 @@ const initialState = {
 export const useAddContentStore = create<AddContentState>((set) => ({
   ...initialState,
   setStep: (step) => set({ step }),
-  setSelectedType: (type) => set({ selectedType: type, step: 'input' }),
+  setSelectedType: (type) => set({ selectedType: type, step: "input" }),
   setUrl: (url) => set({ url }),
   setFile: (file) => set({ file }),
   setTitle: (title) => set({ title }),
@@ -683,11 +695,12 @@ export const useAddContentStore = create<AddContentState>((set) => ({
   setTags: (tags) => set({ tags }),
   setCollectionId: (id) => set({ collectionId: id }),
   resetForm: () => set(initialState),
-  resetForAnotherSave: () => set((s) => ({
-    ...initialState,
-    step: 'input',
-    selectedType: s.selectedType,
-  })),
+  resetForAnotherSave: () =>
+    set((s) => ({
+      ...initialState,
+      step: "input",
+      selectedType: s.selectedType,
+    })),
 }));
 ```
 
@@ -698,9 +711,9 @@ export const useAddContentStore = create<AddContentState>((set) => ({
 ### 8.1 `hooks/useItems.ts`
 
 ```typescript
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import type { Item, PaginatedResponse } from '@/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import type { Item, PaginatedResponse } from "@/types";
 
 interface UseItemsOptions {
   page?: number;
@@ -713,18 +726,21 @@ interface UseItemsOptions {
 export function useItems(opts: UseItemsOptions = {}) {
   const { page = 1, limit = 20, type, tag, source } = opts;
   const params = new URLSearchParams({
-    page: String(page), limit: String(limit),
-    ...(type && { type }), ...(tag && { tag }), ...(source && { source }),
+    page: String(page),
+    limit: String(limit),
+    ...(type && { type }),
+    ...(tag && { tag }),
+    ...(source && { source }),
   });
   return useQuery({
-    queryKey: ['items', opts],
+    queryKey: ["items", opts],
     queryFn: () => api.get<PaginatedResponse<Item>>(`/items?${params}`),
   });
 }
 
 export function useItem(id: string) {
   return useQuery({
-    queryKey: ['item', id],
+    queryKey: ["item", id],
     queryFn: () => api.get<Item>(`/items/${id}`),
     enabled: !!id,
   });
@@ -734,18 +750,23 @@ export function useCreateItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: {
-      url: string; itemType?: string; tags?: string[];
-      collectionId?: string; note?: string; youtubeTimestamp?: string;
-    }) => api.post<Item>('/items', data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['items'] }),
+      url: string;
+      itemType?: string;
+      tags?: string[];
+      collectionId?: string;
+      note?: string;
+      youtubeTimestamp?: string;
+    }) => api.post<Item>("/items", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
 }
 
 export function useUploadItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (formData: FormData) => api.upload<Item>('/items/upload', formData),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['items'] }),
+    mutationFn: (formData: FormData) =>
+      api.upload<Item>("/items/upload", formData),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
 }
 
@@ -755,8 +776,8 @@ export function useUpdateItem() {
     mutationFn: ({ id, ...data }: { id: string; [key: string]: unknown }) =>
       api.patch<Item>(`/items/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ['items'] });
-      qc.invalidateQueries({ queryKey: ['item', vars.id] });
+      qc.invalidateQueries({ queryKey: ["items"] });
+      qc.invalidateQueries({ queryKey: ["item", vars.id] });
     },
   });
 }
@@ -765,7 +786,7 @@ export function useDeleteItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete(`/items/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['items'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
 }
 ```
@@ -773,18 +794,22 @@ export function useDeleteItem() {
 ### 8.2 `hooks/useSearch.ts`
 
 ```typescript
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import { useDebounce } from './useDebounce';
-import type { Item } from '@/types';
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useDebounce } from "./useDebounce";
+import type { Item } from "@/types";
 
-export function useSearch(query: string, type: 'semantic' | 'keyword' = 'semantic') {
+export function useSearch(
+  query: string,
+  type: "semantic" | "keyword" = "semantic",
+) {
   const debouncedQuery = useDebounce(query, 300);
   return useQuery({
-    queryKey: ['search', debouncedQuery, type],
-    queryFn: () => api.get<Item[]>(
-      `/search?q=${encodeURIComponent(debouncedQuery)}&type=${type}`
-    ),
+    queryKey: ["search", debouncedQuery, type],
+    queryFn: () =>
+      api.get<Item[]>(
+        `/search?q=${encodeURIComponent(debouncedQuery)}&type=${type}`,
+      ),
     enabled: debouncedQuery.length >= 2,
   });
 }
@@ -793,7 +818,7 @@ export function useSearch(query: string, type: 'semantic' | 'keyword' = 'semanti
 ### 8.3 `hooks/useDebounce.ts`
 
 ```typescript
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -808,21 +833,23 @@ export function useDebounce<T>(value: T, delay: number): T {
 ### 8.4 `hooks/useKeyboardShortcut.ts`
 
 ```typescript
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 export function useKeyboardShortcut(
-  key: string, callback: () => void, meta = true
+  key: string,
+  callback: () => void,
+  meta = true,
 ) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const metaPressed = meta ? (e.metaKey || e.ctrlKey) : true;
+      const metaPressed = meta ? e.metaKey || e.ctrlKey : true;
       if (metaPressed && e.key.toLowerCase() === key.toLowerCase()) {
         e.preventDefault();
         callback();
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [key, callback, meta]);
 }
 ```
@@ -834,16 +861,18 @@ export function useKeyboardShortcut(
 ### 9.1 `ItemCard.tsx`
 
 **Props:**
+
 ```typescript
 interface ItemCardProps {
   item: Item;
-  viewMode: 'grid' | 'list';
+  viewMode: "grid" | "list";
   onFavourite?: (id: string) => void;
   onArchive?: (id: string) => void;
 }
 ```
 
 **Grid mode layout:**
+
 ```
 ┌──────────────────────────────┐
 │  ┌──────────────────────┐    │
@@ -862,6 +891,7 @@ interface ItemCardProps {
 ```
 
 **Behaviours:**
+
 - Shows `ProcessingBadge` (pulsing skeleton) when `item.status === 'processing'`
 - Thumbnail: `next/image` with R2 URL; fallback gradient with content type icon
 - Click navigates to `/items/[id]`
@@ -903,6 +933,7 @@ interface ItemCardProps {
 ### 9.4 `AddContentModal.tsx`
 
 Full-screen dialog wrapping `AddContentStepper`. Opens via:
+
 - `+ Add Content` button in Topbar
 - `Cmd/Ctrl + K` keyboard shortcut
 - Empty state CTA on dashboard
@@ -914,15 +945,19 @@ Uses `@radix-ui/react-dialog` for accessible modal with focus trap.
 ## 10. Page-by-Page Implementation
 
 ### 10.1 Landing Page — `app/page.tsx`
+
 Static SSG page. Hero with animated gradient, feature grid, CTA to register.
 
 ### 10.2 Login — `app/(auth)/login/page.tsx`
+
 Centred card with email + password. Google OAuth button. Uses `loginSchema`.
 
 ### 10.3 Register — `app/(auth)/register/page.tsx`
+
 Same layout + name field. Uses `registerSchema`.
 
 ### 10.4 Dashboard — `app/(dashboard)/page.tsx`
+
 - Memory widget (3 resurfaced items)
 - Filter bar: All | Articles | Videos | PDFs | Tweets | Podcasts | Images
 - View toggle: Grid / List
@@ -930,15 +965,19 @@ Same layout + name field. Uses `registerSchema`.
 - Empty state: "Save your first item" → opens Add Content
 
 ### 10.5 Item Detail — `app/(dashboard)/items/[id]/page.tsx`
+
 Two-column: Left (70%) content/reader view; Right (30%) tags, collections, related items, actions.
 
 ### 10.6 Graph — `app/(dashboard)/graph/page.tsx`
+
 Full-viewport D3.js force-directed graph. See Section 12.
 
 ### 10.7 Collections — `app/(dashboard)/collections/page.tsx`
+
 Grid of `CollectionCard` components.
 
 ### 10.8 Search — `app/(dashboard)/search/page.tsx`
+
 Full results with semantic/keyword toggle and type filters.
 
 ---
@@ -946,24 +985,28 @@ Full results with semantic/keyword toggle and type filters.
 ## 11. Add Content Flow (Deep Dive)
 
 ### Step 1 — Source Type Picker
+
 Seven cards: Article, YouTube, Tweet, PDF, Podcast, Image, Other Link. Fallback URL paste at bottom.
 
 ### Step 2a — URL Input (Article, YouTube, Tweet, Podcast, Other)
 
-| Field | Required | Notes |
-|---|---|---|
-| URL | Yes | Live validation |
-| Title | No | Placeholder: "Leave blank to auto-detect" |
-| Note | No | Multi-line textarea |
-| Timestamp | No (YouTube only) | `HH:MM:SS` format |
+| Field     | Required          | Notes                                     |
+| --------- | ----------------- | ----------------------------------------- |
+| URL       | Yes               | Live validation                           |
+| Title     | No                | Placeholder: "Leave blank to auto-detect" |
+| Note      | No                | Multi-line textarea                       |
+| Timestamp | No (YouTube only) | `HH:MM:SS` format                         |
 
 ### Step 2b — File Upload (PDF, Image)
+
 Drag-and-drop zone, title (required), note. Progress bar via `useUploadProgress` (XHR, not axios).
 
 ### Step 3 — Tags & Collection
+
 `TagInput` typeahead, `TagChip` removable chips (max 5), collection `<Select>`, Save + Save & Add Another buttons.
 
 ### Save Behaviour — URL
+
 ```typescript
 const { mutateAsync: createItem } = useCreateItem();
 await createItem({ url, itemType, tags, collectionId, note, youtubeTimestamp });
@@ -971,14 +1014,15 @@ await createItem({ url, itemType, tags, collectionId, note, youtubeTimestamp });
 ```
 
 ### Save Behaviour — File Upload
+
 ```typescript
 const { upload, progress } = useUploadProgress();
 const formData = new FormData();
-formData.append('file', file);
-formData.append('title', title);
-formData.append('itemType', itemType);
-tags.forEach(t => formData.append('tags[]', t));
-await upload<Item>('/items/upload', formData);
+formData.append("file", file);
+formData.append("title", title);
+formData.append("itemType", itemType);
+tags.forEach((t) => formData.append("tags[]", t));
+await upload<Item>("/items/upload", formData);
 ```
 
 ---
@@ -986,6 +1030,7 @@ await upload<Item>('/items/upload', formData);
 ## 12. Knowledge Graph (D3.js)
 
 ### Data Types
+
 ```typescript
 interface GraphNode {
   id: string;
@@ -999,11 +1044,12 @@ interface GraphEdge {
   source: string;
   target: string;
   strength: number;
-  type: 'semantic' | 'tag';
+  type: "semantic" | "tag";
 }
 ```
 
 ### Implementation
+
 1. Fetch from `GET /graph` via `useGraph` hook
 2. SVG with `d3.zoom()` for pan/zoom
 3. `d3.forceSimulation()` with `forceLink`, `forceManyBody`, `forceCenter`
@@ -1017,11 +1063,13 @@ interface GraphEdge {
 ## 13. Search System
 
 ### SearchBar
+
 - In Topbar, debounced 300ms via `useSearch`
 - Results dropdown (`SearchOverlay`) with top 5
 - Enter → `/search?q=...`
 
 ### Search Page
+
 - Pre-fills from URL query
 - Semantic / Keyword toggle
 - Filter by type, date, tags
@@ -1031,6 +1079,7 @@ interface GraphEdge {
 ## 14. Accessibility & Responsiveness
 
 ### Accessibility
+
 - `aria-label` and `role` on all interactive elements
 - Focus trap in modals (Radix)
 - Keyboard nav for dropdowns, tabs, modals
@@ -1040,31 +1089,32 @@ interface GraphEdge {
 
 ### Breakpoints
 
-| Name | Width | Layout |
-|---|---|---|
-| Mobile | <640px | Single column, bottom nav |
-| Tablet | 640–1024px | Collapsed sidebar, 2-col grid |
-| Desktop | >1024px | Full sidebar, 3–4 col grid |
+| Name    | Width      | Layout                        |
+| ------- | ---------- | ----------------------------- |
+| Mobile  | <640px     | Single column, bottom nav     |
+| Tablet  | 640–1024px | Collapsed sidebar, 2-col grid |
+| Desktop | >1024px    | Full sidebar, 3–4 col grid    |
 
 ---
 
 ## 15. Performance Optimisation
 
-| Technique | Implementation |
-|---|---|
-| Image optimisation | `next/image` with R2 loader |
-| Code splitting | `lazy()` for KnowledgeGraph + D3 |
-| Virtualised lists | `@tanstack/react-virtual` for 100+ items |
-| React Query caching | 2-min stale time |
-| Skeleton loading | Every page has skeleton variant |
-| Prefetch | `next/link` prefetch for nav links |
-| Bundle analysis | `@next/bundle-analyzer` |
+| Technique           | Implementation                           |
+| ------------------- | ---------------------------------------- |
+| Image optimisation  | `next/image` with R2 loader              |
+| Code splitting      | `lazy()` for KnowledgeGraph + D3         |
+| Virtualised lists   | `@tanstack/react-virtual` for 100+ items |
+| React Query caching | 2-min stale time                         |
+| Skeleton loading    | Every page has skeleton variant          |
+| Prefetch            | `next/link` prefetch for nav links       |
+| Bundle analysis     | `@next/bundle-analyzer`                  |
 
 ---
 
 ## 16. Error Handling & Loading States
 
 ### Error Boundary — `app/error.tsx`
+
 ```typescript
 'use client';
 export default function ErrorPage({
@@ -1081,6 +1131,7 @@ export default function ErrorPage({
 ```
 
 ### Toast Notifications (shadcn/ui)
+
 - Success: "Saved! We're processing your content."
 - Error: "Failed to save. Please try again."
 - Info: "3 items resurfaced from your memory."
@@ -1089,23 +1140,23 @@ export default function ErrorPage({
 
 ## 17. Testing Strategy
 
-| Layer | Tool | What |
-|---|---|---|
-| Unit | Vitest | Utilities, validators, store logic |
-| Component | React Testing Library | Render, events, a11y |
-| Integration | Playwright | Full user flows |
-| Visual | Storybook (optional) | Component variants |
+| Layer       | Tool                  | What                               |
+| ----------- | --------------------- | ---------------------------------- |
+| Unit        | Vitest                | Utilities, validators, store logic |
+| Component   | React Testing Library | Render, events, a11y               |
+| Integration | Playwright            | Full user flows                    |
+| Visual      | Storybook (optional)  | Component variants                 |
 
 ---
 
 ## 18. Production Deployment
 
-| Service | Platform |
-|---|---|
-| Frontend | Vercel |
-| CDN | Vercel Edge Network |
-| Error tracking | Sentry |
-| Analytics | Optional |
+| Service        | Platform            |
+| -------------- | ------------------- |
+| Frontend       | Vercel              |
+| CDN            | Vercel Edge Network |
+| Error tracking | Sentry              |
+| Analytics      | Optional            |
 
 ```bash
 cd apps/web && npx vercel --prod
@@ -1116,6 +1167,7 @@ cd apps/web && npx vercel --prod
 ## 19. Build Checklist
 
 ### Foundation
+
 - [ ] Create Next.js app with TypeScript + Tailwind
 - [ ] Install deps (no axios)
 - [ ] Set up shadcn/ui
@@ -1123,6 +1175,7 @@ cd apps/web && npx vercel --prod
 - [ ] Set up Inter font
 
 ### Core Library
+
 - [ ] `lib/api.ts` — fetch wrapper
 - [ ] `lib/queryClient.ts`
 - [ ] `lib/validators.ts` — Zod schemas
@@ -1130,19 +1183,23 @@ cd apps/web && npx vercel --prod
 - [ ] `lib/constants.ts` — types, colours, routes
 
 ### Types
+
 - [ ] All TypeScript types in `types/`
 
 ### State
+
 - [ ] `authStore.ts` (Zustand + persist)
 - [ ] `uiStore.ts`
 - [ ] `addContentStore.ts`
 
 ### Hooks
+
 - [ ] useAuth, useItems, useSearch, useCollections
 - [ ] useTags, useGraph, useResurface, useHighlights
 - [ ] useDebounce, useKeyboardShortcut, useUploadProgress, useMediaQuery
 
 ### Components
+
 - [ ] Layout: Sidebar, Topbar, MobileNav, ThemeToggle
 - [ ] Items: ItemCard, Skeleton, Grid, Filters, Actions, ProcessingBadge
 - [ ] Add Content: Modal, Stepper, SourceTypePicker, UrlInputForm, FileUploadForm, MetadataForm
@@ -1152,6 +1209,7 @@ cd apps/web && npx vercel --prod
 - [ ] Shared: EmptyState, ErrorState, TagChip, TagInput, TypeBadge, UploadProgress, Avatar
 
 ### Pages
+
 - [ ] Landing, Login, Register
 - [ ] Dashboard feed, Add Content, Item detail
 - [ ] Graph, Collections, Collection detail
@@ -1160,6 +1218,7 @@ cd apps/web && npx vercel --prod
 - [ ] Auth middleware
 
 ### Polish
+
 - [ ] Keyboard shortcuts
 - [ ] Dark mode
 - [ ] Skeletons everywhere
@@ -1170,6 +1229,7 @@ cd apps/web && npx vercel --prod
 - [ ] Confirm no axios in bundle
 
 ### Production
+
 - [ ] Deploy to Vercel
 - [ ] Set production env vars
 - [ ] Custom domain + SSL
@@ -1178,4 +1238,4 @@ cd apps/web && npx vercel --prod
 
 ---
 
-*End of Frontend Design Document — Second Brain / Recall v1.0*
+_End of Frontend Design Document — Recall / Recall v1.0_

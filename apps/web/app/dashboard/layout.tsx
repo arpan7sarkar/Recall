@@ -15,11 +15,11 @@ export default function DashboardLayout({
 }) {
   const { sidebarCollapsed, openAddContent } = useUIStore();
 
-  useKeyboardShortcut("k", openAddContent);
+  useKeyboardShortcut("n", openAddContent, { alt: true });
 
   return (
     <AuthGuard>
-      <div className="h-screen w-screen flex p-4 lg:p-6 gap-6 overflow-hidden bg-[var(--bg-primary)] text-[var(--text-secondary)] font-sans selection:bg-[var(--accent-500)]/30 relative">
+      <div className="h-screen w-screen flex p-4 lg:p-6 gap-6 overflow-hidden bg-background text-muted-foreground font-sans selection:bg-(--accent-500)/30 relative">
         {/* Subtle Silver Pour in Dark Mode */}
         <div className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-20 bg-[radial-gradient(circle_at_top_right,rgba(192,192,192,0.15),transparent_50%)]" />
         <div className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-10 bg-[radial-gradient(circle_at_bottom_left,rgba(192,192,192,0.1),transparent_50%)]" />

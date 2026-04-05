@@ -48,7 +48,7 @@ app.get("/health", (_req: Request, res: Response) => {
  * @access  Public
  */
 app.get("/", (_req: Request, res: Response) => {
-  res.status(200).json({ message: "Welcome to Recall API — Your Second Brain" });
+  res.status(200).json({ message: "Welcome to Recall API — Your Recall" });
 });
 
 // Error handling middleware

@@ -63,11 +63,13 @@ export function HoverFooter() {
           {/* Brand section */}
           <div className="flex flex-col space-y-6">
             <div className="flex items-center space-x-3 group cursor-pointer">
-              <div className="w-8 h-8 rounded bg-zinc-800 text-zinc-200 flex items-center justify-center font-serif font-black text-sm group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">R</div>
+              <div className="w-8 h-8 rounded overflow-hidden flex items-center justify-center transition-all duration-500 group-hover:scale-110">
+                <img src="/favicon.png" alt="Recall" className="w-full h-full object-cover" />
+              </div>
               <span className="text-white text-2xl font-serif font-black">Recall</span>
             </div>
             <p className="text-zinc-500 text-sm leading-relaxed font-light max-w-xs">
-              Architecting spatial intelligence for modern minds. Your second brain, refined by obsidian aesthetics.
+              Architecting spatial intelligence for modern minds. Your Recall, refined by obsidian aesthetics.
             </p>
           </div>
 
