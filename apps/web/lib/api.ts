@@ -1,4 +1,17 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/v1";
+const LOCAL_API_BASE = "http://localhost:4000/v1";
+
+const DEV_API_BASE =
+  process.env.NEXT_PUBLIC_API_URL_DEV ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  LOCAL_API_BASE;
+
+const PROD_API_BASE =
+  process.env.NEXT_PUBLIC_RENDER_API_URL ??
+  process.env.NEXT_PUBLIC_API_URL_PROD ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  LOCAL_API_BASE;
+
+const API_BASE = process.env.NODE_ENV === "production" ? PROD_API_BASE : DEV_API_BASE;
 
 export class ApiError extends Error {
   constructor(
