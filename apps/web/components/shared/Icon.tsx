@@ -26,7 +26,9 @@ import {
   Check,
   AlertCircle,
   Library,
-  Lightbulb
+  Lightbulb,
+  Instagram,
+  Linkedin
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -70,7 +72,9 @@ export type IconName =
   | "check" 
   | "alert"
   | "library"
-  | "lightbulb";
+  | "lightbulb"
+  | "instagram"
+  | "linkedin";
 
 interface IconProps {
   name: IconName | string;
@@ -134,6 +138,10 @@ export function Icon({ name, className, size = 18 }: IconProps) {
       return <Library {...props} />;
     case "lightbulb":
       return <Lightbulb {...props} />;
+    case "instagram":
+      return <Instagram {...props} />;
+    case "linkedin":
+      return <Linkedin {...props} />;
     default:
       return <LinkIcon {...props} />;
   }

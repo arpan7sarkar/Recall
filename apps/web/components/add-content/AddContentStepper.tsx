@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useAddContentStore } from "@/store/addContentStore";
 import { useUIStore } from "@/store/uiStore";
 import { useAuth } from "@clerk/nextjs";
+import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { SourceTypePicker } from "./SourceTypePicker";
 import { ContentDetailsForm } from "./ContentDetailsForm";
@@ -14,6 +15,7 @@ export function AddContentStepper() {
   const { step, resetForm, resetForAnotherSave } = useAddContentStore();
   const { closeAddContent } = useUIStore();
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
 
   const performSave = useCallback(async () => {
@@ -47,6 +49,10 @@ export function AddContentStepper() {
     setIsSaving(true);
     try {
       await performSave();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["items"] }),
+        queryClient.invalidateQueries({ queryKey: ["graph"] }),
+      ]);
       resetForm();
       closeAddContent();
     } catch (error) {
@@ -54,19 +60,23 @@ export function AddContentStepper() {
     } finally {
       setIsSaving(false);
     }
-  }, [performSave, resetForm, closeAddContent]);
+  }, [performSave, queryClient, resetForm, closeAddContent]);
 
   const handleSaveAndAdd = useCallback(async () => {
     setIsSaving(true);
     try {
       await performSave();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["items"] }),
+        queryClient.invalidateQueries({ queryKey: ["graph"] }),
+      ]);
       resetForAnotherSave();
     } catch (error) {
       console.error("Failed to save item:", error);
     } finally {
       setIsSaving(false);
     }
-  }, [performSave, resetForAnotherSave]);
+  }, [performSave, queryClient, resetForAnotherSave]);
 
   return (
     <div className="w-full max-w-lg mx-auto">

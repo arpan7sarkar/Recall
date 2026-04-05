@@ -76,6 +76,10 @@ export default function GraphPage() {
              <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(39,39,42,0.5)] border border-white/10" style={{ background: "#27272a" }} />
              <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Image</span>
            </div>
+           <div className="flex items-center gap-2">
+             <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(217,70,239,0.5)] border border-white/10" style={{ background: "#d946ef" }} />
+             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Instagram</span>
+           </div>
            <div className="h-4 w-px bg-border/50 mx-1" />
            <div className="flex items-center gap-2">
              <div className="w-5 h-px border-t border-dashed border-muted-foreground/30" />

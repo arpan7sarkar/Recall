@@ -1,16 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { TypeBadge } from "@/components/shared/TypeBadge";
-import { TagChip } from "@/components/shared/TagChip";
-import { timeAgo, extractDomain, truncate, formatReadingTime } from "@/lib/utils";
+import { timeAgo, extractDomain } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/shared/Icon";
 import { Heart } from "lucide-react";
 import Script from "next/script";
 import { LoaderOne } from "@/components/ui/unique-loader-components";
+import { SocialPostPreview } from "@/components/items/SocialPostPreview";
+import { InstagramAutoEmbed } from "@/components/items/InstagramAutoEmbed";
 
 interface ItemCardProps {
   item: Item;
@@ -20,6 +21,10 @@ interface ItemCardProps {
 export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   const router = useRouter();
   const isProcessing = item.status === "processing" || item.status === "pending";
+  const isInstagram = item.itemType === "instagram";
+  const isStaticSocialPreview = item.itemType === "linkedin";
+  const trimmedTitle = (item.title || "").trim();
+  const shouldShowTitle = !isInstagram || trimmedTitle.length > 0;
 
   const handleCardClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("a, button, blockquote")) return;
@@ -50,17 +55,19 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-serif text-(--text-primary) tracking-tight truncate">
-            {item.title || "Untitled"}
-          </h3>
+          {shouldShowTitle && (
+            <h3 className="text-sm font-serif text-(--text-primary) tracking-tight truncate">
+              {trimmedTitle || "Untitled"}
+            </h3>
+          )}
           <p className="text-[10px] font-light text-muted-foreground mt-1">
-            {extractDomain(item.url)} · {timeAgo(item.savedAt)}
+            {extractDomain(item.url)} | {timeAgo(item.savedAt)}
           </p>
         </div>
 
         {item.isFavourite && (
           <div className="flex items-center justify-center shrink-0" style={{ color: "var(--accent-500)" }}>
-             <Heart size={14} fill="currentColor" />
+            <Heart size={14} fill="currentColor" />
           </div>
         )}
       </div>
@@ -73,33 +80,38 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       className="flex flex-col overflow-hidden cursor-pointer transition-all duration-300 border rounded-2xl bg-card border-border hover:border-(--border-hover) shadow-sm group min-h-[400px] h-full"
       id={`item-card-${item.id}`}
     >
-      {/* Thumbnail / Showcase */}
       <div
         className={cn(
           "relative flex items-center justify-center overflow-hidden bg-(--bg-primary)/40 border-b border-border transition-all duration-500",
-          item.itemType === "tweet" ? "h-auto min-h-48 p-4" : "h-48",
-          !item.thumbnailUrl && item.itemType !== "tweet" && "bg-linear-to-br from-indigo-500/5 to-transparent",
+          item.itemType === "tweet" ? "h-auto min-h-48 p-4" : isInstagram || isStaticSocialPreview ? "h-56 p-0" : "h-48",
+          !item.thumbnailUrl && item.itemType !== "tweet" && !isInstagram && !isStaticSocialPreview && "bg-linear-to-br from-indigo-500/5 to-transparent",
           isProcessing && "bg-muted animate-pulse"
         )}
         style={{
-          background: item.thumbnailUrl
-            ? `url(${item.thumbnailUrl}) center/cover`
-            : undefined,
+          background: item.thumbnailUrl && !isInstagram && !isStaticSocialPreview ? `url(${item.thumbnailUrl}) center/cover` : undefined,
         }}
       >
         {item.itemType === "tweet" && !isProcessing ? (
           <div className="w-full flex justify-center pointer-events-auto">
             <blockquote className="twitter-tweet" data-conversation="none" data-theme="dark" data-align="center">
-               <a href={(item.url || "").replace("x.com", "twitter.com")} target="_blank"></a>
+              <a href={(item.url || "").replace("x.com", "twitter.com")} target="_blank"></a>
             </blockquote>
-            <Script 
-              src="https://platform.twitter.com/widgets.js" 
-              strategy="afterInteractive" 
+            <Script
+              src="https://platform.twitter.com/widgets.js"
+              strategy="afterInteractive"
               onLoad={() => {
                 // @ts-ignore
                 if (window.twttr) window.twttr.widgets.load();
               }}
             />
+          </div>
+        ) : isInstagram && !isProcessing ? (
+          <div className="h-full w-full p-3 pointer-events-auto">
+            <InstagramAutoEmbed item={item} compact className="h-full" />
+          </div>
+        ) : isStaticSocialPreview && !isProcessing ? (
+          <div className="h-full w-full p-3 pointer-events-auto">
+            <SocialPostPreview item={item} compact className="h-full border-0 rounded-lg" />
           </div>
         ) : !item.thumbnailUrl && !isProcessing ? (
           <div className="opacity-10">
@@ -107,27 +119,30 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
           </div>
         ) : null}
 
-        {/* ... overlay logic ... */}
         {item.isFavourite && (
-          <div className="absolute top-3 right-3 z-10 flex items-center justify-center rounded-full text-xs shadow-sm bg-(--bg-elevated)/90 backdrop-blur-sm" style={{ width: 32, height: 32, color: "var(--accent-500)" }}>
+          <div
+            className="absolute top-3 right-3 z-10 flex items-center justify-center rounded-full text-xs shadow-sm bg-(--bg-elevated)/90 backdrop-blur-sm"
+            style={{ width: 32, height: 32, color: "var(--accent-500)" }}
+          >
             <Heart size={16} fill="currentColor" />
           </div>
         )}
       </div>
 
-      {/* Content */}
       <div className="flex flex-col gap-2 p-5 flex-1 relative">
         <div className="absolute inset-x-0 bottom-0 top-0 bg-linear-to-tl from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-        
+
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground relative z-10">
           <TypeBadge type={item.itemType} size="sm" />
           <span>{timeAgo(item.savedAt)}</span>
         </div>
 
-        <h3 className="text-base font-serif text-(--text-primary) tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-indigo-400 transition-colors duration-300">
-          {item.title || "Untitled"}
-        </h3>
-        
+        {shouldShowTitle && (
+          <h3 className="text-base font-serif text-(--text-primary) tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-indigo-400 transition-colors duration-300">
+            {trimmedTitle || "Untitled"}
+          </h3>
+        )}
+
         {item.description && item.itemType !== "tweet" && (
           <p className="text-xs font-light text-muted-foreground line-clamp-2 mt-1 relative z-10 leading-relaxed">
             {item.description}
@@ -137,4 +152,3 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
     </div>
   );
 }
-  

@@ -5,6 +5,8 @@ export type ItemType =
   | "pdf"
   | "image"
   | "podcast"
+  | "instagram"
+  | "linkedin"
   | "link";
 
 export type ItemStatus = "pending" | "processing" | "ready" | "failed";

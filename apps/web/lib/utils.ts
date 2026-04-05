@@ -42,7 +42,28 @@ export function extractDomain(url: string | null): string {
 /** Truncate text to max length with ellipsis */
 export function truncate(text: string, maxLen: number): string {
   if (text.length <= maxLen) return text;
-  return text.slice(0, maxLen).trimEnd() + "…";
+  return text.slice(0, maxLen).trimEnd() + "...";
+}
+
+/** Convert a standard Instagram URL into an embeddable iframe URL */
+export function getInstagramEmbedUrl(url: string | null, captioned = true): string | null {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    if (!host.includes("instagram.com")) return null;
+
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const typeIndex = parts.findIndex((part) => ["p", "reel", "tv"].includes(part));
+    if (typeIndex === -1 || !parts[typeIndex + 1]) return null;
+
+    const mediaType = parts[typeIndex];
+    const shortcode = parts[typeIndex + 1];
+    return `https://www.instagram.com/${mediaType}/${shortcode}/embed/${captioned ? "captioned/" : ""}`;
+  } catch {
+    return null;
+  }
 }
 
 /** Content-type icon map */
@@ -53,6 +74,8 @@ export const TYPE_ICONS: Record<ItemType, string> = {
   pdf: "pdf",
   podcast: "podcast",
   image: "image",
+  instagram: "instagram",
+  linkedin: "linkedin",
   link: "link",
 };
 
@@ -64,5 +87,7 @@ export const TYPE_LABELS: Record<ItemType, string> = {
   pdf: "PDF",
   podcast: "Podcast",
   image: "Image",
+  instagram: "Instagram",
+  linkedin: "LinkedIn",
   link: "Link",
 };

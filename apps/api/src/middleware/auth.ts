@@ -20,7 +20,7 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
     (req as any).auth = { userId };
     
     // 3. Find/Attach local user record
-    const user = await prisma.user.findFirst({
+    let user = await prisma.user.findFirst({
       where: {
         OR: [
           { googleId: userId },
@@ -31,6 +31,22 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
       console.error("[Auth] Database query failed:", err.message);
       return null;
     });
+
+    // 4. Ensure a local user row exists so downstream writes never fail on FK constraints.
+    if (!user) {
+      user = await prisma.user.upsert({
+        where: { id: userId },
+        update: {},
+        create: {
+          id: userId,
+          email: `${userId}@clerk.local`,
+          name: "Clerk User",
+        },
+      }).catch((err) => {
+        console.error("[Auth] Failed to create fallback local user:", err.message);
+        return null;
+      });
+    }
 
     if (user) {
       (req as any).user = user;
