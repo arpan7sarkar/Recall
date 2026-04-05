@@ -33,7 +33,7 @@ export function SourceTypePicker() {
             style={{
               background:
                 selectedType === opt.type
-                  ? "var(--accent-50)"
+                  ? "var(--accent-50) text-[var(--accent-500)]"
                   : "var(--bg-secondary)",
               border: `1px solid ${
                 selectedType === opt.type

@@ -75,7 +75,7 @@ export function HeroSection() {
                                     <Button
                                         asChild
                                         size="lg"
-                                        className="rounded-full px-8 py-6 text-base bg-white text-[#070707] hover:bg-zinc-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-95">
+                                        className="rounded-full px-8 py-6 text-base active:scale-95">
                                         <Link href={isSignedIn ? ROUTES.dashboard : ROUTES.register}>
                                             <span className="flex items-center gap-2">{isSignedIn ? "Go to Dashboard" : "Start building yours"} <ArrowRight size={18} /></span>
                                         </Link>
@@ -204,7 +204,7 @@ export const HeroHeader = () => {
                                 )}
                                 <Button
                                     asChild
-                                    className="rounded-full bg-white text-[#070707] hover:bg-zinc-200 px-6 py-2 shadow-sm font-medium transition-all active:scale-95">
+                                    className="rounded-full px-6 py-2 font-medium active:scale-95">
                                     <Link href={isSignedIn ? ROUTES.dashboard : ROUTES.register}>{isSignedIn ? "Dashboard" : "Get early access"}</Link>
                                 </Button>
                              </div>
@@ -238,7 +238,7 @@ export const HeroHeader = () => {
                              <div className="flex flex-col gap-4 mt-auto border-t border-white/10 pt-8">
                                 <Button
                                     asChild
-                                    className="w-full rounded-full bg-white text-black py-6 text-lg font-medium">
+                                    className="w-full rounded-full py-6 text-lg font-medium">
                                     <Link href={isSignedIn ? ROUTES.dashboard : ROUTES.register}>{isSignedIn ? "Dashboard" : "Get Started"}</Link>
                                 </Button>
                                 {!isSignedIn && (

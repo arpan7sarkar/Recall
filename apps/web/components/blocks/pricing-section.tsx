@@ -82,7 +82,7 @@ export const PricingSection = () => {
           <div className="inline-flex items-center bg-white/5 border border-white/10 backdrop-blur-sm rounded-full p-1.5 shadow-inner">
             <button
               className={`px-10 py-2.5 rounded-full text-[10px] font-bold tracking-widest transition-all duration-500 ${!isAnnual
-                  ? 'bg-accent text-background shadow-xl shadow-accent/20'
+                  ? 'btn-primary shadow-xl shadow-accent/20'
                   : 'text-zinc-500 hover:text-white'
                 }`}
               onClick={() => setIsAnnual(false)}
@@ -91,7 +91,7 @@ export const PricingSection = () => {
             </button>
             <button
               className={`px-10 py-2.5 rounded-full text-[10px] font-bold tracking-widest transition-all duration-500 ${isAnnual
-                  ? 'bg-accent text-background shadow-xl shadow-accent/20'
+                  ? 'btn-primary shadow-xl shadow-accent/20'
                   : 'text-zinc-500 hover:text-white'
                 }`}
               onClick={() => setIsAnnual(true)}
@@ -151,8 +151,8 @@ export const PricingSection = () => {
                   className={cn(
                     "w-full py-8 rounded-2xl text-xs font-black tracking-[0.15em] uppercase transition-all duration-500 active:scale-95",
                     plan.highlighted
-                      ? "bg-white text-black hover:bg-zinc-200 shadow-xl shadow-white/5"
-                      : "bg-white/5 border border-white/10 text-white hover:bg-white/10"
+                      ? "btn-primary shadow-xl shadow-white/5"
+                      : "btn-secondary"
                   )}
                 >
                    <Link href={isSignedIn ? ROUTES.dashboard : ROUTES.register}>

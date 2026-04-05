@@ -312,11 +312,7 @@ export function ContentDetailsForm() {
       <button
         onClick={() => setStep("metadata")}
         disabled={isNextDisabled}
-        className="w-full py-2.5 rounded-lg text-sm font-medium text-white transition-all focus-ring disabled:opacity-40"
-        style={{
-          background: "var(--accent-500)",
-          borderRadius: "var(--radius-md)",
-        }}
+        className="btn-primary focus-ring w-full rounded-lg py-2.5 text-sm font-medium disabled:opacity-40"
       >
         Next: Add Tags & Collection →
       </button>

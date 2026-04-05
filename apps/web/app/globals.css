@@ -23,6 +23,19 @@
   --accent-500: #334155; 
   --accent-600: #1e293b;
   --accent-700: #0f172a;
+  --accent-foreground: #f8fafc;
+
+  /* Shared Button Tokens */
+  --button-primary-bg: #334155;
+  --button-primary-bg-hover: #253445;
+  --button-primary-text: #f8fafc;
+  --button-primary-border: rgba(15, 23, 42, 0.2);
+  --button-secondary-bg: transparent;
+  --button-secondary-bg-hover: rgba(51, 65, 85, 0.08);
+  --button-secondary-text: #334155;
+  --button-secondary-border: rgba(51, 65, 85, 0.24);
+  --button-focus-ring: rgba(51, 65, 85, 0.35);
+  --button-star-fill: #334155;
 
   /* Border & shadow */
   --border: rgba(0, 0, 0, 0.05);
@@ -70,6 +83,18 @@
   --accent-500: #c0c0c0; /* Brushed Silver */
   --accent-600: #a0a0a0;
   --accent-700: #808080;
+  --accent-foreground: #050505;
+
+  --button-primary-bg: #9a9a9a;
+  --button-primary-bg-hover: #ababab;
+  --button-primary-text: #050505;
+  --button-primary-border: rgba(255, 255, 255, 0.18);
+  --button-secondary-bg: rgba(255, 255, 255, 0.02);
+  --button-secondary-bg-hover: rgba(255, 255, 255, 0.09);
+  --button-secondary-text: #e5e5e5;
+  --button-secondary-border: rgba(255, 255, 255, 0.18);
+  --button-focus-ring: rgba(192, 192, 192, 0.4);
+  --button-star-fill: #9a9a9a;
   
   --silver-gradient: linear-gradient(135deg, #c0c0c0 0%, #ffffff 50%, #c0c0c0 100%);
 }
@@ -83,8 +108,9 @@
   --color-muted: var(--bg-tertiary);
   --color-muted-foreground: var(--text-secondary);
   --color-accent: var(--accent-500);
-  --color-accent-foreground: hsl(0, 0%, 100%);
+  --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
+  --animate-star-btn: star-btn calc(var(--duration) * 1s) linear infinite;
 
   --font-sans: var(--font-sans);
 }
@@ -152,3 +178,150 @@ body {
     transform: translateY(-10px);
   }
 }
+
+@keyframes star-btn {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+.btn-primary {
+  border: 1px solid var(--button-primary-border);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  box-shadow: 0 16px 36px -22px color-mix(in srgb, var(--button-primary-bg) 85%, transparent);
+}
+
+.btn-primary:hover {
+  background: var(--button-primary-bg-hover);
+}
+
+.btn-secondary {
+  border: 1px solid var(--button-secondary-border);
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+}
+
+.btn-secondary:hover {
+  background: var(--button-secondary-bg-hover);
+}
+
+/* ── Clerk Auth Overrides ───────────────────────────────────── */
+.cl-rootBox {
+  width: 100%;
+}
+
+.cl-card {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.cl-headerTitle {
+  color: #ffffff !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 700 !important;
+}
+
+.cl-headerSubtitle {
+  color: #a1a1aa !important;
+}
+
+.cl-socialButtonsBlockButton {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.cl-socialButtonsBlockButtonText {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.cl-dividerLine {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.cl-dividerText {
+  color: #71717a !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+}
+
+.cl-formFieldLabel {
+  color: #a1a1aa !important;
+  font-weight: 500 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.cl-formFieldInput {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.75rem !important;
+  height: 3rem !important;
+}
+
+.cl-formFieldInput:focus {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05) !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  height: 3rem !important;
+  border-radius: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: #f4f4f5 !important;
+  transform: translateY(-1px) !important;
+}
+
+.cl-footerActionText {
+  color: #71717a !important;
+}
+
+.cl-footerActionLink {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.cl-footerActionLink:hover {
+  color: #a1a1aa !important;
+}
+
+.cl-identityPreviewText {
+  color: #ffffff !important;
+}
+
+.cl-formFieldAction {
+  color: #ffffff !important;
+}
+
+.cl-formFieldAction:hover {
+  color: #a1a1aa !important;
+}
+
+/* Fix for light-dark() function defaulting to light in some environments */
+:root {
+  color-scheme: dark;
+}
+

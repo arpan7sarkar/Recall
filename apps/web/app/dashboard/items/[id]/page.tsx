@@ -174,8 +174,7 @@ export default function ItemDetailPage() {
                   href={item.fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-white focus-ring"
-                  style={{ background: "var(--accent-500)", borderRadius: "var(--radius-sm)" }}
+                  className="btn-primary focus-ring inline-flex rounded-lg px-3 py-1.5 text-xs font-medium"
                 >
                   Open File
                 </a>
@@ -205,9 +204,9 @@ export default function ItemDetailPage() {
               <button
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 focus-ring shadow-sm"
                 style={{
-                  background: item.isFavourite ? "var(--accent-500)" : "var(--bg-tertiary)",
-                  color: item.isFavourite ? "#fff" : "var(--text-secondary)",
-                  border: item.isFavourite ? "none" : "1px solid var(--border)",
+                  background: item.isFavourite ? "var(--button-primary-bg)" : "var(--bg-tertiary)",
+                  color: item.isFavourite ? "var(--button-primary-text)" : "var(--text-secondary)",
+                  border: item.isFavourite ? "1px solid var(--button-primary-border)" : "1px solid var(--border)",
                 }}
               >
                 <Icon name={item.isFavourite ? "check" : "plus"} size={16} />

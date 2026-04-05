@@ -35,13 +35,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       {action && (
         <button
           onClick={action.onClick}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm text-white transition-all focus-ring"
-          style={{
-            background: "var(--accent-500)",
-            borderRadius: "var(--radius-md)",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-600)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent-500)")}
+          className="btn-primary focus-ring flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium"
         >
           <span>+</span>
           {action.label}

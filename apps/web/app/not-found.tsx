@@ -13,8 +13,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="px-6 py-2.5 rounded-lg text-sm font-medium text-white focus-ring"
-          style={{ background: "var(--accent-500)", borderRadius: "var(--radius-md)" }}
+          className="btn-primary focus-ring inline-flex rounded-lg px-6 py-2.5 text-sm font-medium"
         >
           Go Home
         </Link>

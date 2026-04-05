@@ -10,7 +10,7 @@
  * @github: https://github.com/kokonut-labs/kokonutui
  */
 
-import { Sun, Moon } from "lucide-react";
+import { Sun } from "lucide-react";
 import { useUIStore } from "@/store/uiStore";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -58,6 +58,7 @@ export default function SwitchButton({
 
   return (
     <Button
+      variant="ghost"
       className={cn(
         "group relative",
         "transition-all duration-300 ease-out",

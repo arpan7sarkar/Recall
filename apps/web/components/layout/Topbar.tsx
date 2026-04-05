@@ -117,14 +117,14 @@ export function Topbar() {
         <button
           onClick={openAddContent}
           className={cn(
-            "flex items-center gap-2 px-6 py-2 rounded-full font-serif text-sm transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-accent/20",
+            "flex items-center gap-2 px-8 py-2 rounded-full font-serif text-xs transition-all duration-300 hover:scale-102 active:scale-97",
             "bg-accent text-background hover:opacity-90"
           )}
           id="add-content-btn"
         >
           <Icon name="plus" size={16} />
           <span className="hidden sm:inline">Add Content</span>
-          <span className="hidden lg:inline ml-1 px-1.5 py-0.5 text-[8px] rounded bg-white/20 uppercase tracking-tighter">Alt+N</span>
+          <span className="hidden lg:inline ml-1 px-1.5 py-0.5 text-[8px] rounded bg-white/20 uppercase ">Alt+N</span>
         </button>
 
         <UserButton

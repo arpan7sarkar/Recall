@@ -143,21 +143,14 @@ export function MetadataForm({ onSave, onSaveAndAdd, isSaving }: MetadataFormPro
         <button
           onClick={onSave}
           disabled={isSaving}
-          className="flex-1 py-2.5 rounded-lg text-sm font-medium text-white transition-all focus-ring disabled:opacity-60"
-          style={{ background: "var(--accent-500)", borderRadius: "var(--radius-md)" }}
+          className="btn-primary focus-ring flex-1 rounded-lg py-2.5 text-sm font-medium disabled:opacity-60"
         >
           {isSaving ? "Saving…" : "Save"}
         </button>
         <button
           onClick={onSaveAndAdd}
           disabled={isSaving}
-          className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all focus-ring disabled:opacity-60"
-          style={{
-            background: "transparent",
-            border: "1px solid var(--accent-500)",
-            color: "var(--accent-500)",
-            borderRadius: "var(--radius-md)",
-          }}
+          className="btn-secondary focus-ring flex-1 rounded-lg py-2.5 text-sm font-medium disabled:opacity-60"
         >
           Save & Add Another
         </button>

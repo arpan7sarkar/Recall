@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 function FloatingPaths({ position }: { position: number }) {
     const paths = Array.from({ length: 36 }, (_, i) => ({
@@ -129,11 +128,7 @@ export function BackgroundPaths({
                         >
                             <Button
                                 asChild
-                                variant="ghost"
-                                className="rounded-full px-8 py-6 text-lg font-medium backdrop-blur-md 
-                                bg-white text-black hover:bg-zinc-200 transition-all duration-300 
-                                group-hover:-translate-y-0.5 border border-white/10
-                                hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+                                className="rounded-full px-8 py-6 text-lg font-medium transition-all duration-300 group-hover:-translate-y-0.5"
                             >
                                 <a href={primaryCTA.href}>
                                     <span className="opacity-90 group-hover:opacity-100 transition-opacity">
