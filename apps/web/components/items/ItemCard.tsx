@@ -7,12 +7,12 @@ import { timeAgo, extractDomain } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/shared/Icon";
-import { Heart } from "lucide-react";
+import { Heart, Trash2 } from "lucide-react";
 import Script from "next/script";
 import { LoaderOne } from "@/components/ui/unique-loader-components";
 import { SocialPostPreview } from "@/components/items/SocialPostPreview";
 import { InstagramAutoEmbed } from "@/components/items/InstagramAutoEmbed";
-import { useArchiveItem, useUnarchiveItem } from "@/hooks/useItems";
+import { useArchiveItem, useDeleteItem, useUnarchiveItem } from "@/hooks/useItems";
 
 interface ItemCardProps {
   item: Item;
@@ -23,12 +23,14 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   const router = useRouter();
   const archiveItem = useArchiveItem();
   const unarchiveItem = useUnarchiveItem();
+  const deleteItem = useDeleteItem();
   const isProcessing = item.status === "processing" || item.status === "pending";
   const isInstagram = item.itemType === "instagram";
   const isStaticSocialPreview = item.itemType === "linkedin";
   const trimmedTitle = (item.title || "").trim();
   const shouldShowTitle = !isInstagram || trimmedTitle.length > 0;
   const isArchiveUpdating = archiveItem.isPending || unarchiveItem.isPending;
+  const isDeletePending = deleteItem.isPending;
 
   const handleCardClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("a, button, blockquote")) return;
@@ -46,6 +48,18 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       }
     } catch (err) {
       console.error("Failed to toggle archive state:", err);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const confirmed = window.confirm("Delete this item permanently? This action cannot be undone.");
+    if (!confirmed) return;
+
+    try {
+      await deleteItem.mutateAsync(item.id);
+    } catch (err) {
+      console.error("Failed to delete item:", err);
     }
   };
 
@@ -86,7 +100,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={handleArchiveToggle}
-            disabled={isArchiveUpdating}
+            disabled={isArchiveUpdating || isDeletePending}
             className="text-[10px] px-2 py-1 rounded-md border transition-colors disabled:opacity-60"
             style={{
               color: "var(--text-secondary)",
@@ -95,6 +109,18 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
             }}
           >
             {isArchiveUpdating ? "..." : item.isArchived ? "Unarchive" : "Archive"}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={isDeletePending}
+            className="text-[10px] px-2 py-1 rounded-md border transition-colors disabled:opacity-60"
+            style={{
+              color: "var(--danger, #ef4444)",
+              borderColor: "var(--border)",
+              background: "var(--bg-secondary)",
+            }}
+          >
+            {isDeletePending ? "Deleting..." : "Delete"}
           </button>
 
           {item.isFavourite && (
@@ -154,7 +180,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
 
         {item.isFavourite && (
           <div
-            className="absolute top-4 right-4 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md"
+            className="absolute top-4 right-14 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md"
             style={{ width: 32, height: 32, color: "var(--accent-500)" }}
           >
             <Heart size={16} fill="currentColor" />
@@ -163,12 +189,21 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
 
         <button
           onClick={handleArchiveToggle}
-          disabled={isArchiveUpdating}
+          disabled={isArchiveUpdating || isDeletePending}
           className="absolute top-4 left-4 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
           style={{ width: 32, height: 32, color: "var(--text-secondary)" }}
           aria-label={item.isArchived ? "Unarchive item" : "Archive item"}
         >
           <Icon name="archive" size={14} />
+        </button>
+        <button
+          onClick={handleDelete}
+          disabled={isDeletePending || isArchiveUpdating}
+          className="absolute top-4 right-4 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
+          style={{ width: 32, height: 32, color: "var(--danger, #ef4444)" }}
+          aria-label="Delete item"
+        >
+          <Trash2 size={14} />
         </button>
       </div>
 
