@@ -15,6 +15,7 @@ export const ROUTES = {
   settings: "/dashboard/settings",
   item: (id: string) => `/dashboard/items/${id}`,
   collection: (id: string) => `/dashboard/collections/${id}`,
+  publicCollection: (slug: string) => `/c/${slug}`,
 } as const;
 
 /** Sidebar navigation items */

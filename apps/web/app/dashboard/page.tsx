@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useItems } from "@/hooks/useItems";
 import { ItemCard } from "@/components/items/ItemCard";
-import { ItemCardSkeleton } from "@/components/items/ItemCardSkeleton";
 import { ItemFilters } from "@/components/items/ItemFilters";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useUIStore } from "@/store/uiStore";
@@ -28,17 +27,30 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* Page header */}
-      <div className="mb-10 flex flex-col pt-2">
-        <h1 className="text-4xl font-serif text-(--text-primary) tracking-tight">
-          Your Knowledge Base
-        </h1>
-        <p className="text-sm font-light text-muted-foreground mt-2">
-          {totalItems} items saved · {processingCount} processing
-        </p>
-      </div>
+      <section
+        className="mb-10 rounded-2xl border overflow-hidden"
+        style={{
+          borderColor: "var(--border)",
+          background:
+            "linear-gradient(120deg, color-mix(in srgb, var(--bg-secondary) 92%, black 8%), color-mix(in srgb, var(--bg-secondary) 78%, black 22%))",
+        }}
+      >
+        <div className="relative px-5 py-5 md:px-7 md:py-6">
+          <div className="absolute inset-0 pointer-events-none opacity-80 bg-[radial-gradient(circle_at_top_right,rgba(192,192,192,0.16),transparent_52%)]" />
+          <div className="relative flex flex-col gap-1">
+            <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: "var(--text-tertiary)" }}>
+              Dashboard
+            </p>
+            <h1 className="text-4xl font-serif tracking-tight text-(--text-primary)">
+              Your Knowledge Base
+            </h1>
+            <p className="text-sm font-light text-muted-foreground mt-1">
+              {totalItems} items saved · {processingCount} processing
+            </p>
+          </div>
+        </div>
+      </section>
 
-      {/* Memory resurfacing widget - Clean & Flat */}
       {items.length > 0 && (
         <div className="mb-12 p-8 rounded-2xl bg-card border border-border transition-all duration-300">
           <div className="flex items-start gap-6 relative z-10">
@@ -50,15 +62,17 @@ export default function DashboardPage() {
                 From your memory
               </h2>
               <p className="text-base font-light text-muted-foreground leading-relaxed max-w-2xl">
-                You saved <span className="text-accent font-medium">'{items[0]?.title || "an item"}'</span>. 
-                Rethink the connections you've built and how this piece fits into your current workflow.
+                You saved{" "}
+                <span className="text-accent font-medium">
+                  &apos;{items[0]?.title || "an item"}&apos;
+                </span>
+                . Rethink the connections you&apos;ve built and how this piece fits into your current workflow.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Filters + view toggle */}
       <ItemFilters
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { authenticateClerk } from "@/middleware/auth";
 
@@ -11,6 +12,96 @@ function normalizeOptionalString(value: unknown): string | null | undefined {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
+
+function normalizeSlug(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.trim().toLowerCase();
+}
+
+function slugBaseFromName(name: string): string {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+
+  return base || "collection";
+}
+
+async function generateUniquePublicSlug(name: string): Promise<string> {
+  const base = slugBaseFromName(name);
+
+  for (let i = 0; i < 8; i += 1) {
+    const suffix = crypto.randomBytes(3).toString("hex");
+    const candidate = `${base}-${suffix}`;
+    const existing = await prisma.collection.findUnique({
+      where: { publicSlug: candidate },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return candidate;
+    }
+  }
+
+  return `${base}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
+function flattenCollectionItems(items: any[]) {
+  return items.map((ci: any) => ({
+    ...ci.item,
+    tags: ci.item.tags?.map((t: any) => ({
+      tagId: t.tag.id,
+      tagName: t.tag.name,
+      tagColor: t.tag.color || null,
+      isAiGenerated: t.isAiGenerated || false,
+      confidence: t.confidence || 1.0,
+    })) || [],
+  }));
+}
+
+/**
+ * @route   GET /collections/public/:slug
+ * @desc    Get a shared public collection by slug (no auth)
+ */
+router.get("/public/:slug", async (req: Request, res: Response) => {
+  const slug = normalizeSlug(req.params.slug);
+  if (!slug) {
+    return res.status(400).json({ error: "Invalid collection slug" });
+  }
+
+  try {
+    const collection = await prisma.collection.findFirst({
+      where: { publicSlug: slug, isPublic: true },
+      include: {
+        items: {
+          where: {
+            item: {
+              isArchived: false,
+            },
+          },
+          include: {
+            item: {
+              include: {
+                tags: { include: { tag: true } },
+              },
+            },
+          },
+          orderBy: { position: "asc" },
+        },
+      },
+    });
+
+    if (!collection) {
+      return res.status(404).json({ error: "Shared collection not found" });
+    }
+
+    const flattenedItems = flattenCollectionItems(collection.items);
+    res.json({ ...collection, items: flattenedItems });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch shared collection" });
+  }
+});
 
 // Apply auth to all collection routes
 router.use(authenticateClerk);
@@ -50,12 +141,14 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   try {
+    const shouldBePublic = Boolean(isPublic);
     const collection = await prisma.collection.create({
       data: {
         userId: userId!,
         name: normalizedName,
         description: normalizeOptionalString(description),
-        isPublic: Boolean(isPublic),
+        isPublic: shouldBePublic,
+        publicSlug: shouldBePublic ? await generateUniquePublicSlug(normalizedName) : null,
       },
     });
     res.status(201).json(collection);
@@ -93,17 +186,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Collection not found" });
     }
 
-    // Flatten logic for items
-    const flattenedItems = collection.items.map((ci: any) => ({
-      ...ci.item,
-      tags: ci.item.tags?.map((t: any) => ({
-        tagId: t.tag.id,
-        tagName: t.tag.name,
-        tagColor: t.tag.color || null,
-        isAiGenerated: t.isAiGenerated || false,
-        confidence: t.confidence || 1.0,
-      })) || [],
-    }));
+    const flattenedItems = flattenCollectionItems(collection.items);
 
     res.json({ ...collection, items: flattenedItems });
   } catch (error) {
@@ -136,6 +219,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
       name?: string;
       description?: string | null;
       isPublic?: boolean;
+      publicSlug?: string | null;
     } = {};
 
     if (hasName) {
@@ -146,6 +230,15 @@ router.patch("/:id", async (req: Request, res: Response) => {
     }
     if (isPublic !== undefined) {
       updateData.isPublic = Boolean(isPublic);
+      if (Boolean(isPublic)) {
+        if (!existing.publicSlug) {
+          const slugSourceName = updateData.name ?? existing.name;
+          updateData.publicSlug = await generateUniquePublicSlug(slugSourceName);
+        }
+      } else {
+        // Unsharing invalidates old public links.
+        updateData.publicSlug = null;
+      }
     }
 
     const collection = await prisma.collection.update({
@@ -155,6 +248,84 @@ router.patch("/:id", async (req: Request, res: Response) => {
     res.json(collection);
   } catch (error) {
     res.status(500).json({ error: "Failed to update collection" });
+  }
+});
+
+/**
+ * @route   POST /collections/:id/share
+ * @desc    Enable public sharing for a collection and return share metadata
+ */
+router.post("/:id/share", async (req: Request, res: Response) => {
+  const userId = (req as any).auth?.userId;
+  const { id } = req.params;
+  const regenerate = Boolean(req.body?.regenerate);
+
+  try {
+    const existing = await prisma.collection.findUnique({ where: { id } });
+    if (!existing || existing.userId !== userId) {
+      return res.status(404).json({ error: "Collection not found" });
+    }
+
+    const publicSlug =
+      regenerate || !existing.publicSlug
+        ? await generateUniquePublicSlug(existing.name)
+        : existing.publicSlug;
+
+    const updated = await prisma.collection.update({
+      where: { id },
+      data: {
+        isPublic: true,
+        publicSlug,
+      },
+      select: {
+        id: true,
+        isPublic: true,
+        publicSlug: true,
+      },
+    });
+
+    res.json({
+      ...updated,
+      sharePath: `/c/${updated.publicSlug}`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to share collection" });
+  }
+});
+
+/**
+ * @route   POST /collections/:id/unshare
+ * @desc    Disable public sharing for a collection
+ */
+router.post("/:id/unshare", async (req: Request, res: Response) => {
+  const userId = (req as any).auth?.userId;
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.collection.findUnique({ where: { id } });
+    if (!existing || existing.userId !== userId) {
+      return res.status(404).json({ error: "Collection not found" });
+    }
+
+    const updated = await prisma.collection.update({
+      where: { id },
+      data: {
+        isPublic: false,
+        publicSlug: null,
+      },
+      select: {
+        id: true,
+        isPublic: true,
+        publicSlug: true,
+      },
+    });
+
+    res.json({
+      ...updated,
+      sharePath: null,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to unshare collection" });
   }
 });
 

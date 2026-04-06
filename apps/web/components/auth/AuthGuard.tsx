@@ -4,7 +4,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ROUTES } from "@/lib/constants";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { LoaderFive } from "@/components/ui/unique-loader-components";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -26,14 +26,27 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       if (isSignedIn && clerkUser && !synced) {
         try {
           const token = await getToken();
+          if (!token) {
+            // Token can be temporarily unavailable during initial Clerk hydration.
+            // We skip sync without surfacing a noisy error.
+            setSynced(true);
+            return;
+          }
+
           await api.post("/auth/sync", {
             email: clerkUser.primaryEmailAddress?.emailAddress,
             name: clerkUser.fullName,
             avatarUrl: clerkUser.imageUrl,
           }, { token: token || undefined });
           setSynced(true);
-        } catch (err) {
+        } catch (err: unknown) {
+          if (err instanceof ApiError && err.status === 401) {
+            // Avoid noisy console spam for occasional token timing issues.
+            setSynced(true);
+            return;
+          }
           console.error("Sync failed", err);
+          setSynced(true);
         }
       }
     }
