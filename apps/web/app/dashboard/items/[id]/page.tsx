@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useItem, useArchiveItem, useUnarchiveItem } from "@/hooks/useItems";
+import { useItem, useArchiveItem, useDeleteItem, useUnarchiveItem } from "@/hooks/useItems";
 import { useCollections, useAddItemToCollection, useCreateCollection } from "@/hooks/useCollections";
 import { TypeBadge } from "@/components/shared/TypeBadge";
 import { TagChip } from "@/components/shared/TagChip";
@@ -13,6 +13,7 @@ import { TweetPreview } from "@/components/items/TweetPreview";
 import { SocialPostPreview } from "@/components/items/SocialPostPreview";
 import { InstagramAutoEmbed } from "@/components/items/InstagramAutoEmbed";
 import { LoaderFive, LoaderTwo } from "@/components/ui/unique-loader-components";
+import { Trash2 } from "lucide-react";
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,7 @@ export default function ItemDetailPage() {
   const { data: item, isLoading, error } = useItem(id as string);
   const archiveItem = useArchiveItem();
   const unarchiveItem = useUnarchiveItem();
+  const deleteItem = useDeleteItem();
   const { data: collections } = useCollections();
   const addItemToCollection = useAddItemToCollection();
   const createCollection = useCreateCollection();
@@ -31,6 +33,7 @@ export default function ItemDetailPage() {
   const [collectionError, setCollectionError] = useState<string | null>(null);
 
   const isArchiving = archiveItem.isPending || unarchiveItem.isPending;
+  const isDeleting = deleteItem.isPending;
 
   const handleArchive = async () => {
     if (!item) return;
@@ -61,6 +64,19 @@ export default function ItemDetailPage() {
       e.target.value = "";
     } catch (e) {
       console.error("Failed to add to collection", e);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!item) return;
+    const confirmed = window.confirm("Delete this item permanently? This action cannot be undone.");
+    if (!confirmed) return;
+
+    try {
+      await deleteItem.mutateAsync(item.id);
+      router.push("/dashboard");
+    } catch (e) {
+      console.error("Failed to delete item", e);
     }
   };
 
@@ -305,17 +321,31 @@ export default function ItemDetailPage() {
               )}
               <button
                 onClick={handleArchive}
-                disabled={isArchiving}
+                disabled={isArchiving || isDeleting}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border shadow-sm focus-ring"
                 style={{
                   background: "var(--bg-primary)",
                   color: "var(--text-secondary)",
                   borderColor: "var(--border)",
-                  opacity: isArchiving ? 0.6 : 1,
+                  opacity: isArchiving || isDeleting ? 0.6 : 1,
                 }}
               >
                 <Icon name="archive" size={16} />
                 {isArchiving ? "Updating..." : item.isArchived ? "Unarchive" : "Archive"}
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting || isArchiving}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border shadow-sm focus-ring"
+                style={{
+                  background: "var(--bg-primary)",
+                  color: "var(--danger, #ef4444)",
+                  borderColor: "var(--border)",
+                  opacity: isDeleting || isArchiving ? 0.6 : 1,
+                }}
+              >
+                <Trash2 size={16} />
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
 

@@ -127,7 +127,12 @@ export function useDeleteItem() {
       if (!token) throw new Error("Missing auth token");
       return api.delete(`/items/${id}`, { token });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ["items"] });
+      qc.invalidateQueries({ queryKey: ["item", id] });
+      qc.invalidateQueries({ queryKey: ["collections"] });
+      qc.invalidateQueries({ queryKey: ["collection"] });
+    },
   });
 }
 

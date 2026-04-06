@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import type { ItemType, SaveSource } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { authenticateClerk } from "@/middleware/auth";
-import { fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
+import { deleteEmbedding, fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
 import { upload } from "@/middleware/upload";
 import { scrapeQueue, aiQueue } from "@/queues";
 import { buildKey, uploadFile } from "@/lib/storage";
@@ -473,6 +473,14 @@ router.delete("/:id", async (req: Request, res: Response) => {
     }
 
     await prisma.item.delete({ where: { id } });
+
+    // Keep vector index in sync with source-of-truth DB deletes.
+    try {
+      await deleteEmbedding(id);
+    } catch (vectorError) {
+      console.warn(`[Items] Item ${id} deleted from DB, but Pinecone cleanup failed`, vectorError);
+    }
+
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: "Failed to delete item" });
