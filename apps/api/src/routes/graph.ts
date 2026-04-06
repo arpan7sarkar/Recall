@@ -48,6 +48,7 @@ router.get("/", async (req: Request, res: Response) => {
       tags: item.tags.map(t => t.tag.name),
       size: 1, // Normalized size, could be weighted by importance or views in future
     }));
+    const itemIdSet = new Set(items.map((item) => item.id));
 
     const edges: any[] = [];
     const edgeSet = new Set<string>();
@@ -78,7 +79,12 @@ router.get("/", async (req: Request, res: Response) => {
           // Top 4 to include itself
           const matches = await queryEmbedding(userId, embedding, 4);
           matches.forEach(match => {
-            if (match.id !== item.id && match.score !== undefined && match.score > 0.6) { // Include moderate semantic relationships
+            if (
+              match.id !== item.id &&
+              itemIdSet.has(match.id) &&
+              match.score !== undefined &&
+              match.score > 0.6
+            ) { // Include moderate semantic relationships only for items that still exist in DB.
                addEdge(item.id, match.id, match.score, 'similarity');
             }
           });

@@ -30,8 +30,9 @@ export function Sidebar() {
         className={cn(
           "z-50 shrink-0 flex flex-col transition-all duration-300 ease-in-out border rounded-2xl overflow-hidden",
           "fixed inset-y-4 left-4 shadow-2xl backdrop-blur-xl",
+          "w-[min(86vw,320px)]",
           sidebarOpen ? "translate-x-0" : "-translate-x-[150%]",
-          "lg:relative lg:inset-0 lg:translate-x-0 lg:shadow-none lg:h-full lg:backdrop-blur-none",
+          "lg:relative lg:inset-0 lg:w-auto lg:translate-x-0 lg:shadow-none lg:h-full lg:backdrop-blur-none",
           sidebarCollapsed ? "lg:w-[80px]" : "lg:w-[260px]",
           "bg-[var(--bg-secondary)] border-[var(--border)] shadow-sm"
         )}

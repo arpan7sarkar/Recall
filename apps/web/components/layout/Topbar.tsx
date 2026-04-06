@@ -39,28 +39,28 @@ export function Topbar() {
 
   return (
     <header
-      className="shrink-0 flex items-center justify-between gap-4 px-6 rounded-2xl border border-border shadow-sm bg-(--bg-secondary)/80 backdrop-blur-xl relative z-20 h-16"
+      className="shrink-0 flex items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4 lg:gap-4 lg:px-6 rounded-xl sm:rounded-2xl border border-border shadow-sm bg-(--bg-secondary)/80 backdrop-blur-xl relative z-20 h-14 sm:h-16"
     >
       {/* Mobile hamburger */}
       <button
         onClick={toggleSidebar}
-        className="lg:hidden p-2 rounded-lg focus-ring transition-colors bg-muted text-muted-foreground hover:text-(--text-primary)"
+        className="lg:hidden p-2 rounded-lg focus-ring transition-colors bg-muted text-muted-foreground hover:text-(--text-primary) shrink-0"
         aria-label="Toggle sidebar"
       >
         <Menu size={20} />
       </button>
 
       {/* Search bar with live dropdown */}
-      <div className="relative flex-1 flex justify-end max-w-2xl ml-auto">
-        <form onSubmit={handleSearch} className="w-full max-w-xl">
+      <div className="relative flex-1 min-w-0 flex justify-end max-w-2xl">
+        <form onSubmit={handleSearch} className="w-full max-w-xl min-w-0">
           <div
             className={cn(
-              "flex items-center gap-3 px-5 py-2 rounded-full transition-all duration-300 border bg-(--bg-primary)/40",
+              "flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all duration-300 border bg-(--bg-primary)/40",
               showDropdown && searchQuery.length >= 2 ? "border-(--accent-500)/50 shadow-[0_0_15px_rgba(192,192,192,0.1)]" : "border-border"
             )}
           >
-            <div className="flex items-center justify-center opacity-40" style={{ width: 16 }}>
-              <Icon name="search" size={16} />
+            <div className="flex items-center justify-center opacity-40 shrink-0" style={{ width: 14 }}>
+              <Icon name="search" size={14} />
             </div>
             <input
               type="text"
@@ -72,8 +72,8 @@ export function Topbar() {
               onFocus={() => {
                 if (searchQuery.length >= 2) setShowDropdown(true);
               }}
-              placeholder="Search your mind..."
-              className="flex-1 bg-transparent text-sm font-light text-(--text-primary) outline-none placeholder:text-(--text-tertiary)"
+              placeholder="Search..."
+              className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm font-light text-(--text-primary) outline-none placeholder:text-(--text-tertiary)"
               id="global-search"
               autoComplete="off"
             />
@@ -93,7 +93,7 @@ export function Topbar() {
             )}
             {!searchQuery && (
               <kbd
-                className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-(--bg-tertiary)/50 text-(--text-tertiary) border border-border"
+                className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-(--bg-tertiary)/50 text-(--text-tertiary) border border-border"
               >
                 ⌘K
               </kbd>
@@ -112,15 +112,17 @@ export function Topbar() {
         )}
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 shrink-0">
         {/* Add Content CTA */}
         <button
           onClick={openAddContent}
           className={cn(
-            "flex items-center gap-2 px-8 py-2 rounded-full font-serif text-xs transition-all duration-300 hover:scale-102 active:scale-97",
+            "flex items-center justify-center gap-2 rounded-full font-serif text-xs transition-all duration-300 hover:scale-102 active:scale-97",
+            "h-9 w-9 sm:h-auto sm:w-auto sm:px-5 lg:px-8 sm:py-2",
             "bg-accent text-background hover:opacity-90"
           )}
           id="add-content-btn"
+          aria-label="Add content"
         >
           <Icon name="plus" size={16} />
           <span className="hidden sm:inline">Add Content</span>
