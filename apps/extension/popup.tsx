@@ -20,6 +20,20 @@ type AuthState = "loading" | "connected" | "disconnected";
 type UserInfo = { name?: string; email?: string };
 type TabSnapshot = { title: string; url: string };
 
+// Content type options for the category picker
+const CATEGORY_OPTIONS = [
+  { value: "", label: "Auto-detect" },
+  { value: "article", label: "Article / Blog" },
+  { value: "youtube", label: "YouTube Video" },
+  { value: "tweet", label: "Tweet / Post" },
+  { value: "pdf", label: "PDF / Document" },
+  { value: "podcast", label: "Podcast" },
+  { value: "image", label: "Image" },
+  { value: "instagram", label: "Instagram" },
+  { value: "linkedin", label: "LinkedIn" },
+  { value: "link", label: "Other Link" },
+];
+
 function IndexPopup() {
   const [authState, setAuthState] = useState<AuthState>("loading");
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -31,6 +45,13 @@ function IndexPopup() {
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  // Manual URL input
+  const [manualUrl, setManualUrl] = useState("");
+  const [useManualUrl, setUseManualUrl] = useState(false);
+
+  // Category selection
+  const [category, setCategory] = useState("");
+
   // Token paste states
   const [tokenInput, setTokenInput] = useState("");
   const [isValidating, setIsValidating] = useState(false);
@@ -40,6 +61,12 @@ function IndexPopup() {
     setSelectedTags((prev) =>
       prev.includes(tagName) ? prev.filter((name) => name !== tagName) : [...prev, tagName]
     );
+  };
+
+  // Get the URL that will be saved
+  const getSaveUrl = (): string => {
+    if (useManualUrl && manualUrl.trim()) return manualUrl.trim();
+    return activeTab?.url ?? "";
   };
 
   useEffect(() => {
@@ -67,34 +94,45 @@ function IndexPopup() {
         if (res.data?.valid && res.data?.user) {
           setUser(res.data.user);
           setAuthState("connected");
-
-          // Fetch tags
-          try {
-            const tagsRes = await axios.get(`${API_BASE}/tags`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            const names = Array.isArray(tagsRes?.data)
-              ? tagsRes.data
-                  .map((tag: any) => (typeof tag?.name === "string" ? tag.name.trim() : ""))
-                  .filter((n: string) => n.length > 0)
-                  .slice(0, 8)
-              : [];
-            setTagSuggestions(names);
-          } catch {
-            // Tags fetch failed — non-critical
-          }
+          await fetchTags(token);
         } else {
+          // Only clear if explicitly invalid (not a network error)
           await clearJwtToken();
           setAuthState("disconnected");
         }
-      } catch {
-        await clearJwtToken();
-        setAuthState("disconnected");
+      } catch (err: any) {
+        const status = err?.response?.status;
+        // Only clear token for definitive auth failures (401)
+        // Network errors or 500s should not clear the token
+        if (status === 401) {
+          await clearJwtToken();
+          setAuthState("disconnected");
+        } else {
+          // Network error — still show as connected attempt failed
+          setAuthState("disconnected");
+        }
       }
     };
 
     void bootstrap();
   }, []);
+
+  const fetchTags = async (token: string) => {
+    try {
+      const tagsRes = await axios.get(`${API_BASE}/tags`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const names = Array.isArray(tagsRes?.data)
+        ? tagsRes.data
+            .map((tag: any) => (typeof tag?.name === "string" ? tag.name.trim() : ""))
+            .filter((n: string) => n.length > 0)
+            .slice(0, 12)
+        : [];
+      setTagSuggestions(names);
+    } catch {
+      // Tags fetch failed — non-critical
+    }
+  };
 
   const handleTokenSubmit = async () => {
     const cleanToken = tokenInput.trim();
@@ -118,6 +156,7 @@ function IndexPopup() {
         setUser(res.data.user);
         setAuthState("connected");
         setTokenInput("");
+        await fetchTags(cleanToken);
       } else {
         setTokenError("Token validation failed.");
       }
@@ -140,8 +179,16 @@ function IndexPopup() {
     setSaveMessage(null);
     setSaveError(null);
 
-    if (!activeTab?.url) {
-      setSaveError("No active tab URL found.");
+    const urlToSave = getSaveUrl();
+
+    if (!urlToSave) {
+      setSaveError("Enter a URL or navigate to a page to save.");
+      return;
+    }
+
+    // Basic URL validation
+    if (!/^https?:\/\//i.test(urlToSave)) {
+      setSaveError("URL must start with http:// or https://");
       return;
     }
 
@@ -156,10 +203,11 @@ function IndexPopup() {
       await axios.post(
         `${API_BASE}/items`,
         {
-          url: activeTab.url,
+          url: urlToSave,
           note: note.trim() || undefined,
           saveSource: "extension",
           tags: selectedTags.length > 0 ? selectedTags : undefined,
+          ...(category ? { itemType: category } : {}),
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -167,13 +215,25 @@ function IndexPopup() {
       setSaveMessage("Saved successfully!");
       setNote("");
       setSelectedTags([]);
+      setManualUrl("");
+      setUseManualUrl(false);
+      setCategory("");
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (requestError: any) {
+      const status = requestError?.response?.status;
       const errorMsg = requestError?.response?.data?.error || "Failed to save.";
-      if (requestError?.response?.status === 401) {
-        await clearJwtToken();
-        setAuthState("disconnected");
-        setSaveError("Token expired or revoked. Please reconnect.");
+
+      if (status === 401) {
+        // Check if the error message indicates a permanent issue
+        const isRevoked = /revoked|expired|invalid/i.test(errorMsg);
+        if (isRevoked) {
+          await clearJwtToken();
+          setAuthState("disconnected");
+          setSaveError("Token expired or revoked. Please reconnect.");
+        } else {
+          // Transient 401 — retry without clearing token
+          setSaveError("Auth error. Please try again.");
+        }
       } else {
         setSaveError(errorMsg);
       }
@@ -182,17 +242,40 @@ function IndexPopup() {
     }
   };
 
+  // ── Shared input styles ──
+  const inputStyle = {
+    padding: "8px 10px",
+    borderRadius: "8px",
+    border: `1px solid ${COLORS.border}`,
+    background: COLORS.inputBg,
+    fontSize: "13px",
+    fontFamily: "inherit",
+    outline: "none",
+    color: COLORS.text,
+    width: "100%",
+  } as const;
+
+  const selectStyle = {
+    ...inputStyle,
+    cursor: "pointer",
+    appearance: "none" as const,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2352525b' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E")`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right 10px center",
+    paddingRight: "28px",
+  };
+
   return (
     <div
       style={{
-        width: 320,
+        width: 340,
         padding: "20px",
         background: COLORS.bg,
         color: COLORS.text,
         fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
         display: "flex",
         flexDirection: "column",
-        gap: "16px",
+        gap: "14px",
       }}
     >
       {/* Header */}
@@ -225,7 +308,7 @@ function IndexPopup() {
         </div>
       )}
 
-      {/* Disconnected — Token Paste */}
+      {/* ── Disconnected — Token Paste ── */}
       {authState === "disconnected" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <div
@@ -238,14 +321,7 @@ function IndexPopup() {
             }}
           >
             <div style={{ fontSize: "28px", marginBottom: "8px" }}>🔗</div>
-            <p
-              style={{
-                margin: "0 0 4px",
-                fontSize: "14px",
-                fontWeight: 600,
-                color: COLORS.text,
-              }}
-            >
+            <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: 600, color: COLORS.text }}>
               Connect your account
             </p>
             <p style={{ margin: 0, fontSize: "12px", color: COLORS.mutedText, lineHeight: 1.5 }}>
@@ -268,15 +344,10 @@ function IndexPopup() {
               placeholder="Paste your access token here..."
               rows={3}
               style={{
-                padding: "10px 12px",
-                borderRadius: "8px",
-                border: `1px solid ${COLORS.border}`,
-                background: COLORS.inputBg,
-                fontSize: "12px",
+                ...inputStyle,
                 fontFamily: "monospace",
+                fontSize: "12px",
                 resize: "none",
-                outline: "none",
-                color: COLORS.text,
               }}
             />
             <button
@@ -317,61 +388,112 @@ function IndexPopup() {
         </div>
       )}
 
-      {/* Connected — Save UI */}
+      {/* ── Connected — Save UI ── */}
       {authState === "connected" && (
-        <main style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <main style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           {/* User badge */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              padding: "8px 12px",
+              padding: "6px 10px",
               borderRadius: "8px",
               background: "#ecfdf5",
               border: "1px solid #d1fae5",
             }}
           >
-            <span style={{ fontSize: "14px" }}>✓</span>
-            <span style={{ fontSize: "12px", color: "#059669", fontWeight: 500 }}>
+            <span style={{ fontSize: "12px" }}>✓</span>
+            <span style={{ fontSize: "11px", color: "#059669", fontWeight: 500 }}>
               Connected as {user?.name || user?.email || "User"}
             </span>
           </div>
 
-          {/* Active tab */}
-          <div
-            style={{
-              padding: "12px",
-              background: COLORS.secondaryBg,
-              border: `1px solid ${COLORS.border}`,
-              borderRadius: "10px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "13px",
-                fontWeight: 600,
-                color: COLORS.text,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                marginBottom: "4px",
-              }}
-            >
-              {activeTab?.title || "No page detected"}
+          {/* Active tab / URL source toggle */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.mutedText }}>
+                {useManualUrl ? "Custom URL" : "Current Page"}
+              </label>
+              <button
+                onClick={() => setUseManualUrl(!useManualUrl)}
+                style={{
+                  padding: "2px 8px",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  background: "none",
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: "100px",
+                  color: COLORS.mutedText,
+                  cursor: "pointer",
+                  transition: "0.2s",
+                }}
+              >
+                {useManualUrl ? "Use current page" : "Enter URL manually"}
+              </button>
             </div>
-            <div
-              style={{
-                fontSize: "11px",
-                color: COLORS.mutedText,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
+
+            {useManualUrl ? (
+              <input
+                type="url"
+                value={manualUrl}
+                onChange={(e) => setManualUrl(e.target.value)}
+                placeholder="https://example.com/article"
+                style={inputStyle}
+              />
+            ) : (
+              <div
+                style={{
+                  padding: "10px 12px",
+                  background: COLORS.secondaryBg,
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: COLORS.text,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    marginBottom: "2px",
+                  }}
+                >
+                  {activeTab?.title || "No page detected"}
+                </div>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: COLORS.mutedText,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {activeTab?.url || "Navigate to a page to save it"}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Category selector */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.mutedText }}>
+              Category
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              style={selectStyle}
             >
-              {activeTab?.url || "Navigate to a page to save it"}
-            </div>
+              {CATEGORY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Note */}
@@ -384,16 +506,9 @@ function IndexPopup() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               style={{
-                padding: "8px 10px",
-                borderRadius: "8px",
-                border: `1px solid ${COLORS.border}`,
-                background: COLORS.inputBg,
-                fontSize: "13px",
-                fontFamily: "inherit",
+                ...inputStyle,
                 resize: "none",
-                minHeight: "50px",
-                outline: "none",
-                color: COLORS.text,
+                minHeight: "44px",
               }}
             />
           </div>
@@ -404,13 +519,13 @@ function IndexPopup() {
               <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.mutedText }}>
                 Tags
               </label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
                 {tagSuggestions.map((tag) => (
                   <button
                     key={tag}
                     onClick={() => toggleTag(tag)}
                     style={{
-                      padding: "4px 10px",
+                      padding: "3px 10px",
                       borderRadius: "100px",
                       fontSize: "11px",
                       cursor: "pointer",
@@ -454,9 +569,12 @@ function IndexPopup() {
                 color: COLORS.success,
                 textAlign: "center",
                 fontWeight: 500,
+                padding: "6px",
+                borderRadius: "6px",
+                background: "#ecfdf5",
               }}
             >
-              {saveMessage}
+              ✓ {saveMessage}
             </div>
           )}
           {saveError && (
@@ -466,6 +584,9 @@ function IndexPopup() {
                 color: COLORS.error,
                 textAlign: "center",
                 fontWeight: 500,
+                padding: "6px",
+                borderRadius: "6px",
+                background: "#fef2f2",
               }}
             >
               {saveError}
@@ -477,9 +598,8 @@ function IndexPopup() {
       {/* Footer */}
       <footer
         style={{
-          marginTop: "4px",
           borderTop: `1px solid ${COLORS.border}`,
-          paddingTop: "12px",
+          paddingTop: "10px",
           textAlign: "center",
         }}
       >

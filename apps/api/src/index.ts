@@ -23,14 +23,8 @@ const configuredCorsOrigins = (process.env.CORS_ORIGINS ?? "")
 const defaultCorsOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
 const allowedCorsOrigins = new Set([...defaultCorsOrigins, ...configuredCorsOrigins]);
 
-// Standard middleware
-app.use(
-  clerkMiddleware({
-    clockSkewInMs: Number.isFinite(clerkClockSkewInMs) ? clerkClockSkewInMs : 15000,
-  })
-); // Clerk sessions
-app.use(helmet()); // Security headers
-app.use(morgan("dev")); // Logging
+// Standard middleware — ORDER MATTERS
+// 1. CORS (must be first to handle preflight OPTIONS)
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -53,9 +47,20 @@ app.use(
     },
     credentials: true,
   })
-); // CORS support for web app + extension
-app.use(express.json()); // JSON body parser
+);
+// 2. Body parsing (must come before Clerk/auth middleware)
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// 3. Clerk (Registered globally to initialize context)
+app.use(
+  clerkMiddleware({
+    clockSkewInMs: Number.isFinite(clerkClockSkewInMs) ? clerkClockSkewInMs : 15000,
+  })
+);
+
+// 4. Security & Logging
+app.use(helmet());
+app.use(morgan("dev"));
 
 // Routes
 app.use("/v1/auth", authRoutes);
@@ -85,6 +90,7 @@ app.get("/", (_req: Request, res: Response) => {
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("[GlobalError]", err.name, err.message);
   console.error(err.stack);
   res.status(500).json({ error: "Something went wrong!" });
 });
