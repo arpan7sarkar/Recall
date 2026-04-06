@@ -133,7 +133,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
               src="https://platform.twitter.com/widgets.js"
               strategy="afterInteractive"
               onLoad={() => {
-                // @ts-ignore
+                // @ts-expect-error twttr is injected by Twitter's widget script
                 if (window.twttr) window.twttr.widgets.load();
               }}
             />

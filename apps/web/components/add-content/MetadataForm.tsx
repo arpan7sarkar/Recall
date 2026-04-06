@@ -54,8 +54,12 @@ export function MetadataForm({ onSave, onSaveAndAdd, isSaving }: MetadataFormPro
       setCollectionId(created.id);
       setNewCollectionName("");
       setShowCreateCollection(false);
-    } catch (err: any) {
-      setCollectionError(err?.body?.error ?? "Failed to create collection.");
+    } catch (err: unknown) {
+      const apiError =
+        typeof err === "object" && err !== null && "body" in err
+          ? (err as { body?: { error?: string } }).body?.error
+          : undefined;
+      setCollectionError(apiError ?? "Failed to create collection.");
     }
   };
 
