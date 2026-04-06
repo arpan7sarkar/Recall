@@ -20,7 +20,11 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className="h-full" suppressHydrationWarning>
-        <body className="min-h-full flex flex-col" style={{ fontFamily: "var(--font-sans)" }}>
+        <body
+          className="min-h-full flex flex-col"
+          style={{ fontFamily: "var(--font-sans)" }}
+          suppressHydrationWarning
+        >
           <QueryProvider>
             <ThemeProvider>
               {children}

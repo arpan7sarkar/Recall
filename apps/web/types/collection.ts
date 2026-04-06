@@ -19,6 +19,13 @@ export interface CollectionDetail extends Collection {
   items: Item[];
 }
 
+export interface CollectionSharePayload {
+  id: string;
+  isPublic: boolean;
+  publicSlug: string | null;
+  sharePath: string | null;
+}
+
 export interface CollectionItem {
   collectionId: string;
   itemId: string;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCollections, useCreateCollection } from "@/hooks/useCollections";
+import { useCollections, useCreateCollection, useDeleteCollection } from "@/hooks/useCollections";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ROUTES } from "@/lib/constants";
 import { Icon } from "@/components/shared/Icon";
@@ -11,12 +11,14 @@ export default function CollectionsPage() {
   const router = useRouter();
   const { data: collections, isLoading, error } = useCollections();
   const createCollection = useCreateCollection();
+  const deleteCollection = useDeleteCollection();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const resetForm = () => {
     setName("");
@@ -49,6 +51,26 @@ export default function CollectionsPage() {
           ? (err as { body?: { error?: string } }).body?.error
           : undefined;
       setFormError(apiError ?? "Failed to create collection.");
+    }
+  };
+
+  const handleDeleteCollection = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+    collectionId: string,
+    collectionName: string
+  ) => {
+    e.stopPropagation();
+
+    const confirmed = window.confirm(`Delete "${collectionName}"? This cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(collectionId);
+      await deleteCollection.mutateAsync(collectionId);
+    } catch {
+      setFormError("Failed to delete collection.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -199,11 +221,20 @@ export default function CollectionsPage() {
                 </p>
                 <div className="mt-auto flex items-center justify-between text-xs relative z-10 text-white/75">
                   <span>{col._count?.items ?? col.itemCount ?? 0} items</span>
-                  {col.isPublic && (
-                    <span className="px-2 py-0.5 rounded-full text-xs border border-white/25 bg-white/10 text-white">
-                      Public
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {col.isPublic && (
+                      <span className="px-2 py-0.5 rounded-full text-xs border border-white/25 bg-white/10 text-white">
+                        Public
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => handleDeleteCollection(e, col.id, col.name)}
+                      disabled={deletingId === col.id}
+                      className="px-2 py-0.5 rounded-full text-xs border border-white/25 bg-black/25 text-white disabled:opacity-60"
+                    >
+                      {deletingId === col.id ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
