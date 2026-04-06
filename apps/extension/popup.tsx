@@ -3,6 +3,7 @@ import axios from "axios";
 import { clearJwtToken, getJwtToken, setJwtToken } from "~lib/storage";
 
 const API_BASE = process.env.PLASMO_PUBLIC_API_URL ?? "http://localhost:4000/v1";
+const FRONTEND_BASE = process.env.PLASMO_PUBLIC_FRONTEND_URL ?? "http://localhost:3000";
 
 const COLORS = {
   bg: "#fafafa",
@@ -327,7 +328,7 @@ function IndexPopup() {
             <p style={{ margin: 0, fontSize: "12px", color: COLORS.mutedText, lineHeight: 1.5 }}>
               Generate an access token from your{" "}
               <a
-                href="http://localhost:3000/dashboard/settings"
+                href={`${FRONTEND_BASE}/dashboard/settings`}
                 target="_blank"
                 style={{ color: COLORS.accent, textDecoration: "none", fontWeight: 600 }}
               >
@@ -606,7 +607,7 @@ function IndexPopup() {
         <span style={{ fontSize: "11px", color: COLORS.mutedText }}>
           Manage tokens in your{" "}
           <a
-            href="http://localhost:3000/dashboard/settings"
+            href={`${FRONTEND_BASE}/dashboard/settings`}
             target="_blank"
             style={{ color: COLORS.accent, textDecoration: "none", fontWeight: 600 }}
           >
