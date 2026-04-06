@@ -21,6 +21,7 @@ export function AddContentStepper() {
   const performSave = useCallback(async () => {
     const { selectedType, url, file, title, note, youtubeTimestamp, tags, collectionId } = useAddContentStore.getState();
     const token = await getToken();
+    if (!token) throw new Error("Missing auth token");
     const isUpload = selectedType === "pdf" || selectedType === "image";
 
     if (isUpload && file) {
@@ -32,7 +33,7 @@ export function AddContentStepper() {
       if (collectionId) formData.append("collectionId", collectionId);
       tags.forEach(t => formData.append("tags", t)); // Send multiple tags
       
-      await api.upload("/items/upload", formData, { token: token || undefined });
+      await api.upload("/items/upload", formData, { token });
     } else {
       await api.post("/items", {
         url,
@@ -41,7 +42,7 @@ export function AddContentStepper() {
         collectionId,
         note,
         youtubeTimestamp,
-      }, { token: token || undefined });
+      }, { token });
     }
   }, [getToken]);
 

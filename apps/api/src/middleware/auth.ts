@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 export type AuthSource = "clerk" | "extension_token";
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY ?? "";
+const clerkClockSkewInMs = Number(process.env.CLERK_CLOCK_SKEW_MS ?? 15000);
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -18,6 +19,10 @@ function extractBearerToken(req: Request): string {
     return authHeader.slice(7).trim();
   }
   return "";
+}
+
+function isLikelyJwt(token: string): boolean {
+  return token.split(".").length === 3;
 }
 
 export const authenticateClerk = async (req: Request, res: Response, next: NextFunction) => {
@@ -55,7 +60,23 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
       }
     }
 
-    // 2. Handle Clerk Sessions (only if not an extension token)
+    // 2. Validate explicit Bearer JWT first (most reliable for cross-origin API calls in dev).
+    if (!userId && bearerToken && !isExtensionToken && CLERK_SECRET_KEY && isLikelyJwt(bearerToken)) {
+      try {
+        const result = await verifyToken(bearerToken, {
+          secretKey: CLERK_SECRET_KEY,
+          clockSkewInMs: Number.isFinite(clerkClockSkewInMs) ? clerkClockSkewInMs : 15000,
+        });
+        if (result && typeof result === "object" && "sub" in result) {
+          userId = result.sub as string;
+          source = "clerk";
+        }
+      } catch {
+        // Invalid JWT - fall through to middleware auth context check.
+      }
+    }
+
+    // 3. Handle Clerk Sessions (cookie/context path)
     if (!userId && !isExtensionToken) {
       try {
         const auth = getAuth(req);
@@ -67,19 +88,6 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
         // Safe skip: getAuth may throw if clerkMiddleware isn't registered yet
         // but it's now registered globally in index.ts
         console.log("[Auth] Clerk session check skipped/failed:", err.message);
-      }
-    }
-
-    // 3. Fallback to Clerk JWT (cross-origin)
-    if (!userId && bearerToken && !isExtensionToken && CLERK_SECRET_KEY) {
-      try {
-        const result = await verifyToken(bearerToken, { secretKey: CLERK_SECRET_KEY });
-        if (result && typeof result === "object" && "sub" in result) {
-          userId = result.sub as string;
-          source = "clerk";
-        }
-      } catch {
-        // Invalid JWT - fall through
       }
     }
 

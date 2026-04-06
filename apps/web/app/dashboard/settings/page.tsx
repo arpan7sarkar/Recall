@@ -23,7 +23,7 @@ interface NewTokenResponse {
 }
 
 export default function SettingsPage() {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [tokens, setTokens] = useState<ExtensionToken[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -34,16 +34,20 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTokens = useCallback(async () => {
+    if (!isLoaded || !isSignedIn) return;
+
     try {
       const token = await getToken();
-      const data = await api.get<ExtensionToken[]>("/auth/extension-tokens", { token: token ?? undefined });
+      if (!token) return;
+
+      const data = await api.get<ExtensionToken[]>("/auth/extension-tokens", { token });
       setTokens(data);
     } catch {
       setError("Failed to load tokens");
     } finally {
       setIsLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, isLoaded, isSignedIn]);
 
   useEffect(() => {
     fetchTokens();
@@ -54,10 +58,11 @@ export default function SettingsPage() {
     setIsCreating(true);
     try {
       const token = await getToken();
+      if (!token) throw new Error("Missing auth token");
       const data = await api.post<NewTokenResponse>("/auth/extension-tokens", {
         label: label.trim() || "My Extension",
         expiresInDays: expiryDays,
-      }, { token: token ?? undefined });
+      }, { token });
 
       setNewToken(data.token);
       setLabel("");
@@ -72,7 +77,8 @@ export default function SettingsPage() {
   const handleRevoke = async (id: string) => {
     try {
       const token = await getToken();
-      await api.delete(`/auth/extension-tokens/${id}`, { token: token ?? undefined });
+      if (!token) throw new Error("Missing auth token");
+      await api.delete(`/auth/extension-tokens/${id}`, { token });
       await fetchTokens();
     } catch {
       setError("Failed to revoke token");

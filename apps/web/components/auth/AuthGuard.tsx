@@ -16,18 +16,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const legacyToken = localStorage.getItem("jwt");
-    if (legacyToken?.startsWith("recall_ext_")) {
-      localStorage.removeItem("jwt");
-    }
+    // Web app is Clerk-authenticated now; clear legacy token storage on load.
+    localStorage.removeItem("jwt");
 
     const persistedAuth = localStorage.getItem("recall-auth");
     if (persistedAuth) {
       try {
         const parsed = JSON.parse(persistedAuth) as { state?: { token?: string | null } };
-        if (parsed?.state?.token?.startsWith?.("recall_ext_")) {
-          localStorage.removeItem("recall-auth");
-        }
+        if (parsed?.state?.token) localStorage.removeItem("recall-auth");
       } catch {
         // Ignore malformed legacy persisted state.
       }

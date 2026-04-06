@@ -45,6 +45,11 @@ export class ApiError extends Error {
 function getAuthHeaders(token?: string): Record<string, string> {
   if (token) return { Authorization: `Bearer ${token}` };
   if (typeof window === "undefined") return {};
+  const enableLegacyJwtFallback = process.env.NEXT_PUBLIC_ENABLE_LEGACY_JWT_FALLBACK === "true";
+  if (!enableLegacyJwtFallback) {
+    return {};
+  }
+
   const localToken = localStorage.getItem("jwt"); // Fallback for transition
   if (!localToken) return {};
 
