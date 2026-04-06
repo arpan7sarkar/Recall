@@ -155,7 +155,14 @@ export default function CollectionDetailPage() {
       </button>
 
       {error ? (
-        <div className="p-8 text-center text-red-500 bg-red-50 rounded-lg">
+        <div
+          className="p-8 text-center rounded-lg border"
+          style={{
+            color: "color-mix(in srgb, #ef4444 70%, var(--text-primary) 30%)",
+            background: "color-mix(in srgb, var(--bg-secondary) 88%, #b91c1c 12%)",
+            borderColor: "color-mix(in srgb, var(--border) 50%, #dc2626 50%)",
+          }}
+        >
           Failed to load this collection.
         </div>
       ) : isLoading ? (

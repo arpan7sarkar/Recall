@@ -15,6 +15,26 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [synced, setSynced] = useState(false);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const legacyToken = localStorage.getItem("jwt");
+    if (legacyToken?.startsWith("recall_ext_")) {
+      localStorage.removeItem("jwt");
+    }
+
+    const persistedAuth = localStorage.getItem("recall-auth");
+    if (persistedAuth) {
+      try {
+        const parsed = JSON.parse(persistedAuth) as { state?: { token?: string | null } };
+        if (parsed?.state?.token?.startsWith?.("recall_ext_")) {
+          localStorage.removeItem("recall-auth");
+        }
+      } catch {
+        // Ignore malformed legacy persisted state.
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.replace(`${ROUTES.login}?redirect=${encodeURIComponent(pathname)}`);
     }
@@ -27,9 +47,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         try {
           const token = await getToken();
           if (!token) {
-            // Token can be temporarily unavailable during initial Clerk hydration.
-            // We skip sync without surfacing a noisy error.
-            setSynced(true);
+            // Token can be briefly unavailable while Clerk hydrates.
+            // Keep waiting so child pages do not fire unauthorized API calls.
             return;
           }
 
@@ -53,7 +72,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     sync();
   }, [isSignedIn, clerkUser, getToken, synced]);
 
-  if (!isLoaded || (isSignedIn && !synced && !clerkUser)) {
+  if (!isLoaded || (isSignedIn && !synced)) {
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center bg-background"

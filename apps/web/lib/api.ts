@@ -1,4 +1,5 @@
 const LOCAL_API_BASE = "http://localhost:4000/v1";
+const DEFAULT_PROD_API_BASE = "https://recall-z9zo.onrender.com/v1";
 
 const DEV_API_BASE =
   process.env.NEXT_PUBLIC_API_URL_DEV ??
@@ -9,9 +10,26 @@ const PROD_API_BASE =
   process.env.NEXT_PUBLIC_RENDER_API_URL ??
   process.env.NEXT_PUBLIC_API_URL_PROD ??
   process.env.NEXT_PUBLIC_API_URL ??
-  LOCAL_API_BASE;
+  DEFAULT_PROD_API_BASE;
 
-const API_BASE = process.env.NODE_ENV === "production" ? PROD_API_BASE : DEV_API_BASE;
+const PRELIM_API_BASE = process.env.NODE_ENV === "production" ? PROD_API_BASE : DEV_API_BASE;
+
+function isLocalHost(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
+function resolveApiBase(): string {
+  if (typeof window === "undefined") return PRELIM_API_BASE;
+
+  // Safety: if app runs on a non-local host, never call localhost API.
+  if (!isLocalHost(window.location.hostname) && PRELIM_API_BASE.includes("localhost")) {
+    return PROD_API_BASE;
+  }
+
+  return PRELIM_API_BASE;
+}
+
+const API_BASE = resolveApiBase();
 
 export class ApiError extends Error {
   constructor(
@@ -28,7 +46,21 @@ function getAuthHeaders(token?: string): Record<string, string> {
   if (token) return { Authorization: `Bearer ${token}` };
   if (typeof window === "undefined") return {};
   const localToken = localStorage.getItem("jwt"); // Fallback for transition
-  return localToken ? { Authorization: `Bearer ${localToken}` } : {};
+  if (!localToken) return {};
+
+  // Never send extension tokens from web app requests.
+  if (localToken.startsWith("recall_ext_")) {
+    localStorage.removeItem("jwt");
+    return {};
+  }
+
+  // Basic JWT shape check to avoid sending random/stale tokens.
+  if (localToken.split(".").length !== 3) {
+    localStorage.removeItem("jwt");
+    return {};
+  }
+
+  return { Authorization: `Bearer ${localToken}` };
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {

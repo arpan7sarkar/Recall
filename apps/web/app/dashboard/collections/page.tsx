@@ -114,7 +114,14 @@ export default function CollectionsPage() {
       </section>
 
       {error ? (
-        <div className="p-8 text-center text-red-500 bg-red-50 rounded-lg">
+        <div
+          className="p-8 text-center rounded-lg border"
+          style={{
+            color: "color-mix(in srgb, #ef4444 70%, var(--text-primary) 30%)",
+            background: "color-mix(in srgb, var(--bg-secondary) 88%, #b91c1c 12%)",
+            borderColor: "color-mix(in srgb, var(--border) 50%, #dc2626 50%)",
+          }}
+        >
           Failed to load collections.
         </div>
       ) : isLoading ? (
@@ -124,7 +131,8 @@ export default function CollectionsPage() {
               key={i}
               className="p-5 rounded-xl h-40 animate-pulse"
               style={{
-                background: "var(--bg-secondary)",
+                background:
+                  "linear-gradient(120deg, color-mix(in srgb, var(--bg-secondary) 92%, var(--text-primary) 8%), color-mix(in srgb, var(--bg-tertiary) 90%, var(--text-primary) 10%))",
                 border: "1px solid var(--border)",
                 boxShadow: "var(--shadow-sm)",
               }}

@@ -12,11 +12,12 @@ export function useAuth() {
     
     // Sync with local DB
     const token = await getToken();
+    if (!token) return null;
     const res = await api.post<{ user: User }>("/auth/sync", {
       email: clerkUser.primaryEmailAddress?.emailAddress,
       name: clerkUser.fullName,
       avatarUrl: clerkUser.imageUrl,
-    }, { token: token || undefined });
+    }, { token });
     return res.user;
   }, [clerkUser, getToken]);
 
@@ -25,9 +26,11 @@ export function useAuth() {
   }, [signOut]);
 
   const fetchMe = useCallback(async () => {
-    const me = await api.get<User>("/auth/me");
+    const token = await getToken();
+    if (!token) throw new Error("Missing auth token");
+    const me = await api.get<User>("/auth/me", { token });
     return me;
-  }, []);
+  }, [getToken]);
 
   // Map Clerk user to our User type conceptually if needed
   const user: User | null = clerkUser ? {
