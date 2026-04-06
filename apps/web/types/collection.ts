@@ -1,3 +1,5 @@
+import type { Item } from "./item";
+
 export interface Collection {
   id: string;
   userId: string;
@@ -6,11 +8,15 @@ export interface Collection {
   coverImage: string | null;
   isPublic: boolean;
   publicSlug: string | null;
-  itemCount: number;
+  itemCount?: number;
   _count?: {
     items: number;
   };
   createdAt: string;
+}
+
+export interface CollectionDetail extends Collection {
+  items: Item[];
 }
 
 export interface CollectionItem {

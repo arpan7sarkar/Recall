@@ -122,3 +122,33 @@ export function useDeleteItem() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
 }
+
+export function useArchiveItem() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const token = await getToken();
+      return api.post<Item>(`/items/${id}/archive`, undefined, { token: token || undefined });
+    },
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ["items"] });
+      qc.invalidateQueries({ queryKey: ["item", id] });
+    },
+  });
+}
+
+export function useUnarchiveItem() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const token = await getToken();
+      return api.post<Item>(`/items/${id}/unarchive`, undefined, { token: token || undefined });
+    },
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ["items"] });
+      qc.invalidateQueries({ queryKey: ["item", id] });
+    },
+  });
+}

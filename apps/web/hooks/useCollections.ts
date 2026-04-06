@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { api } from "@/lib/api";
-import type { Collection } from "@/types";
+import type { Collection, CollectionDetail } from "@/types";
 
 export function useCollections() {
   const { getToken } = useAuth();
@@ -24,7 +24,7 @@ export function useCollection(id: string) {
     queryKey: ["collection", id],
     queryFn: async () => {
       const token = await getToken();
-      return api.get<Collection>(`/collections/${id}`, { token: token || undefined });
+      return api.get<CollectionDetail>(`/collections/${id}`, { token: token || undefined });
     },
     enabled: !!id,
   });
@@ -39,7 +39,10 @@ export function useCreateCollection() {
       const token = await getToken();
       return api.post<Collection>("/collections", data, { token: token || undefined });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["collections"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["collections"] });
+      qc.invalidateQueries({ queryKey: ["items"] });
+    },
   });
 }
 
@@ -68,7 +71,11 @@ export function useDeleteCollection() {
       const token = await getToken();
       return api.delete(`/collections/${id}`, { token: token || undefined });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["collections"] }),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ["collections"] });
+      qc.invalidateQueries({ queryKey: ["collection", id] });
+      qc.invalidateQueries({ queryKey: ["items"] });
+    },
   });
 }
 
@@ -82,7 +89,9 @@ export function useAddItemToCollection() {
       return api.post(`/collections/${collectionId}/items`, { itemId }, { token: token || undefined });
     },
     onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["collections"] });
       qc.invalidateQueries({ queryKey: ["collection", vars.collectionId] });
+      qc.invalidateQueries({ queryKey: ["items"] });
       qc.invalidateQueries({ queryKey: ["item", vars.itemId] });
     },
   });
@@ -98,7 +107,9 @@ export function useRemoveItemFromCollection() {
       return api.delete(`/collections/${collectionId}/items/${itemId}`, { token: token || undefined });
     },
     onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["collections"] });
       qc.invalidateQueries({ queryKey: ["collection", vars.collectionId] });
+      qc.invalidateQueries({ queryKey: ["items"] });
       qc.invalidateQueries({ queryKey: ["item", vars.itemId] });
     },
   });
