@@ -16,7 +16,7 @@ interface UseItemsOptions {
 }
 
 export function useItems(opts: UseItemsOptions = {}) {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const { page = 1, limit = 20, type, tag, source, archived, favorite } = opts;
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (type && type !== "all") params.set("type", type);
@@ -29,8 +29,10 @@ export function useItems(opts: UseItemsOptions = {}) {
     queryKey: ["items", opts],
     queryFn: async () => {
       const token = await getToken();
-      return api.get<PaginatedResponse<Item>>(`/items?${params}`, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.get<PaginatedResponse<Item>>(`/items?${params}`, { token });
     },
+    enabled: isLoaded && Boolean(isSignedIn),
     refetchInterval: (query) => {
       const data = query.state.data as PaginatedResponse<Item> | undefined;
       const hasPendingProcessing = data?.data?.some(
@@ -42,26 +44,28 @@ export function useItems(opts: UseItemsOptions = {}) {
 }
 
 export function useItem(id: string) {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   return useQuery({
     queryKey: ["item", id],
     queryFn: async () => {
       const token = await getToken();
-      return api.get<Item>(`/items/${id}`, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.get<Item>(`/items/${id}`, { token });
     },
-    enabled: !!id,
+    enabled: Boolean(id) && isLoaded && Boolean(isSignedIn),
   });
 }
 
 export function useRelatedItems(id: string) {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   return useQuery({
     queryKey: ["item", id, "related"],
     queryFn: async () => {
       const token = await getToken();
-      return api.get<Item[]>(`/items/${id}/related`, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.get<Item[]>(`/items/${id}/related`, { token });
     },
-    enabled: !!id,
+    enabled: Boolean(id) && isLoaded && Boolean(isSignedIn),
   });
 }
 
@@ -78,7 +82,8 @@ export function useCreateItem() {
       youtubeTimestamp?: string;
     }) => {
       const token = await getToken();
-      return api.post<Item>("/items", data, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.post<Item>("/items", data, { token });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
@@ -90,7 +95,8 @@ export function useUploadItem() {
   return useMutation({
     mutationFn: async (formData: FormData) => {
       const token = await getToken();
-      return api.upload<Item>("/items/upload", formData, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.upload<Item>("/items/upload", formData, { token });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
@@ -102,7 +108,8 @@ export function useUpdateItem() {
   return useMutation({
     mutationFn: async ({ id, ...data }: { id: string; [key: string]: unknown }) => {
       const token = await getToken();
-      return api.patch<Item>(`/items/${id}`, data, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.patch<Item>(`/items/${id}`, data, { token });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["items"] });
@@ -117,7 +124,8 @@ export function useDeleteItem() {
   return useMutation({
     mutationFn: async (id: string) => {
       const token = await getToken();
-      return api.delete(`/items/${id}`, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.delete(`/items/${id}`, { token });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
   });
@@ -129,7 +137,8 @@ export function useArchiveItem() {
   return useMutation({
     mutationFn: async (id: string) => {
       const token = await getToken();
-      return api.post<Item>(`/items/${id}/archive`, undefined, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.post<Item>(`/items/${id}/archive`, undefined, { token });
     },
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ["items"] });
@@ -144,7 +153,8 @@ export function useUnarchiveItem() {
   return useMutation({
     mutationFn: async (id: string) => {
       const token = await getToken();
-      return api.post<Item>(`/items/${id}/unarchive`, undefined, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.post<Item>(`/items/${id}/unarchive`, undefined, { token });
     },
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ["items"] });

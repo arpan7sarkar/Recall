@@ -47,6 +47,10 @@ function IndexPopup() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [collections, setCollections] = useState<{id: string, name: string}[]>([]);
   const [selectedCollection, setSelectedCollection] = useState("");
+  const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [collectionFormVisible, setCollectionFormVisible] = useState(false);
+  const [collectionError, setCollectionError] = useState<string | null>(null);
   const [isArchived, setIsArchived] = useState(false);
 
   // Manual URL input
@@ -149,6 +153,42 @@ function IndexPopup() {
       }
     } catch {
       // Collections fetch failed
+    }
+  };
+
+  const handleCreateCollection = async () => {
+    const token = await getJwtToken();
+    if (!token) {
+      setAuthState("disconnected");
+      return;
+    }
+
+    const normalizedName = newCollectionName.trim();
+    if (!normalizedName) {
+      setCollectionError("Collection name is required.");
+      return;
+    }
+
+    setCollectionError(null);
+    setIsCreatingCollection(true);
+    try {
+      const response = await axios.post(
+        `${API_BASE}/collections`,
+        { name: normalizedName },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const created = response?.data;
+      if (created?.id && created?.name) {
+        setCollections((prev) => [{ id: created.id, name: created.name }, ...prev]);
+        setSelectedCollection(created.id);
+        setNewCollectionName("");
+        setCollectionFormVisible(false);
+      }
+    } catch (err: any) {
+      setCollectionError(err?.response?.data?.error || "Failed to create collection.");
+    } finally {
+      setIsCreatingCollection(false);
     }
   };
 
@@ -523,25 +563,85 @@ function IndexPopup() {
           </div>
 
           {/* Collection selector */}
-          {collections.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.mutedText }}>
                 Collection
               </label>
-              <select
-                value={selectedCollection}
-                onChange={(e) => setSelectedCollection(e.target.value)}
-                style={selectStyle}
+              <button
+                onClick={() => {
+                  setCollectionError(null);
+                  setCollectionFormVisible((prev) => !prev);
+                }}
+                style={{
+                  padding: "2px 8px",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  background: "none",
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: "100px",
+                  color: COLORS.mutedText,
+                  cursor: "pointer",
+                }}
               >
-                <option value="">No Collection</option>
-                {collections.map((col) => (
-                  <option key={col.id} value={col.id}>
-                    {col.name}
-                  </option>
-                ))}
-              </select>
+                {collectionFormVisible ? "Close" : "New"}
+              </button>
             </div>
-          )}
+
+            <select
+              value={selectedCollection}
+              onChange={(e) => setSelectedCollection(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">No Collection</option>
+              {collections.map((col) => (
+                <option key={col.id} value={col.id}>
+                  {col.name}
+                </option>
+              ))}
+            </select>
+
+            {collectionFormVisible && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: `1px solid ${COLORS.border}`,
+                  background: COLORS.secondaryBg,
+                }}
+              >
+                <input
+                  value={newCollectionName}
+                  onChange={(e) => setNewCollectionName(e.target.value)}
+                  placeholder="Collection name"
+                  style={inputStyle}
+                />
+                <button
+                  onClick={handleCreateCollection}
+                  disabled={isCreatingCollection}
+                  style={{
+                    padding: "8px",
+                    background: COLORS.accent,
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: isCreatingCollection ? "not-allowed" : "pointer",
+                    opacity: isCreatingCollection ? 0.7 : 1,
+                  }}
+                >
+                  {isCreatingCollection ? "Creating..." : "Create Collection"}
+                </button>
+                {collectionError && (
+                  <span style={{ fontSize: "11px", color: COLORS.error }}>{collectionError}</span>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Note */}
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>

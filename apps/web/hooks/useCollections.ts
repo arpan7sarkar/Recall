@@ -6,27 +6,30 @@ import { api } from "@/lib/api";
 import type { Collection, CollectionDetail, CollectionSharePayload } from "@/types";
 
 export function useCollections() {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   return useQuery({
     queryKey: ["collections"],
     queryFn: async () => {
       const token = await getToken();
-      return api.get<Collection[]>("/collections", { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.get<Collection[]>("/collections", { token });
     },
+    enabled: isLoaded && Boolean(isSignedIn),
   });
 }
 
 export function useCollection(id: string) {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   return useQuery({
     queryKey: ["collection", id],
     queryFn: async () => {
       const token = await getToken();
-      return api.get<CollectionDetail>(`/collections/${id}`, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.get<CollectionDetail>(`/collections/${id}`, { token });
     },
-    enabled: !!id,
+    enabled: Boolean(id) && isLoaded && Boolean(isSignedIn),
   });
 }
 
@@ -47,7 +50,8 @@ export function useCreateCollection() {
   return useMutation({
     mutationFn: async (data: { name: string; description?: string; isPublic?: boolean }) => {
       const token = await getToken();
-      return api.post<Collection>("/collections", data, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.post<Collection>("/collections", data, { token });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["collections"] });
@@ -63,7 +67,8 @@ export function useUpdateCollection() {
   return useMutation({
     mutationFn: async ({ id, ...data }: { id: string; name?: string; description?: string; isPublic?: boolean }) => {
       const token = await getToken();
-      return api.patch<Collection>(`/collections/${id}`, data, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.patch<Collection>(`/collections/${id}`, data, { token });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["collections"] });
@@ -79,7 +84,8 @@ export function useShareCollection() {
   return useMutation({
     mutationFn: async ({ id, regenerate }: { id: string; regenerate?: boolean }) => {
       const token = await getToken();
-      return api.post<CollectionSharePayload>(`/collections/${id}/share`, { regenerate }, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.post<CollectionSharePayload>(`/collections/${id}/share`, { regenerate }, { token });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["collections"] });
@@ -95,7 +101,8 @@ export function useUnshareCollection() {
   return useMutation({
     mutationFn: async ({ id }: { id: string }) => {
       const token = await getToken();
-      return api.post<CollectionSharePayload>(`/collections/${id}/unshare`, undefined, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.post<CollectionSharePayload>(`/collections/${id}/unshare`, undefined, { token });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["collections"] });
@@ -111,7 +118,8 @@ export function useDeleteCollection() {
   return useMutation({
     mutationFn: async (id: string) => {
       const token = await getToken();
-      return api.delete(`/collections/${id}`, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.delete(`/collections/${id}`, { token });
     },
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ["collections"] });
@@ -128,7 +136,8 @@ export function useAddItemToCollection() {
   return useMutation({
     mutationFn: async ({ collectionId, itemId }: { collectionId: string; itemId: string }) => {
       const token = await getToken();
-      return api.post(`/collections/${collectionId}/items`, { itemId }, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.post(`/collections/${collectionId}/items`, { itemId }, { token });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["collections"] });
@@ -146,7 +155,8 @@ export function useRemoveItemFromCollection() {
   return useMutation({
     mutationFn: async ({ collectionId, itemId }: { collectionId: string; itemId: string }) => {
       const token = await getToken();
-      return api.delete(`/collections/${collectionId}/items/${itemId}`, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.delete(`/collections/${collectionId}/items/${itemId}`, { token });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["collections"] });

@@ -28,14 +28,16 @@ export interface GraphData {
 }
 
 export function useGraphData() {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   return useQuery({
     queryKey: ["graph"],
     queryFn: async () => {
       const token = await getToken();
-      return api.get<GraphData>("/graph", { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.get<GraphData>("/graph", { token });
     },
+    enabled: isLoaded && Boolean(isSignedIn),
     // Graph builds take time, keep fresh for longer
     staleTime: 5 * 60 * 1000, 
   });

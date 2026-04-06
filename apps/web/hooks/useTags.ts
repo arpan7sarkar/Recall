@@ -6,14 +6,16 @@ import { api } from "@/lib/api";
 import type { Tag } from "@/types";
 
 export function useTags() {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   return useQuery({
     queryKey: ["tags"],
     queryFn: async () => {
       const token = await getToken();
-      return api.get<Tag[]>("/tags", { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.get<Tag[]>("/tags", { token });
     },
+    enabled: isLoaded && Boolean(isSignedIn),
   });
 }
 
@@ -24,7 +26,8 @@ export function useCreateTag() {
   return useMutation({
     mutationFn: async (data: { name: string; color?: string }) => {
       const token = await getToken();
-      return api.post<Tag>("/tags", data, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.post<Tag>("/tags", data, { token });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tags"] }),
   });
@@ -37,7 +40,8 @@ export function useAttachTag() {
   return useMutation({
     mutationFn: async ({ itemId, tagId, tagName }: { itemId: string; tagId?: string; tagName?: string }) => {
       const token = await getToken();
-      return api.post(`/tags/attach/${itemId}`, { tagId, tagName }, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.post(`/tags/attach/${itemId}`, { tagId, tagName }, { token });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["item", vars.itemId] });
@@ -54,7 +58,8 @@ export function useUpdateTag() {
   return useMutation({
     mutationFn: async ({ id, ...data }: { id: string; name?: string; color?: string }) => {
       const token = await getToken();
-      return api.patch<Tag>(`/tags/${id}`, data, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.patch<Tag>(`/tags/${id}`, data, { token });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tags"] }),
   });
@@ -67,7 +72,8 @@ export function useDeleteTag() {
   return useMutation({
     mutationFn: async (id: string) => {
       const token = await getToken();
-      return api.delete(`/tags/${id}`, { token: token || undefined });
+      if (!token) throw new Error("Missing auth token");
+      return api.delete(`/tags/${id}`, { token });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tags"] }),
   });
