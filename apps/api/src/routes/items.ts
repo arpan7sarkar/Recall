@@ -192,17 +192,17 @@ async function requeueStaleItems(userId: string) {
 
     try {
       if (stale.url && !hasUsefulScrapeData) {
-        await scrapeQueue.add(
+        scrapeQueue.add(
           "retry-stale-scrape",
           { itemId: stale.id, url: stale.url, userId },
           { jobId: `scrape-${stale.id}` }
-        );
+        ).catch(() => {});
       } else {
-        await aiQueue.add(
+        aiQueue.add(
           "retry-stale-ai",
           { itemId: stale.id, userId },
           { jobId: `ai-${stale.id}` }
-        );
+        ).catch(() => {});
       }
     } catch (error: any) {
       // Ignore duplicate-job errors; another worker/job may already be handling it.
@@ -326,8 +326,11 @@ router.post("/", async (req: Request, res: Response) => {
       },
     });
 
-    // 3.1.4 Push to scrapeQueue
-    await scrapeQueue.add("scrape-url", { itemId: item.id, url: normalizedUrl, userId });
+    // 3.1.4 Push to scrapeQueue - fire and forget to avoid hanging if Redis is down
+    scrapeQueue.add("scrape-url", { itemId: item.id, url: normalizedUrl, userId })
+      .catch((err: any) => {
+        console.warn(`[Items] Failed to enqueue scrape for ${item.id}:`, err.message);
+      });
 
     res.status(201).json(mapItemWithTags(item));
   } catch (error) {

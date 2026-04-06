@@ -19,7 +19,7 @@ function isValidWebUrl(value: unknown): value is string {
 async function saveUrlToRecall(url: string) {
   const token = await getJwtToken();
   if (!token) {
-    notify("Login required. Open the extension and sign in first.");
+    notify("Not connected. Open the extension and paste your access token.");
     return;
   }
 
