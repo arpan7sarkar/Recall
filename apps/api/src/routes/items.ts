@@ -272,7 +272,7 @@ router.get("/", async (req: Request, res: Response) => {
  */
 router.post("/", async (req: Request, res: Response) => {
   const userId = (req as any).auth?.userId;
-  const { url, itemType, tags, collectionId, note, youtubeTimestamp, saveSource } = req.body;
+  const { url, itemType, tags, collectionId, note, youtubeTimestamp, saveSource, isArchived } = req.body;
 
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -300,6 +300,7 @@ router.post("/", async (req: Request, res: Response) => {
         userNote: note,
         youtubeTimestamp: Number.isFinite(parsedYoutubeTimestamp) ? parsedYoutubeTimestamp : null,
         status: "pending",
+        isArchived: Boolean(isArchived),
         // If collection provided
         ...(collectionId && {
           collections: {
@@ -398,6 +399,62 @@ router.patch("/:id", async (req: Request, res: Response) => {
     res.json(mapItemWithTags(updated));
   } catch (error) {
     res.status(500).json({ error: "Failed to update item" });
+  }
+});
+
+/**
+ * @route   POST /items/:id/archive
+ * @desc    Archive an item
+ */
+router.post("/:id/archive", async (req: Request, res: Response) => {
+  const userId = (req as any).auth?.userId;
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.item.findUnique({ where: { id } });
+    if (!existing || existing.userId !== userId) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const updated = await prisma.item.update({
+      where: { id },
+      data: { isArchived: true },
+      include: {
+        tags: { include: { tag: true } },
+      },
+    });
+
+    res.json(mapItemWithTags(updated));
+  } catch (error) {
+    res.status(500).json({ error: "Failed to archive item" });
+  }
+});
+
+/**
+ * @route   POST /items/:id/unarchive
+ * @desc    Unarchive an item
+ */
+router.post("/:id/unarchive", async (req: Request, res: Response) => {
+  const userId = (req as any).auth?.userId;
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.item.findUnique({ where: { id } });
+    if (!existing || existing.userId !== userId) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const updated = await prisma.item.update({
+      where: { id },
+      data: { isArchived: false },
+      include: {
+        tags: { include: { tag: true } },
+      },
+    });
+
+    res.json(mapItemWithTags(updated));
+  } catch (error) {
+    res.status(500).json({ error: "Failed to unarchive item" });
   }
 });
 

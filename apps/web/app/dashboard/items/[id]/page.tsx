@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useItem } from "@/hooks/useItems";
+import { useItem, useArchiveItem, useUnarchiveItem } from "@/hooks/useItems";
+import { useCollections, useAddItemToCollection, useCreateCollection } from "@/hooks/useCollections";
 import { TypeBadge } from "@/components/shared/TypeBadge";
 import { TagChip } from "@/components/shared/TagChip";
 import { timeAgo, extractDomain, formatReadingTime } from "@/lib/utils";
@@ -17,6 +19,79 @@ export default function ItemDetailPage() {
   const router = useRouter();
   
   const { data: item, isLoading, error } = useItem(id as string);
+  const archiveItem = useArchiveItem();
+  const unarchiveItem = useUnarchiveItem();
+  const { data: collections } = useCollections();
+  const addItemToCollection = useAddItemToCollection();
+  const createCollection = useCreateCollection();
+
+  const [showCreateCollectionForm, setShowCreateCollectionForm] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [newCollectionDescription, setNewCollectionDescription] = useState("");
+  const [collectionError, setCollectionError] = useState<string | null>(null);
+
+  const isArchiving = archiveItem.isPending || unarchiveItem.isPending;
+
+  const handleArchive = async () => {
+    if (!item) return;
+    try {
+      if (item.isArchived) {
+        await unarchiveItem.mutateAsync(item.id);
+      } else {
+        await archiveItem.mutateAsync(item.id);
+      }
+    } catch (e) {
+      console.error("Failed to archive item", e);
+    }
+  };
+
+  const handleAddToCollection = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const collectionId = e.target.value;
+    if (!item || !collectionId) return;
+
+    if (collectionId === "__new_collection__") {
+      setShowCreateCollectionForm(true);
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      await addItemToCollection.mutateAsync({ collectionId, itemId: item.id });
+      // clear select value after success
+      e.target.value = "";
+    } catch (e) {
+      console.error("Failed to add to collection", e);
+    }
+  };
+
+  const handleCreateCollectionAndAdd = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!item) return;
+
+    const normalizedName = newCollectionName.trim();
+    if (!normalizedName) {
+      setCollectionError("Collection name is required.");
+      return;
+    }
+
+    try {
+      setCollectionError(null);
+      const created = await createCollection.mutateAsync({
+        name: normalizedName,
+        description: newCollectionDescription.trim() || undefined,
+      });
+      await addItemToCollection.mutateAsync({ collectionId: created.id, itemId: item.id });
+      setNewCollectionName("");
+      setNewCollectionDescription("");
+      setShowCreateCollectionForm(false);
+    } catch (err: unknown) {
+      const apiError =
+        typeof err === "object" && err !== null && "body" in err
+          ? (err as { body?: { error?: string } }).body?.error
+          : undefined;
+      setCollectionError(apiError ?? "Failed to create collection.");
+    }
+  };
   const isInstagram = item?.itemType === "instagram";
   const isStaticSocialPreview = item?.itemType === "linkedin";
 
@@ -229,18 +304,106 @@ export default function ItemDetailPage() {
                 </a>
               )}
               <button
+                onClick={handleArchive}
+                disabled={isArchiving}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border shadow-sm focus-ring"
                 style={{
                   background: "var(--bg-primary)",
                   color: "var(--text-secondary)",
                   borderColor: "var(--border)",
+                  opacity: isArchiving ? 0.6 : 1,
                 }}
               >
                 <Icon name="archive" size={16} />
-                Archive
+                {isArchiving ? "Updating..." : item.isArchived ? "Unarchive" : "Archive"}
               </button>
             </div>
+
+            <div className="pt-4 mt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-tertiary)" }}>
+                Save to Collection
+              </h4>
+              <select
+                onChange={handleAddToCollection}
+                disabled={addItemToCollection.isPending}
+                className="w-full px-3 py-2 text-sm rounded-lg border shadow-sm focus-ring"
+                style={{
+                  background: "var(--bg-primary)",
+                  borderColor: "var(--border)",
+                  color: "var(--text-primary)",
+                  opacity: addItemToCollection.isPending ? 0.5 : 1,
+                }}
+              >
+                <option value="">Select a collection...</option>
+                <option value="__new_collection__">+ Create new collection</option>
+                {collections?.map(col => (
+                  <option key={col.id} value={col.id}>{col.name}</option>
+                ))}
+              </select>
+
+              {showCreateCollectionForm && (
+                <form onSubmit={handleCreateCollectionAndAdd} className="mt-3 space-y-2">
+                  <input
+                    value={newCollectionName}
+                    onChange={(e) => setNewCollectionName(e.target.value)}
+                    placeholder="Collection name"
+                    className="w-full px-3 py-2 text-sm rounded-lg border shadow-sm focus-ring"
+                    style={{
+                      background: "var(--bg-primary)",
+                      borderColor: "var(--border)",
+                      color: "var(--text-primary)",
+                    }}
+                  />
+                  <input
+                    value={newCollectionDescription}
+                    onChange={(e) => setNewCollectionDescription(e.target.value)}
+                    placeholder="Description (optional)"
+                    className="w-full px-3 py-2 text-sm rounded-lg border shadow-sm focus-ring"
+                    style={{
+                      background: "var(--bg-primary)",
+                      borderColor: "var(--border)",
+                      color: "var(--text-primary)",
+                    }}
+                  />
+
+                  {collectionError && (
+                    <p className="text-xs text-red-500">{collectionError}</p>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={createCollection.isPending || addItemToCollection.isPending}
+                      className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold border focus-ring"
+                      style={{
+                        borderColor: "var(--border)",
+                        background: "var(--bg-secondary)",
+                        color: "var(--text-primary)",
+                        opacity: createCollection.isPending || addItemToCollection.isPending ? 0.6 : 1,
+                      }}
+                    >
+                      {createCollection.isPending ? "Creating..." : "Create & Add"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateCollectionForm(false)}
+                      className="px-3 py-2 rounded-lg text-xs font-semibold border focus-ring"
+                      style={{
+                        borderColor: "var(--border)",
+                        background: "var(--bg-primary)",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
+
+
+
 
           {/* Tags */}
           <div

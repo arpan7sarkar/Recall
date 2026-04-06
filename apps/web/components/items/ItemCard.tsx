@@ -12,6 +12,7 @@ import Script from "next/script";
 import { LoaderOne } from "@/components/ui/unique-loader-components";
 import { SocialPostPreview } from "@/components/items/SocialPostPreview";
 import { InstagramAutoEmbed } from "@/components/items/InstagramAutoEmbed";
+import { useArchiveItem, useUnarchiveItem } from "@/hooks/useItems";
 
 interface ItemCardProps {
   item: Item;
@@ -20,15 +21,32 @@ interface ItemCardProps {
 
 export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   const router = useRouter();
+  const archiveItem = useArchiveItem();
+  const unarchiveItem = useUnarchiveItem();
   const isProcessing = item.status === "processing" || item.status === "pending";
   const isInstagram = item.itemType === "instagram";
   const isStaticSocialPreview = item.itemType === "linkedin";
   const trimmedTitle = (item.title || "").trim();
   const shouldShowTitle = !isInstagram || trimmedTitle.length > 0;
+  const isArchiveUpdating = archiveItem.isPending || unarchiveItem.isPending;
 
   const handleCardClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("a, button, blockquote")) return;
     router.push(ROUTES.item(item.id));
+  };
+
+  const handleArchiveToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    try {
+      if (item.isArchived) {
+        await unarchiveItem.mutateAsync(item.id);
+      } else {
+        await archiveItem.mutateAsync(item.id);
+      }
+    } catch (err) {
+      console.error("Failed to toggle archive state:", err);
+    }
   };
 
   if (viewMode === "list") {
@@ -65,11 +83,26 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
           </p>
         </div>
 
-        {item.isFavourite && (
-          <div className="flex items-center justify-center shrink-0" style={{ color: "var(--accent-500)" }}>
-            <Heart size={14} fill="currentColor" />
-          </div>
-        )}
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={handleArchiveToggle}
+            disabled={isArchiveUpdating}
+            className="text-[10px] px-2 py-1 rounded-md border transition-colors disabled:opacity-60"
+            style={{
+              color: "var(--text-secondary)",
+              borderColor: "var(--border)",
+              background: "var(--bg-secondary)",
+            }}
+          >
+            {isArchiveUpdating ? "..." : item.isArchived ? "Unarchive" : "Archive"}
+          </button>
+
+          {item.isFavourite && (
+            <div className="flex items-center justify-center shrink-0" style={{ color: "var(--accent-500)" }}>
+              <Heart size={14} fill="currentColor" />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -127,6 +160,16 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
             <Heart size={16} fill="currentColor" />
           </div>
         )}
+
+        <button
+          onClick={handleArchiveToggle}
+          disabled={isArchiveUpdating}
+          className="absolute top-4 left-4 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
+          style={{ width: 32, height: 32, color: "var(--text-secondary)" }}
+          aria-label={item.isArchived ? "Unarchive item" : "Archive item"}
+        >
+          <Icon name="archive" size={14} />
+        </button>
       </div>
 
       <div className="flex flex-col gap-2 p-5 flex-1 relative">

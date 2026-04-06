@@ -6,6 +6,6 @@ export type {
   SaveSource,
   ItemTag,
 } from "./item";
-export type { Collection, CollectionItem } from "./collection";
+export type { Collection, CollectionDetail, CollectionItem } from "./collection";
 export type { Tag } from "./tag";
 export type { PaginatedResponse, ApiErrorBody } from "./api";

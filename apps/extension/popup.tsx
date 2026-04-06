@@ -45,6 +45,9 @@ function IndexPopup() {
   const [isSaving, setIsSaving] = useState(false);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [collections, setCollections] = useState<{id: string, name: string}[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState("");
+  const [isArchived, setIsArchived] = useState(false);
 
   // Manual URL input
   const [manualUrl, setManualUrl] = useState("");
@@ -96,6 +99,7 @@ function IndexPopup() {
           setUser(res.data.user);
           setAuthState("connected");
           await fetchTags(token);
+          await fetchCollections(token);
         } else {
           // Only clear if explicitly invalid (not a network error)
           await clearJwtToken();
@@ -135,6 +139,19 @@ function IndexPopup() {
     }
   };
 
+  const fetchCollections = async (token: string) => {
+    try {
+      const colsRes = await axios.get(`${API_BASE}/collections`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (Array.isArray(colsRes?.data)) {
+        setCollections(colsRes.data.map(c => ({ id: c.id, name: c.name })));
+      }
+    } catch {
+      // Collections fetch failed
+    }
+  };
+
   const handleTokenSubmit = async () => {
     const cleanToken = tokenInput.trim();
     setTokenError(null);
@@ -158,6 +175,7 @@ function IndexPopup() {
         setAuthState("connected");
         setTokenInput("");
         await fetchTags(cleanToken);
+        await fetchCollections(cleanToken);
       } else {
         setTokenError("Token validation failed.");
       }
@@ -174,6 +192,9 @@ function IndexPopup() {
     setAuthState("disconnected");
     setTagSuggestions([]);
     setSelectedTags([]);
+    setCollections([]);
+    setSelectedCollection("");
+    setIsArchived(false);
   };
 
   const handleSave = async () => {
@@ -207,7 +228,9 @@ function IndexPopup() {
           url: urlToSave,
           note: note.trim() || undefined,
           saveSource: "extension",
+          isArchived,
           tags: selectedTags.length > 0 ? selectedTags : undefined,
+          collectionId: selectedCollection || undefined,
           ...(category ? { itemType: category } : {}),
         },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -219,6 +242,8 @@ function IndexPopup() {
       setManualUrl("");
       setUseManualUrl(false);
       setCategory("");
+      setSelectedCollection("");
+      setIsArchived(false);
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (requestError: any) {
       const status = requestError?.response?.status;
@@ -497,6 +522,27 @@ function IndexPopup() {
             </select>
           </div>
 
+          {/* Collection selector */}
+          {collections.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.mutedText }}>
+                Collection
+              </label>
+              <select
+                value={selectedCollection}
+                onChange={(e) => setSelectedCollection(e.target.value)}
+                style={selectStyle}
+              >
+                <option value="">No Collection</option>
+                {collections.map((col) => (
+                  <option key={col.id} value={col.id}>
+                    {col.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Note */}
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <label style={{ fontSize: "12px", fontWeight: 600, color: COLORS.mutedText }}>
@@ -542,6 +588,20 @@ function IndexPopup() {
               </div>
             </div>
           )}
+
+          {/* Archive option */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+            <input
+              type="checkbox"
+              id="archiveCheckbox"
+              checked={isArchived}
+              onChange={(e) => setIsArchived(e.target.checked)}
+              style={{ cursor: "pointer" }}
+            />
+            <label htmlFor="archiveCheckbox" style={{ fontSize: "12px", color: COLORS.mutedText, cursor: "pointer", userSelect: "none" }}>
+              Send straight to Archive
+            </label>
+          </div>
 
           {/* Save button */}
           <button
