@@ -28,7 +28,8 @@ import {
   Library,
   Lightbulb,
   Instagram,
-  Linkedin
+  Linkedin,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +75,8 @@ export type IconName =
   | "library"
   | "lightbulb"
   | "instagram"
-  | "linkedin";
+  | "linkedin"
+  | "settings";
 
 interface IconProps {
   name: IconName | string;
@@ -142,6 +144,8 @@ export function Icon({ name, className, size = 18 }: IconProps) {
       return <Instagram {...props} />;
     case "linkedin":
       return <Linkedin {...props} />;
+    case "settings":
+      return <Settings {...props} />;
     default:
       return <LinkIcon {...props} />;
   }

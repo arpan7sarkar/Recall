@@ -12,6 +12,7 @@ export const ROUTES = {
   tags: "/dashboard/tags",
   archive: "/dashboard/archive",
   search: "/dashboard/search",
+  settings: "/dashboard/settings",
   item: (id: string) => `/dashboard/items/${id}`,
   collection: (id: string) => `/dashboard/collections/${id}`,
 } as const;
@@ -23,6 +24,7 @@ export const NAV_ITEMS = [
   { label: "Tags", icon: "tag", href: ROUTES.tags },
   { label: "Graph", icon: "graph", href: ROUTES.graph },
   { label: "Archive", icon: "archive", href: ROUTES.archive },
+  { label: "Settings", icon: "settings", href: ROUTES.settings },
 ] as const;
 
 /** Content type filter options */
