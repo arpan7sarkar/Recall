@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { TypeBadge } from "@/components/shared/TypeBadge";
@@ -21,6 +22,7 @@ interface ItemCardProps {
 
 export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   const router = useRouter();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const archiveItem = useArchiveItem();
   const unarchiveItem = useUnarchiveItem();
   const deleteItem = useDeleteItem();
@@ -53,103 +55,158 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const confirmed = window.confirm("Delete this item permanently? This action cannot be undone.");
-    if (!confirmed) return;
+    setShowDeleteConfirm(true);
+  };
 
+  const handleConfirmDelete = async () => {
     try {
       await deleteItem.mutateAsync(item.id);
+      setShowDeleteConfirm(false);
     } catch (err) {
       console.error("Failed to delete item:", err);
     }
   };
 
-  if (viewMode === "list") {
-    return (
+  const deleteConfirmPopup = showDeleteConfirm ? (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
       <div
-        onClick={handleCardClick}
-        className="flex items-center gap-4 p-6 cursor-pointer transition-all duration-500 border rounded-xl bg-card/60 backdrop-blur-sm border-border hover:border-accent/30 hover:bg-zinc-900/40 group/list"
-        id={`item-card-${item.id}`}
+        className="relative w-full max-w-sm rounded-2xl border p-5 space-y-4"
+        style={{
+          borderColor: "var(--border)",
+          background: "var(--bg-secondary)",
+          boxShadow: "var(--shadow-card)",
+        }}
       >
-        <div
-          className="flex items-center justify-center shrink-0"
-          style={{
-            width: 48,
-            height: 48,
-          }}
-        >
-          {isProcessing ? (
-            <div className="scale-75 flex items-center justify-center">
-              <LoaderOne />
-            </div>
-          ) : (
-            <TypeBadge type={item.itemType} />
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          {shouldShowTitle && (
-            <h3 className="text-sm font-serif text-(--text-primary) tracking-tight truncate">
-              {trimmedTitle || "Untitled"}
-            </h3>
-          )}
-          <p className="text-[10px] font-serif italic text-zinc-500 mt-1.5 group-hover/list:text-zinc-400 transition-colors">
-            {extractDomain(item.url)} <span className="mx-1 opacity-30">|</span> {timeAgo(item.savedAt)}
+        <div>
+          <h3 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
+            Delete this item?
+          </h3>
+          <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+            This action cannot be undone.
           </p>
         </div>
-
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center justify-end gap-2">
           <button
-            onClick={handleArchiveToggle}
-            disabled={isArchiveUpdating || isDeletePending}
-            className="text-[10px] px-2 py-1 rounded-md border transition-colors disabled:opacity-60"
+            onClick={() => setShowDeleteConfirm(false)}
+            className="px-3 py-2 rounded-lg text-sm border"
             style={{
-              color: "var(--text-secondary)",
               borderColor: "var(--border)",
-              background: "var(--bg-secondary)",
+              color: "var(--text-secondary)",
+              background: "var(--bg-primary)",
             }}
           >
-            {isArchiveUpdating ? "..." : item.isArchived ? "Unarchive" : "Archive"}
+            Cancel
           </button>
           <button
-            onClick={handleDelete}
+            onClick={handleConfirmDelete}
             disabled={isDeletePending}
-            className="text-[10px] px-2 py-1 rounded-md border transition-colors disabled:opacity-60"
+            className="px-3 py-2 rounded-lg text-sm border disabled:opacity-60"
             style={{
-              color: "var(--danger, #ef4444)",
-              borderColor: "var(--border)",
-              background: "var(--bg-secondary)",
+              borderColor: "color-mix(in srgb, var(--border) 40%, #ef4444 60%)",
+              color: "#fff",
+              background: "var(--danger, #ef4444)",
             }}
           >
             {isDeletePending ? "Deleting..." : "Delete"}
           </button>
-
-          {item.isFavourite && (
-            <div className="flex items-center justify-center shrink-0" style={{ color: "var(--accent-500)" }}>
-              <Heart size={14} fill="currentColor" />
-            </div>
-          )}
         </div>
       </div>
+    </div>
+  ) : null;
+
+  if (viewMode === "list") {
+    return (
+      <>
+        <div
+          onClick={handleCardClick}
+          className="flex items-center gap-4 p-6 cursor-pointer transition-all duration-500 border rounded-xl bg-card/60 backdrop-blur-sm border-border hover:border-accent/30 hover:bg-zinc-900/40 group/list"
+          id={`item-card-${item.id}`}
+        >
+          <div
+            className="flex items-center justify-center shrink-0"
+            style={{
+              width: 48,
+              height: 48,
+            }}
+          >
+            {isProcessing ? (
+              <div className="scale-75 flex items-center justify-center">
+                <LoaderOne />
+              </div>
+            ) : (
+              <TypeBadge type={item.itemType} />
+            )}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            {shouldShowTitle && (
+              <h3 className="text-sm font-serif text-(--text-primary) tracking-tight truncate">
+                {trimmedTitle || "Untitled"}
+              </h3>
+            )}
+            <p className="text-[10px] font-serif italic text-zinc-500 mt-1.5 group-hover/list:text-zinc-400 transition-colors">
+              {extractDomain(item.url)} <span className="mx-1 opacity-30">|</span> {timeAgo(item.savedAt)}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={handleArchiveToggle}
+              disabled={isArchiveUpdating || isDeletePending}
+              className="text-[10px] px-2 py-1 rounded-md border transition-colors disabled:opacity-60"
+              style={{
+                color: "var(--text-secondary)",
+                borderColor: "var(--border)",
+                background: "var(--bg-secondary)",
+              }}
+            >
+              {isArchiveUpdating ? "..." : item.isArchived ? "Unarchive" : "Archive"}
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isDeletePending}
+              className="text-[10px] px-2 py-1 rounded-md border transition-colors disabled:opacity-60"
+              style={{
+                color: "var(--danger, #ef4444)",
+                borderColor: "var(--border)",
+                background: "var(--bg-secondary)",
+              }}
+            >
+              {isDeletePending ? "Deleting..." : "Delete"}
+            </button>
+
+            {item.isFavourite && (
+              <div className="flex items-center justify-center shrink-0" style={{ color: "var(--accent-500)" }}>
+                <Heart size={14} fill="currentColor" />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {deleteConfirmPopup}
+      </>
     );
   }
 
   return (
-    <div
-      onClick={handleCardClick}
-      className="flex flex-col overflow-hidden cursor-pointer transition-all duration-700 border rounded-2xl bg-card/40 backdrop-blur-md border-border hover:border-accent/40 group min-h-[420px] h-full"
-      id={`item-card-${item.id}`}
-    >
+    <>
       <div
-        className={cn(
-          "relative flex items-center justify-center overflow-hidden bg-(--bg-primary)/40 border-b border-border transition-all duration-500",
-          item.itemType === "tweet" ? "h-auto min-h-48 p-4" : isInstagram || isStaticSocialPreview ? "h-56 p-0" : "h-48",
-          !item.thumbnailUrl && item.itemType !== "tweet" && !isInstagram && !isStaticSocialPreview && "bg-linear-to-br from-indigo-500/5 to-transparent",
-          isProcessing && "bg-muted animate-pulse"
-        )}
-        style={{
-          background: item.thumbnailUrl && !isInstagram && !isStaticSocialPreview ? `url(${item.thumbnailUrl}) center/cover` : undefined,
-        }}
+        onClick={handleCardClick}
+        className="flex flex-col overflow-hidden cursor-pointer transition-all duration-700 border rounded-2xl bg-card/40 backdrop-blur-md border-border hover:border-accent/40 group min-h-[420px] h-full"
+        id={`item-card-${item.id}`}
       >
+        <div
+          className={cn(
+            "relative flex items-center justify-center overflow-hidden bg-(--bg-primary)/40 border-b border-border transition-all duration-500",
+            item.itemType === "tweet" ? "h-auto min-h-48 p-4" : isInstagram || isStaticSocialPreview ? "h-56 p-0" : "h-48",
+            !item.thumbnailUrl && item.itemType !== "tweet" && !isInstagram && !isStaticSocialPreview && "bg-linear-to-br from-indigo-500/5 to-transparent",
+            isProcessing && "bg-muted animate-pulse"
+          )}
+          style={{
+            background: item.thumbnailUrl && !isInstagram && !isStaticSocialPreview ? `url(${item.thumbnailUrl}) center/cover` : undefined,
+          }}
+        >
         {item.itemType === "tweet" && !isProcessing ? (
           <div className="w-full flex justify-center pointer-events-auto">
             <blockquote className="twitter-tweet" data-conversation="none" data-theme="dark" data-align="center">
@@ -205,28 +262,30 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         >
           <Trash2 size={14} />
         </button>
-      </div>
-
-      <div className="flex flex-col gap-2 p-5 flex-1 relative">
-        <div className="absolute inset-x-0 bottom-0 top-0 bg-linear-to-tl from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground relative z-10">
-          <TypeBadge type={item.itemType} size="sm" />
-          <span>{timeAgo(item.savedAt)}</span>
         </div>
 
-        {shouldShowTitle && (
-          <h3 className="text-lg font-serif italic text-white/90 tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-accent transition-colors duration-500">
-            {trimmedTitle || "Untitled"}
-          </h3>
-        )}
+        <div className="flex flex-col gap-2 p-5 flex-1 relative">
+          <div className="absolute inset-x-0 bottom-0 top-0 bg-linear-to-tl from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-        {item.description && item.itemType !== "tweet" && (
-          <p className="text-xs font-serif italic text-zinc-500 line-clamp-3 mt-2 relative z-10 leading-relaxed group-hover:text-zinc-400 transition-colors duration-500">
-            {item.description}
-          </p>
-        )}
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground relative z-10">
+            <TypeBadge type={item.itemType} size="sm" />
+            <span>{timeAgo(item.savedAt)}</span>
+          </div>
+
+          {shouldShowTitle && (
+            <h3 className="text-lg font-serif italic text-white/90 tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-accent transition-colors duration-500">
+              {trimmedTitle || "Untitled"}
+            </h3>
+          )}
+
+          {item.description && item.itemType !== "tweet" && (
+            <p className="text-xs font-serif italic text-zinc-500 line-clamp-3 mt-2 relative z-10 leading-relaxed group-hover:text-zinc-400 transition-colors duration-500">
+              {item.description}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+      {deleteConfirmPopup}
+    </>
   );
 }
