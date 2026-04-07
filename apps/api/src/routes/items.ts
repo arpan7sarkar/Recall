@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import type { ItemType, SaveSource } from "@prisma/client";
 import prisma from "@/lib/prisma";
+import redis from "@/lib/redis";
 import { authenticateClerk } from "@/middleware/auth";
 import { deleteEmbedding, fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
 import { upload } from "@/middleware/upload";
@@ -480,6 +481,9 @@ router.delete("/:id", async (req: Request, res: Response) => {
     } catch (vectorError) {
       console.warn(`[Items] Item ${id} deleted from DB, but Pinecone cleanup failed`, vectorError);
     }
+
+    // Invalidate cached graph so deleted items disappear immediately from graph view.
+    await redis.del(`graph:${userId}`).catch(() => {});
 
     res.status(204).send();
   } catch (error) {

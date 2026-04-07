@@ -132,6 +132,8 @@ export function useDeleteItem() {
       qc.invalidateQueries({ queryKey: ["item", id] });
       qc.invalidateQueries({ queryKey: ["collections"] });
       qc.invalidateQueries({ queryKey: ["collection"] });
+      qc.invalidateQueries({ queryKey: ["graph"] });
+      qc.invalidateQueries({ queryKey: ["search"] });
     },
   });
 }
