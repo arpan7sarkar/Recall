@@ -12,16 +12,39 @@ Personal knowledge infrastructure for saving content, enriching it with AI, and 
 
 </div>
 
-## Overview
+## Product Overview
 
 Recall is a full-stack product for capturing web content from a dashboard or Chrome extension, processing it asynchronously, and turning it into a searchable personal knowledge base.
 
-It is built to feel like a real production system, not a demo:
+Built to feel like a real production system, not a demo:
 - multi-surface capture
 - asynchronous worker pipeline
 - semantic retrieval
 - graph visualization
 - production deployment split across Vercel and Render
+
+## Feature Highlights
+
+### Core Capabilities
+
+- Save URL content with rich metadata extraction
+- Upload PDF and image content into the same knowledge system
+- Metadata scraping using `metascraper`
+- AI tag generation using OpenAI
+- Semantic search and keyword fallback
+- Related item discovery
+- Tag management and collection management
+- Knowledge graph view for connected content exploration
+- One-click extension save
+- Authentication and user sync
+
+### Latest Updates
+
+- Shareable public collection links for curated knowledge sharing
+- Share-link controls: disable and regenerate links whenever needed
+- Extension token lifecycle management: generate, list, revoke, and use expiring tokens
+- Full delete flow with vector cleanup for semantic consistency
+- Cache invalidation on item deletion for graph and search freshness
 
 ## Snapshot
 
@@ -34,26 +57,12 @@ It is built to feel like a real production system, not a demo:
 | Exploration | Knowledge graph view of connected saved content |
 | Runtime | Web app, API, worker process, browser extension |
 
-## Why It Stands Out
+## Why Recall Stands Out
 
 - End-to-end product thinking: capture, process, organize, retrieve
 - Real backend workflow: queue-based workers instead of synchronous everything
 - Production-minded architecture: Vercel frontend, Render API/worker, external managed services
 - Strong technical breadth: frontend UX, APIs, auth, storage, jobs, vector search
-
-## Core Features
-
-- Save URL content
-- Upload PDF and image content
-- Metadata scraping using `metascraper`
-- AI tag generation using OpenAI
-- Semantic search
-- Related items
-- Tag management
-- Collection management
-- Knowledge graph view
-- One-click extension save
-- Authentication and user sync
 
 ## Architecture
 
