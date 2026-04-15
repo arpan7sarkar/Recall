@@ -3,16 +3,26 @@ import React from "react";
 import Link from "next/link";
 import {
   Mail,
-  Phone,
+  Linkedin,
   MapPin,
   X,
   Instagram,
   Github,
-  Globe,
+  PenLine,
+  Code2,
   ArrowUpRight,
 } from "lucide-react";
 import { FooterBackgroundGradient, TextHoverEffect } from "@/components/ui/hover-footer";
 import { ROUTES } from "@/lib/constants";
+
+export const socialLinks = [
+  {name:"Portfolio", href:"https://arpansarkar.vercel.app", icon:"globe"},
+  { name: "GitHub", href: "https://github.com/arpan7sarkar", icon: "github" },
+  { name: "LinkedIn", href: "https://linkedin.com/in/arpan7sarkar", icon: "linkedin" },
+  { name: "Twitter / X", href: "https://twitter.com/arpan7sarkar", icon: "twitter" },
+  { name: "Instagram", href: "https://instagram.com/arpan7sarkar", icon: "instagram" },
+  { name: "Email", href: "mailto:contact.arpan.sarkar@gmail.com", icon: "mail" },
+];
 
 export function HoverFooter() {
   const footerLinks = [
@@ -39,21 +49,24 @@ export function HoverFooter() {
   const contactInfo = [
     {
       icon: <Mail size={16} className="text-zinc-500 group-hover:text-indigo-400 transition-colors" />,
-      text: "hello@recall.com",
-      href: "mailto:hello@recall.com",
+      text: "contact.arpan.sarkar@gmail.com",
+      href: "mailto:contact.arpan.sarkar@gmail.com",
     },
     {
-      text: "New York, Terminal 4",
+      text: "Kolkata, India",
       icon: <MapPin size={16} className="text-zinc-500 group-hover:text-indigo-400 transition-colors" />,
     },
   ];
 
-  const socialLinks = [
-    { icon: <X size={18} />, label: "X", href: "#" },
-    { icon: <Instagram size={18} />, label: "Instagram", href: "#" },
-    { icon: <Github size={18} />, label: "Github", href: "#" },
-    { icon: <Globe size={18} />, label: "Web", href: "#" },
-  ];
+  const socialIcons: Record<string, React.ReactNode> = {
+    github: <Github size={18} />,
+    linkedin: <Linkedin size={18} />,
+    twitter: <X size={18} />,
+    instagram: <Instagram size={18} />,
+    hashnode: <PenLine size={18} />,
+    leetcode: <Code2 size={18} />,
+    mail: <Mail size={18} />,
+  };
 
   return (
     <footer className="relative w-full overflow-hidden bg-[#070707] pt-20 border-t border-white/5">
@@ -143,14 +156,14 @@ export function HoverFooter() {
 
           {/* Social icons */}
           <div className="flex space-x-8">
-            {socialLinks.map(({ icon, label, href }) => (
+            {socialLinks.map(({ icon, name, href }) => (
               <a
-                key={label}
+                key={name}
                 href={href}
-                aria-label={label}
+                aria-label={name}
                 className="hover:text-white transition-colors duration-500 opacity-60 hover:opacity-100"
               >
-                {icon}
+                {socialIcons[icon]}
               </a>
             ))}
           </div>
