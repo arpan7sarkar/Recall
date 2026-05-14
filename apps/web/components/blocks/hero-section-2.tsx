@@ -188,7 +188,7 @@ export const HeroHeader = () => {
                                 aria-label="home"
                                 className="flex items-center space-x-3 group">
                                 <div className={cn(
-                                    'rounded border border-white/10 overflow-hidden flex items-center justify-center group-hover:scale-110 transition-all duration-500 ease-out motion-reduce:transition-none',
+                                    'rounded border border-white/20 overflow-hidden flex items-center justify-center group-hover:scale-110 transition-all duration-500 ease-out motion-reduce:transition-none bg-white/5',
                                     scrolled ? 'w-7 h-7' : 'w-8 h-8'
                                 )}>
                                     <img src="/favicon.png" alt="Recall" className="w-full h-full object-cover" />
@@ -245,7 +245,7 @@ export const HeroHeader = () => {
                         
                         {/* Mobile Menu Overlay */}
                         <div className={cn(
-                             "fixed inset-0 top-[72px] bg-black/90 backdrop-blur-3xl z-40 lg:hidden p-8 transition-all duration-300 flex flex-col gap-10",
+                             "fixed inset-0 top-[72px] bg-black/95 backdrop-blur-3xl z-40 lg:hidden p-8 transition-all duration-300 flex flex-col gap-10",
                              menuState ? "opacity-100 pointer-events-auto translate-y-0" : "opacity-0 pointer-events-none -translate-y-4"
                         )}>
                              <ul className="flex flex-col gap-8">
@@ -254,13 +254,13 @@ export const HeroHeader = () => {
                                         <Link
                                             href={item.href}
                                             onClick={() => setMenuState(false)}
-                                            className="text-2xl font-serif text-white block">
+                                            className="text-2xl font-serif text-white block font-semibold">
                                             {item.name}
                                         </Link>
                                     </li>
                                 ))}
                              </ul>
-                             <div className="flex flex-col gap-4 mt-auto border-t border-white/10 pt-8">
+                             <div className="flex flex-col gap-4 mt-auto border-t border-white/20 pt-8">
                                 <Button
                                     asChild
                                     className="w-full rounded-full py-6 text-lg font-medium">
@@ -270,7 +270,7 @@ export const HeroHeader = () => {
                                     <Button
                                         asChild
                                         variant="outline"
-                                        className="w-full rounded-full border-white/10 text-white py-6 text-lg font-medium">
+                                        className="w-full rounded-full border-white/30 text-white py-6 text-lg font-medium bg-white/5 hover:bg-white/10">
                                         <Link href={ROUTES.login}>Sign In</Link>
                                     </Button>
                                 )}
