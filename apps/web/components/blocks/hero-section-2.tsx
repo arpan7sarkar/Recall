@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChevronRight, Menu, X, ArrowRight, Sparkles, Brain, Zap, Search, Github } from 'lucide-react'
 import { useAuth } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
@@ -13,17 +14,14 @@ const transitionVariants = {
     item: {
         hidden: {
             opacity: 0,
-            filter: 'blur(12px)',
-            y: 12,
+            y: 16,
         },
         visible: {
             opacity: 1,
-            filter: 'blur(0px)',
             y: 0,
             transition: {
-                type: 'spring',
-                bounce: 0.3,
-                duration: 1.5,
+                duration: 0.5,
+                ease: 'easeOut',
             } as any,
         },
     },
@@ -111,10 +109,14 @@ export function HeroSection() {
                                     className="bg-linear-to-b to-[#070707] absolute inset-0 z-10 from-transparent from-50%"
                                 />
                                 <div className="relative mx-auto max-w-6xl overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e0e]/50 backdrop-blur-sm p-2 shadow-2xl ring-1 ring-white/10">
-                                    <img
+                                    <Image
                                         className="h-auto w-full rounded-xl object-contain bg-[#0e0e0e]/50 opacity-90 transition-opacity hover:opacity-100"
-                                        src="/dashboard_mockup.png"
+                                        src="https://ik.imagekit.io/arpans/dashboard_mockup.png"
                                         alt="Recall Dashboard Preview"
+                                        width={1200}
+                                        height={675}
+                                        loading="lazy"
+                                        unoptimized
                                     />
                                     {/* Overlay Subtle Glow */}
                                     <div className="absolute inset-0 bg-[#0059ff05] mix-blend-overlay pointer-events-none" />
@@ -175,7 +177,7 @@ export const HeroHeader = () => {
                     'mx-auto transition-all duration-500 ease-out motion-reduce:transition-none',
                     'w-full',
                     scrolled
-                        ? 'max-w-6xl rounded-2xl bg-black/50 backdrop-blur-3xl shadow-xl px-6 lg:px-8'
+                        ? 'max-w-6xl rounded-2xl bg-black/70 backdrop-blur-md shadow-xl px-6 lg:px-8'
                         : 'max-w-full'
                 )}>
                     <div className={cn(
@@ -245,7 +247,7 @@ export const HeroHeader = () => {
                         
                         {/* Mobile Menu Overlay */}
                         <div className={cn(
-                             "fixed inset-0 top-[72px] bg-black/95 backdrop-blur-3xl z-40 lg:hidden p-8 transition-all duration-300 flex flex-col gap-10",
+                             "fixed inset-0 top-[72px] bg-black/95 z-40 lg:hidden p-8 transition-all duration-300 flex flex-col gap-10",
                              menuState ? "opacity-100 pointer-events-auto translate-y-0" : "opacity-0 pointer-events-none -translate-y-4"
                         )}>
                              <ul className="flex flex-col gap-8">

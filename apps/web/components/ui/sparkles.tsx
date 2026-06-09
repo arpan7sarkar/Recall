@@ -8,11 +8,11 @@ export function Sparkles({
   className,
   size = 1,
   minSize = null,
-  density = 800,
+  density = 200,
   speed = 1,
   minSpeed = null,
   opacity = 1,
-  opacitySpeed = 3,
+  opacitySpeed = 1,
   minOpacity = null,
   color = "#FFFFFF",
   background = "transparent",
@@ -32,19 +32,12 @@ export function Sparkles({
 
   const defaultOptions = {
     background: {
-      color: {
-        value: background,
-      },
+      color: { value: background },
     },
-    fullScreen: {
-      enable: false,
-      zIndex: 1,
-    },
-    fpsLimit: 120,
+    fullScreen: { enable: false, zIndex: 1 },
+    fpsLimit: 30,
     particles: {
-      color: {
-        value: color,
-      },
+      color: { value: color },
       move: {
         enable: true,
         direction: "none",
@@ -54,9 +47,7 @@ export function Sparkles({
         },
         straight: false,
       },
-      number: {
-        value: density,
-      },
+      number: { value: density },
       opacity: {
         value: {
           min: minOpacity || opacity / 10,
@@ -75,7 +66,7 @@ export function Sparkles({
         },
       },
     },
-    detectRetina: true,
+    detectRetina: false,
   }
 
   return isReady && <Particles id={id} options={{ ...defaultOptions, ...options } as any} className={className} />

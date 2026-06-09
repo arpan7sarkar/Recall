@@ -61,10 +61,10 @@ export const AboutSection = () => {
                 </div>
 
                 {/* Floating Labels */}
-                <div className="absolute top-[20%] right-[10%] px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full animate-float translate-x-2">
+                <div className="absolute top-[20%] right-[10%] px-4 py-2 bg-black/60 border border-white/10 rounded-full animate-float translate-x-2">
                    <span className="text-[10px] text-zinc-400 tracking-widest font-bold">AI-POWERED</span>
                 </div>
-                <div className="absolute bottom-[30%] left-[10%] px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full animate-float delay-700 -translate-x-2">
+                <div className="absolute bottom-[30%] left-[10%] px-4 py-2 bg-black/60 border border-white/10 rounded-full animate-float delay-700 -translate-x-2">
                    <span className="text-[10px] text-zinc-400 tracking-widest font-bold">ALWAYS LEARNING</span>
                 </div>
              </div>

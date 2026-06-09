@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 function FloatingPaths({ position }: { position: number }) {
-    const paths = Array.from({ length: 36 }, (_, i) => ({
+    const paths = Array.from({ length: 12 }, (_, i) => ({
         id: i,
         d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
             380 - i * 5 * position
@@ -13,7 +13,6 @@ function FloatingPaths({ position }: { position: number }) {
         } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
             684 - i * 5 * position
         } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-        color: `rgba(15,23,42,${0.1 + i * 0.03})`,
         width: 0.5 + i * 0.03,
     }));
 
@@ -39,7 +38,7 @@ function FloatingPaths({ position }: { position: number }) {
                             pathOffset: [0, 1, 0],
                         }}
                         transition={{
-                            duration: 20 + Math.random() * 10,
+                            duration: 25 + path.id * 1.5,
                             repeat: Number.POSITIVE_INFINITY,
                             ease: "linear",
                         }}
@@ -76,7 +75,7 @@ export function BackgroundPaths({
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 2 }}
+                    transition={{ duration: 1.5 }}
                     className="max-w-4xl mx-auto"
                 >
                     <h2 className="text-4xl sm:text-6xl md:text-7xl font-serif text-white mb-12 tracking-tighter italic leading-[1.1]">
@@ -88,18 +87,15 @@ export function BackgroundPaths({
                                 {word.split("").map((letter, letterIndex) => (
                                     <motion.span
                                         key={`${wordIndex}-${letterIndex}`}
-                                        initial={{ y: 50, opacity: 0 }}
+                                        initial={{ y: 30, opacity: 0 }}
                                         whileInView={{ y: 0, opacity: 1 }}
                                         viewport={{ once: true }}
                                         transition={{
-                                            delay:
-                                                wordIndex * 0.1 +
-                                                letterIndex * 0.03,
-                                            type: "spring",
-                                            stiffness: 150,
-                                            damping: 25,
+                                            delay: wordIndex * 0.08 + letterIndex * 0.02,
+                                            duration: 0.4,
+                                            ease: "easeOut",
                                         }}
-                                        className="inline-block text-transparent bg-clip-text 
+                                        className="inline-block text-transparent bg-clip-text
                                         bg-linear-to-r from-white to-white/40"
                                     >
                                         {letter}
@@ -110,11 +106,11 @@ export function BackgroundPaths({
                     </h2>
 
                     {subtitle && (
-                        <motion.p 
-                            initial={{ opacity: 0, y: 20 }}
+                        <motion.p
+                            initial={{ opacity: 0, y: 16 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: 0.5, duration: 1 }}
+                            transition={{ delay: 0.4, duration: 0.7 }}
                             className="text-zinc-400 text-lg mb-14 font-light max-w-2xl mx-auto leading-relaxed"
                         >
                             {subtitle}
@@ -123,7 +119,7 @@ export function BackgroundPaths({
 
                     {primaryCTA && (
                         <div
-                            className="inline-block group relative bg-linear-to-b from-white/10 to-transparent p-px rounded-full backdrop-blur-lg 
+                            className="inline-block group relative bg-linear-to-b from-white/10 to-transparent p-px rounded-full backdrop-blur-lg
                             overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
                         >
                             <Button
@@ -135,7 +131,7 @@ export function BackgroundPaths({
                                         {primaryCTA.label}
                                     </span>
                                     <span
-                                        className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 
+                                        className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5
                                         transition-all duration-300"
                                     >
                                         →
