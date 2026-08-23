@@ -1,11 +1,61 @@
 "use client";
 
-import { useTags } from "@/hooks/useTags";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTags, useCreateTag, useUpdateTag, useDeleteTag } from "@/hooks/useTags";
+import { getApiErrorMessage } from "@/lib/api";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LoaderFive } from "@/components/ui/unique-loader-components";
 
 export default function TagsPage() {
+  const router = useRouter();
   const { data: tags, isLoading, error } = useTags();
+  const createTag = useCreateTag();
+  const updateTag = useUpdateTag();
+  const deleteTag = useDeleteTag();
+  const [newName, setNewName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const handleCreate = async () => {
+    const name = newName.trim();
+    if (!name) return setActionError("Tag name is required.");
+    if (tags?.some((tag) => tag.name.trim().toLowerCase() === name.toLowerCase())) {
+      return setActionError("A tag with that name already exists.");
+    }
+    try {
+      setActionError(null);
+      await createTag.mutateAsync({ name });
+      setNewName("");
+    } catch (err) {
+      setActionError(getApiErrorMessage(err, "Tag could not be created."));
+    }
+  };
+
+  const handleUpdate = async (id: string) => {
+    const name = editingName.trim();
+    if (!name) return setActionError("Tag name is required.");
+    if (tags?.some((tag) => tag.id !== id && tag.name.trim().toLowerCase() === name.toLowerCase())) {
+      return setActionError("A tag with that name already exists.");
+    }
+    try {
+      setActionError(null);
+      await updateTag.mutateAsync({ id, name });
+      setEditingId(null);
+    } catch (err) {
+      setActionError(getApiErrorMessage(err, "Tag could not be renamed."));
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      setActionError(null);
+      await deleteTag.mutateAsync(id);
+    } catch (err) {
+      setActionError(getApiErrorMessage(err, "Tag could not be deleted."));
+    }
+  };
 
   return (
     <div>
@@ -17,6 +67,28 @@ export default function TagsPage() {
           {tags?.length || 0} tags in your library
         </p>
       </div>
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        <input
+          aria-label="New tag name"
+          value={newName}
+          onChange={(event) => setNewName(event.target.value)}
+          onKeyDown={(event) => { if (event.key === "Enter") void handleCreate(); }}
+          placeholder="Create a tag"
+          className="min-w-56 flex-1 rounded-lg border px-3 py-2 text-sm outline-none"
+          style={{ background: "var(--bg-secondary)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+        />
+        <button
+          type="button"
+          onClick={() => void handleCreate()}
+          disabled={createTag.isPending}
+          className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60"
+          style={{ background: "var(--accent-500)", color: "white" }}
+        >
+          {createTag.isPending ? "Creating..." : "Create tag"}
+        </button>
+      </div>
+      {actionError && <p role="alert" className="mb-5 text-sm text-red-400">{actionError}</p>}
 
       {error ? (
         <div
@@ -44,13 +116,19 @@ export default function TagsPage() {
           {tags?.map((tag) => (
             <div
               key={tag.id}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer card-hover"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl card-hover"
               style={{
                 background: "var(--bg-secondary)",
                 boxShadow: "var(--shadow-card)",
                 borderRadius: "var(--radius-lg)",
               }}
             >
+              <button
+                type="button"
+                aria-label={`Search for ${tag.name}`}
+                onClick={() => router.push(`/dashboard/search?q=${encodeURIComponent(tag.name)}&type=keyword`)}
+                className="flex items-center gap-2"
+              >
               <span
                 className="w-3 h-3 rounded-full"
                 style={{ background: tag.color ?? "var(--text-tertiary)" }}
@@ -61,6 +139,24 @@ export default function TagsPage() {
               <span className="text-xs ml-1" style={{ color: "var(--text-tertiary)" }}>
                 {tag._count?.items || 0}
               </span>
+              </button>
+              {editingId === tag.id ? (
+                <>
+                  <input
+                    aria-label={`Rename ${tag.name}`}
+                    value={editingName}
+                    onChange={(event) => setEditingName(event.target.value)}
+                    className="w-28 rounded border px-2 py-1 text-xs"
+                  />
+                  <button type="button" onClick={() => void handleUpdate(tag.id)} className="text-xs underline">Save</button>
+                  <button type="button" onClick={() => setEditingId(null)} className="text-xs underline">Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button type="button" aria-label={`Rename ${tag.name}`} onClick={() => { setEditingId(tag.id); setEditingName(tag.name); }} className="text-xs underline">Edit</button>
+                  <button type="button" aria-label={`Delete ${tag.name}`} onClick={() => void handleDelete(tag.id)} className="text-xs text-red-400 underline">Delete</button>
+                </>
+              )}
             </div>
           ))}
         </div>

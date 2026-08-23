@@ -270,10 +270,10 @@ Related ledger IDs: `UI-008` and `UI-010`.
 
 Completion gate: search, tags, and collections are fully functional and do not disguise errors as empty data.
 
-- [ ] Render search errors distinctly from empty results.
+- [x] Render search errors distinctly from empty results. (`apps/web/app/dashboard/search/page.tsx`)
 - [ ] Render search loading and retry states in the page and top-bar dropdown.
-- [ ] Connect tag create, rename, delete, and attach actions to visible controls.
-- [ ] Add tag validation and duplicate-name feedback.
+- [x] Connect tag create, rename, delete, and attach actions to visible controls. (tag management controls and existing item attach mutation)
+- [x] Add tag validation and duplicate-name feedback. (`apps/web/app/dashboard/tags/page.tsx`)
 - [ ] Verify collection ownership and membership feedback.
 - [ ] Add collection pagination where needed.
 - [ ] Add collection and tag empty states that teach the next action.
@@ -423,7 +423,7 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 07 | `recall-parser` |  |  |  |  |  |  |
 | 08 | `recall-sync-fix` | `/tmp/recall-worktrees/sync-fix` | 2026-08-24 | 2026-08-24 | API 35/35; web 21/21; API/web type checks passed; changed-file lint passed | Graph cache route tests, web resync contract, bounded pagination and processing count consistency | Full web lint retains pre-existing errors outside this session; live Redis and full save consistency E2E remain. |
 | 09 | `recall-item-actions-fix` | `/tmp/recall-worktrees/item-actions-fix` | 2026-08-24 | 2026-08-24 | Web 28/28; web `tsc --noEmit`; changed-file ESLint clean | Commit `a17ad75`, integrated as `2eafd2b`; item-card and detail-action regression tests cover favorite, retry, failure reason/stage, queued success, duplicate retry, and queue failure states | Browser E2E action coverage remains unchecked. |
-| 10 | `recall-dashboard-features` |  |  |  |  |  |  |
+| 10 | `recall-features-fix` | `/tmp/recall-worktrees/features-fix` | 2026-08-24 | 2026-08-24 | Web 32/32; web `tsc --noEmit`; changed-file ESLint clean | Search error/retry and tag management regression tests; commit to be recorded after integration | Top-bar search errors, collection feedback, and full search/tag/collection E2E remain. |
 | 11 | `recall-dashboard-ui` |  |  |  |  |  |  |
 | 12 | `recall-graph-ui` |  |  |  |  |  |  |
 | 13 | `recall-performance` |  |  |  |  |  |  |
