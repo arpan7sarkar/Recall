@@ -424,19 +424,24 @@ Completion gate: all critical and high checklist items are verified or explicitl
 
 - [x] Run API build and type checks. (Integrated `npm run build:api` and `npx tsc --noEmit` pass.)
 - [x] Run web build, type checks, and lint. (Integrated `npm run build:web`, web typecheck, and lint pass.)
-- [ ] Run unit and integration suites.
+- [x] Run unit and integration suites. (Integrated API 56/56 and web 55/55 pass with `npm test`.)
 - [ ] Run the complete save and recovery E2E suite.
 - [ ] Run accessibility checks.
 - [ ] Run visual regression checks.
 - [ ] Run five-minute browser performance scenarios.
 - [ ] Run five-minute API and worker resource scenarios.
-- [ ] Run authorization and SSRF security checks.
+- [x] Run authorization and SSRF security checks. (Integrated authorization, remote-fetch, redirect, DNS, and bounded-body regression tests pass in the API suite.)
 - [ ] Verify health and readiness behavior with each dependency healthy and unavailable.
 - [ ] Verify queue depth, worker liveness, retry behavior, and terminal item states.
-- [ ] Verify production-like environment variables without exposing values.
+- [x] Verify production-like environment variables without exposing values. (Runtime validation tests accept required contracts without printing secret values, and web production API configuration now fails closed.)
 - [x] Update `AUDIT_LEDGER.md` with test paths, commits, dates, and evidence.
 - [x] Mark only genuinely verified items as `[x]` in this checklist.
-- [ ] Document rollback, recovery, and known deferred work.
+- [x] Document rollback, recovery, and known deferred work. (Migration and recovery runbooks record the live-database, Redis, storage, profiling, visual, and browser save gates that remain.)
+
+Session 16 evidence: the integrated API suite passes 56/56, the integrated web suite passes 55/55, `npm run lint` completes with zero errors and 18 pre-existing API warnings, and the production API and web builds pass.
+The runtime contract passes 6/6 and the landing-page Playwright smoke passes 1/1 with elevated local-process permissions.
+The browser smoke still reports a non-blocking Next development warning for the existing `127.0.0.1` HMR origin configuration.
+Live Neon PostgreSQL, Redis worker recovery, full save/recovery E2E, accessibility, visual regression, and five-minute resource profiling remain explicitly unchecked.
 
 ## Session 17: Dashboard Pagination and Projection Consistency
 
@@ -480,7 +485,7 @@ Browser-level pagination and live multi-page API checks remain part of Session 1
 | 13 | `recall-performance-fix` | `/tmp/recall-worktrees/performance-fix` | 2026-08-24 | 2026-08-24 | Focused dashboard performance tests 3/3 plus Twitter lifecycle tests 2/2; source web 37/37; integrated web 44/44; web `tsc --noEmit`; changed-file lint passed; integrated web build passed | Source commits `c592666`, `a7c4313`, integrated as `a28660d` and `758551c`; graph render policy, bounded processing polling, near-viewport Instagram loading, and deduplicated/remount-safe Twitter widget changes verified in code and tests | Five-minute browser/server profiling and performance budgets remain unchecked. |
 | 14 | `recall-authorization` | `/tmp/recall-worktrees/authorization` | 2026-08-24 | 2026-08-24 | Source focused authorization tests 4/4; source API 39/39; integrated API 52/52; API `tsc --noEmit` and build passed; changed-file lint has 10 pre-existing warnings | Source commit `d2ce724`, integrated as `44e75c9`; cross-user collection save/upload, tag attachment, and public nested item boundaries covered by regression tests | Extension-token route isolation, full ownership matrix, security logging, dependency audit, and integrated security verification remain. |
 | 15 | `recall-migrations` | `/tmp/recall-worktrees/migrations` | 2026-08-24 | 2026-08-24 | Source migration-history tests 3/3 and API 43/43; integrated API 52/52; API typecheck/build passed; changed-file lint passes | Source commit `8890557`, integrated as `60c1c47`; CI PostgreSQL migration deploy/status/smoke gate, SQL assertions, deterministic history tests, rollback/reconciliation runbook, and upload cleanup regression added | Live ledger inspection and baseline resolution remain blocked by no configured PostgreSQL; orphan inventory and durable storage keys remain deferred. |
-| 16 | `recall-release-verification` |  |  |  |  |  |  |
-| 17 | `recall-pagination-consistency` | `/tmp/recall-worktrees/pagination-consistency` | 2026-08-24 | 2026-08-24 | Focused web 7/7; full web 49/49; web `tsc --noEmit`; changed-file ESLint clean | `useInfiniteItems` loads API pages and exposes visible Load more controls; archive, unarchive, and delete invalidate all item projections | Browser-level pagination and live multi-page API verification remain part of Session 16. |
-| 18 | `recall-config-cors` | `/tmp/recall-worktrees/config-cors` | 2026-08-24 | 2026-08-24 | Web API configuration and transport tests 8/8; API CORS preflight tests 4/4; API/web type checks and changed-file lint pass | Commit recorded in the integration history; production base gating, environment-aware CORS options, and CI/docs configuration are covered by `apps/web/tests/api-config.test.ts`, `apps/web/tests/api-client.test.ts`, and `apps/api/src/runtime/cors.test.ts` | Live deployed-origin browser smoke and production service verification remain part of Session 16. |
-| 19 | `recall-graph-theme` | `/tmp/recall-worktrees/graph-theme` | 2026-08-24 | 2026-08-24 | Focused graph/theme tests 3/3; web typecheck; changed-file ESLint passed | Graph palette covers all item types, collection and item cards use semantic theme tokens, and source picker selected styles are valid and pressed-state accessible | Full browser visual checks, persisted theme preferences, graph keyboard navigation, and large-graph profiling remain. |
+| 16 | `recall-release-verification` |  | 2026-08-24 | 2026-08-24 | Integrated API 56/56; web 55/55; runtime 6/6; landing Playwright smoke 1/1; API/web build passed; full lint has 0 errors and 18 pre-existing API warnings | Release verification updated only genuinely proven gates; production-like environment validation, authorization/SSRF regression coverage, and deferred-work documentation are recorded above | Full save/recovery E2E, live Neon/Redis readiness and queue recovery, accessibility, visual regression, and five-minute resource profiling remain unchecked. |
+| 17 | `recall-pagination-consistency` | `/tmp/recall-worktrees/pagination-consistency` | 2026-08-24 | 2026-08-24 | Focused web 7/7; full web 49/49 in source; integrated web 55/55; web `tsc --noEmit`; changed-file ESLint clean | Source commit `5d955db`, integrated as `3ef0960`; `useInfiniteItems` loads API pages and exposes visible Load more controls; archive, unarchive, and delete invalidate all item projections | Browser-level pagination and live multi-page API verification remain part of Session 16. |
+| 18 | `recall-config-cors` | `/tmp/recall-worktrees/config-cors` | 2026-08-24 | 2026-08-24 | Web API configuration and transport tests 8/8; API CORS preflight tests 4/4; API/web type checks and changed-file lint pass | Source commit `c0908a5dc4024a75f125a4dcada17feb7bb2a8ca`, integrated as `67a9806`; production base gating, environment-aware CORS options, and CI/docs configuration are covered by `apps/web/tests/api-config.test.ts`, `apps/web/tests/api-client.test.ts`, and `apps/api/src/runtime/cors.test.ts` | Live deployed-origin browser smoke and production service verification remain part of Session 16. |
+| 19 | `recall-graph-theme` | `/tmp/recall-worktrees/graph-theme` | 2026-08-24 | 2026-08-24 | Focused graph/theme tests 3/3; web typecheck; changed-file ESLint passed | Source commit `08f93f1`, integrated as `f2a25ed`; graph palette covers all item types, collection and item cards use semantic theme tokens, and source picker selected styles are valid and pressed-state accessible | Full browser visual checks, persisted theme preferences, graph keyboard navigation, and large-graph profiling remain. |
