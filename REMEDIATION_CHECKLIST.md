@@ -132,16 +132,16 @@ Related ledger IDs: `AUTH-004`, `AUTH-006`, and `AUTH-007`.
 
 Completion gate: every API failure is classified consistently in the UI, and local or deployed origin configuration is explicit.
 
-- [ ] Add a failing test for API 401 handling.
-- [ ] Add request timeout and abort behavior.
-- [ ] Classify authentication, validation, conflict, dependency, offline, and unknown errors.
-- [ ] Remove the empty 401 handling branch.
-- [ ] Make API base URL configuration explicit per environment.
+- [x] Add a failing test for API 401 handling. (`apps/web/tests/api-client.test.ts`)
+- [x] Add request timeout and abort behavior. (`apps/web/lib/api.ts`)
+- [x] Classify authentication, validation, conflict, dependency, offline, and unknown errors. (`classifyApiError`)
+- [x] Remove the empty 401 handling branch. (`apps/web/lib/api.ts`)
+- [x] Make API base URL configuration explicit per environment. (`apps/web/.env.example`)
 - [ ] Remove or formally document the hardcoded production fallback.
-- [ ] Allow configured development origins beyond port 3000.
+- [x] Allow configured development origins beyond port 3000. (runtime CORS defaults and `CORS_ORIGINS`)
 - [ ] Add CORS preflight integration tests for web and extension origins.
-- [ ] Ensure successful empty responses do not require JSON parsing.
-- [ ] Add request correlation IDs for save and processing flows.
+- [x] Ensure successful empty responses do not require JSON parsing. (`apps/web/tests/api-client.test.ts`)
+- [x] Add request correlation IDs for save and processing flows. (`X-Request-ID` browser/API propagation)
 
 ## Session 05: URL and File Save Flow
 
@@ -415,7 +415,7 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 01 | `recall-runtime` | `/tmp/recall-worktrees/runtime` | 2026-08-24 | 2026-08-24 | Runtime contract tests; API 26/26; integrated API and web builds passed | Commit `fdef9b7`; integrated commit `e0d313e` | Live service smoke checks remain. |
 | 02 | `recall-pipeline` | `/tmp/recall-worktrees/pipeline` | 2026-08-24 | 2026-08-24 | Focused API 9/9; integrated API 26/26; integrated build passed | Commit `bc5607041905353249c1af03e2bb89fbe0845175`; compatibility commit `75e00dd` | Eight waiting Redis jobs remain unchecked because no live worker recovery was performed. |
 | 03 | `recall-auth` | `/tmp/recall-worktrees/auth` | 2026-08-24 | 2026-08-24 | API 12/12; web 6/6; API `tsc --noEmit` | Web `next build`; commit `5694038` | Web lint has pre-existing errors outside Session 03. |
-| 04 | `recall-api-client` |  |  |  |  |  |  |
+| 04 | `recall-api-client-fix` | `/tmp/recall-worktrees/api-client-fix` | 2026-08-24 | 2026-08-24 | API 32/32; web 20/20; API and web type checks passed; changed-file lint passed | Commit `76df424`, integrated as `59e34ab`; transport tests cover 401, offline, empty response, base URL, and correlation ID | Preflight integration test and explicit removal/documentation of the legacy production fallback remain. |
 | 05 | `recall-save-flow` | `/tmp/recall-worktrees/save-flow` (salvaged into integration branch) | 2026-08-24 | 2026-08-24 | API 30/30; web 13/13; API and web type checks passed; API and web lint passed | Commit recorded in integration history after focused URL, metadata, timestamp, error, and duplicate-submit tests | E2E save, retry action, optimistic item display, attachment feedback, and refresh/reauth checks remain. |
 | 06 | `recall-uploads-fix` | `/tmp/recall-worktrees/uploads-fix` | 2026-08-24 | 2026-08-24 | API 32/32; web 15/15; API and web type checks passed; API lint passed | Commit `e40ed6a`, integrated as `c1be157`; browser/API size and signature tests passed | Drag-drop-specific test, mode-path E2E, durable key/fresh URL lifecycle, and full storage failure matrix remain. |
 | 07 | `recall-parser` |  |  |  |  |  |  |
