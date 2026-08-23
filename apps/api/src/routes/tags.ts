@@ -25,7 +25,7 @@ router.get("/", async (req: Request, res: Response) => {
       },
     });
     res.json(tags);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to fetch tags" });
   }
 });
@@ -49,7 +49,7 @@ router.post("/", async (req: Request, res: Response) => {
       },
     });
     res.status(201).json(tag);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to create tag" });
   }
 });
@@ -70,7 +70,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
     });
     await invalidateGraphCache(userId);
     res.json(tag);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to update tag" });
   }
 });
@@ -87,7 +87,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     await prisma.tag.delete({ where: { id, userId } });
     await invalidateGraphCache(userId);
     res.status(204).send();
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to delete tag" });
   }
 });
@@ -141,7 +141,7 @@ router.post("/attach/:itemId", async (req: Request, res: Response) => {
 
         await invalidateGraphCache(userId);
         res.json(itemTag);
-    } catch (error) {
+    } catch {
         res.status(500).json({ error: "Failed to attach tag" });
     }
 });

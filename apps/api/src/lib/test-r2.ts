@@ -1,7 +1,5 @@
 import { uploadFile, buildKey } from './storage';
 import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
 
 dotenv.config();
 

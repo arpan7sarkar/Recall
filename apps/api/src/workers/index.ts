@@ -1,4 +1,3 @@
-import "module-alias/register";
 import "dotenv/config";
 import http from "http";
 import { Worker } from "bullmq";
