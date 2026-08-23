@@ -411,7 +411,7 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 00 | `recall-test-foundation` |  |  |  |  |  |  |
 | 01 | `recall-runtime` |  |  |  |  |  |  |
 | 02 | `recall-pipeline` |  |  |  |  |  |  |
-| 03 | `recall-auth` |  |  |  |  |  |  |
+| 03 | `recall-auth` | `/tmp/recall-worktrees/auth` | 2026-08-24 | 2026-08-24 | API 12/12; web 6/6; API `tsc --noEmit` | Web `next build`; commit `5694038` | Web lint has pre-existing errors outside Session 03. |
 | 04 | `recall-api-client` |  |  |  |  |  |  |
 | 05 | `recall-save-flow` |  |  |  |  |  |  |
 | 06 | `recall-uploads` |  |  |  |  |  |  |
