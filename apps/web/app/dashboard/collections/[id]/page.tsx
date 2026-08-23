@@ -17,6 +17,7 @@ import { useUIStore } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { Icon } from "@/components/shared/Icon";
+import { getApiErrorMessage } from "@/lib/api";
 
 export default function CollectionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +30,8 @@ export default function CollectionDetailPage() {
   const deleteCollection = useDeleteCollection();
   const updateCollection = useUpdateCollection();
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
+  const [collectionActionMessage, setCollectionActionMessage] = useState<string | null>(null);
+  const [collectionActionError, setCollectionActionError] = useState<string | null>(null);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
@@ -69,11 +72,14 @@ export default function CollectionDetailPage() {
   }, [showSettingsMenu]);
 
   const handleRemove = async (itemId: string) => {
+    setCollectionActionMessage(null);
+    setCollectionActionError(null);
     try {
       setRemovingItemId(itemId);
       await removeItemFromCollection.mutateAsync({ collectionId: id, itemId });
+      setCollectionActionMessage("Item removed from collection.");
     } catch (err) {
-      console.error("Failed to remove item from collection:", err);
+      setCollectionActionError(getApiErrorMessage(err, "Could not remove the item from this collection."));
     } finally {
       setRemovingItemId(null);
     }
@@ -311,6 +317,22 @@ export default function CollectionDetailPage() {
               {shareMessage && (
                 <p className="relative text-xs mt-2" style={{ color: "var(--accent-500)" }}>
                   {shareMessage}
+                </p>
+              )}
+
+              {collectionActionMessage && (
+                <p role="status" className="relative text-xs mt-2" style={{ color: "var(--accent-500)" }}>
+                  {collectionActionMessage}
+                </p>
+              )}
+
+              {collectionActionError && (
+                <p
+                  role="alert"
+                  className="relative text-xs mt-2"
+                  style={{ color: "color-mix(in srgb, #ef4444 75%, var(--text-primary) 25%)" }}
+                >
+                  {collectionActionError}
                 </p>
               )}
             </div>

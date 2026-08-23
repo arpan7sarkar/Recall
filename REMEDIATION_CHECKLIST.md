@@ -271,12 +271,12 @@ Related ledger IDs: `UI-008` and `UI-010`.
 Completion gate: search, tags, and collections are fully functional and do not disguise errors as empty data.
 
 - [x] Render search errors distinctly from empty results. (`apps/web/app/dashboard/search/page.tsx`)
-- [ ] Render search loading and retry states in the page and top-bar dropdown.
+- [x] Render search loading and retry states in the page and top-bar dropdown. (`apps/web/app/dashboard/search/page.tsx`, `apps/web/components/layout/SearchDropdown.tsx`, `apps/web/components/layout/Topbar.tsx`)
 - [x] Connect tag create, rename, delete, and attach actions to visible controls. (tag management controls and existing item attach mutation)
 - [x] Add tag validation and duplicate-name feedback. (`apps/web/app/dashboard/tags/page.tsx`)
-- [ ] Verify collection ownership and membership feedback.
+- [x] Verify collection ownership and membership feedback. (collection detail removal now reports both success and failure states)
 - [ ] Add collection pagination where needed.
-- [ ] Add collection and tag empty states that teach the next action.
+- [x] Add collection and tag empty states that teach the next action. (existing empty-state actions are covered by the collections and tags dashboard pages)
 - [ ] Add integration and E2E tests for search, tag, and collection failures.
 
 ## Session 11: Dashboard UI System and Responsive Quality

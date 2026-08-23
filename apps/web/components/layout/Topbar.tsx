@@ -18,7 +18,12 @@ export function Topbar() {
   const router = useRouter();
 
   // Live search results (debounced inside useSearch)
-  const { data: searchResults = [], isLoading: isSearching } = useSearch(
+  const {
+    data: searchResults = [],
+    isLoading: isSearching,
+    error: searchError,
+    refetch: retrySearch,
+  } = useSearch(
     searchQuery,
     "semantic"
   );
@@ -112,6 +117,8 @@ export function Topbar() {
             isLoading={isSearching}
             query={searchQuery}
             onClose={closeDropdown}
+            error={searchError}
+            onRetry={retrySearch}
           />
         )}
       </div>

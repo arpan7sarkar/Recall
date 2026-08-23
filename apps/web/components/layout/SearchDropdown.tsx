@@ -8,15 +8,18 @@ import { TypeBadge } from "@/components/shared/TypeBadge";
 import { timeAgo, extractDomain } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { LoaderFive } from "@/components/ui/unique-loader-components";
+import { getApiErrorMessage } from "@/lib/api";
 
 interface SearchDropdownProps {
   results: Item[];
   isLoading: boolean;
   query: string;
   onClose: () => void;
+  error?: unknown;
+  onRetry?: () => void | Promise<unknown>;
 }
 
-export function SearchDropdown({ results, isLoading, query, onClose }: SearchDropdownProps) {
+export function SearchDropdown({ results, isLoading, query, onClose, error, onRetry }: SearchDropdownProps) {
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -51,7 +54,22 @@ export function SearchDropdown({ results, isLoading, query, onClose }: SearchDro
       }}
       id="search-dropdown"
     >
-      {isLoading ? (
+      {error ? (
+        <div role="alert" className="px-4 py-6 text-center">
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            {getApiErrorMessage(error, "Search is temporarily unavailable.")}
+          </p>
+          {onRetry && (
+            <button
+              type="button"
+              onClick={() => void onRetry()}
+              className="btn-primary focus-ring mt-4 rounded-lg px-3 py-2 text-xs font-medium"
+            >
+              Try search again
+            </button>
+          )}
+        </div>
+      ) : isLoading ? (
         <div className="px-4 py-8 flex flex-col items-center justify-center gap-4">
           <LoaderFive text="Searching your mind" />
         </div>
