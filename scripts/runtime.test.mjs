@@ -6,6 +6,7 @@ import { validateEnvironment } from "./validate-env.mjs";
 const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const compose = readFileSync(new URL("../docker-compose.yml", import.meta.url), "utf8");
 const apiSource = readFileSync(new URL("../apps/api/src/index.ts", import.meta.url), "utf8");
+const corsSource = readFileSync(new URL("../apps/api/src/runtime/cors.ts", import.meta.url), "utf8");
 const workerSource = readFileSync(new URL("../apps/api/src/workers/index.ts", import.meta.url), "utf8");
 
 describe("root runtime contract", () => {
@@ -33,7 +34,7 @@ describe("root runtime contract", () => {
   it("exposes separate liveness and readiness endpoints", () => {
     assert.match(apiSource, /app\.get\("\/live"/);
     assert.match(apiSource, /app\.get\("\/ready"/);
-    assert.match(apiSource, /localhost:3001/);
+    assert.match(corsSource, /localhost:3001/);
     assert.match(workerSource, /requestUrl\.pathname === "\/ready"/);
     assert.match(workerSource, /requestUrl\.pathname === "\/health" \|\| requestUrl\.pathname === "\/live"/);
   });
