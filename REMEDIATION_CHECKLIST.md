@@ -416,8 +416,8 @@ Worktree scope: integration of completed groups and production-like verification
 
 Completion gate: all critical and high checklist items are verified or explicitly deferred with approval.
 
-- [ ] Run API build and type checks.
-- [ ] Run web build, type checks, and lint.
+- [x] Run API build and type checks. (Integrated `npm run build:api` and `npx tsc --noEmit` pass.)
+- [x] Run web build, type checks, and lint. (Integrated `npm run build:web`, web typecheck, and lint pass.)
 - [ ] Run unit and integration suites.
 - [ ] Run the complete save and recovery E2E suite.
 - [ ] Run accessibility checks.
@@ -428,8 +428,8 @@ Completion gate: all critical and high checklist items are verified or explicitl
 - [ ] Verify health and readiness behavior with each dependency healthy and unavailable.
 - [ ] Verify queue depth, worker liveness, retry behavior, and terminal item states.
 - [ ] Verify production-like environment variables without exposing values.
-- [ ] Update `AUDIT_LEDGER.md` with test paths, commits, dates, and evidence.
-- [ ] Mark only genuinely verified items as `[x]` in this checklist.
+- [x] Update `AUDIT_LEDGER.md` with test paths, commits, dates, and evidence.
+- [x] Mark only genuinely verified items as `[x]` in this checklist.
 - [ ] Document rollback, recovery, and known deferred work.
 
 ## Session Log
