@@ -79,8 +79,7 @@ export default function CollectionsPage() {
         className="mb-8 rounded-2xl border overflow-hidden"
         style={{
           borderColor: "var(--border)",
-          background:
-            "linear-gradient(120deg, color-mix(in srgb, var(--bg-secondary) 92%, black 8%), color-mix(in srgb, var(--bg-secondary) 78%, black 22%))",
+          background: "linear-gradient(120deg, var(--bg-secondary), var(--bg-tertiary))",
         }}
       >
         <div className="relative px-5 py-5 md:px-7 md:py-6">
@@ -104,7 +103,7 @@ export default function CollectionsPage() {
               style={{
                 borderColor: "var(--border)",
                 color: "var(--text-primary)",
-                background: "color-mix(in srgb, var(--bg-primary) 84%, black 16%)",
+                background: "var(--bg-tertiary)",
               }}
             >
               {showCreateForm ? "Cancel" : "Create Collection"}
@@ -117,9 +116,9 @@ export default function CollectionsPage() {
         <div
           className="p-8 text-center rounded-lg border"
           style={{
-            color: "color-mix(in srgb, #ef4444 70%, var(--text-primary) 30%)",
-            background: "color-mix(in srgb, var(--bg-secondary) 88%, #b91c1c 12%)",
-            borderColor: "color-mix(in srgb, var(--border) 50%, #dc2626 50%)",
+            color: "var(--danger)",
+            background: "var(--danger-bg)",
+            borderColor: "var(--danger-border)",
           }}
         >
           Failed to load collections.
@@ -131,8 +130,7 @@ export default function CollectionsPage() {
               key={i}
               className="p-5 rounded-xl h-40 animate-pulse"
               style={{
-                background:
-                  "linear-gradient(120deg, color-mix(in srgb, var(--bg-secondary) 92%, var(--text-primary) 8%), color-mix(in srgb, var(--bg-tertiary) 90%, var(--text-primary) 10%))",
+                background: "var(--bg-tertiary)",
                 border: "1px solid var(--border)",
                 boxShadow: "var(--shadow-sm)",
               }}
@@ -156,8 +154,8 @@ export default function CollectionsPage() {
               style={{
                 backgroundImage:
                   theme === "light"
-                    ? "linear-gradient(to top left, rgba(248,250,252,0.45), rgba(226,232,240,0.3)), url('/collection-bg-light.png')"
-                    : "linear-gradient(to top left, rgba(99,102,241,0.1), rgba(0,0,0,0.2)), url('/collection-bg.jpg')",
+                    ? "linear-gradient(to top left, color-mix(in srgb, var(--bg-secondary) 86%, transparent), color-mix(in srgb, var(--bg-tertiary) 72%, transparent)), url('/collection-bg-light.png')"
+                    : "linear-gradient(to top left, color-mix(in srgb, var(--bg-secondary) 86%, transparent), color-mix(in srgb, var(--bg-tertiary) 72%, transparent)), url('/collection-bg.jpg')",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 boxShadow: "var(--shadow-card)",
@@ -166,34 +164,38 @@ export default function CollectionsPage() {
               <div
                 className="relative flex items-center justify-center h-32 border-b border-border"
                 style={{
-                  background: "linear-gradient(135deg, rgba(0,0,0,0.15), rgba(0,0,0,0.35))",
+                  background: "linear-gradient(135deg, color-mix(in srgb, var(--bg-tertiary) 72%, transparent), color-mix(in srgb, var(--bg-primary) 90%, transparent))",
                 }}
               >
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-500" />
-                <div className="relative z-10 w-10 h-10 rounded-full border border-white/20 bg-black/30 backdrop-blur-sm flex items-center justify-center">
-                  <Icon name="collection" size={20} className="opacity-90 text-white" />
+                <div className="absolute inset-0 bg-(--bg-primary)/20 group-hover:bg-(--bg-primary)/10 transition-colors duration-500" />
+                <div
+                  className="relative z-10 w-10 h-10 rounded-full border backdrop-blur-sm flex items-center justify-center"
+                  style={{ borderColor: "var(--border)", background: "var(--bg-elevated)", color: "var(--accent-500)" }}
+                >
+                  <Icon name="collection" size={20} className="opacity-90" />
                 </div>
               </div>
               <div className="flex flex-col gap-2 p-5 flex-1 relative">
                 <div className="absolute inset-x-0 bottom-0 top-0 bg-linear-to-tl from-indigo-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                <h3 className="text-lg font-serif italic text-white/95 tracking-tight line-clamp-2 relative z-10 group-hover:text-accent transition-colors duration-500">
+                <h3 className="text-lg font-serif italic text-(--text-primary) tracking-tight line-clamp-2 relative z-10 group-hover:text-accent transition-colors duration-500">
                   {col.name}
                 </h3>
-                <p className="text-xs font-serif italic text-white/70 line-clamp-3 mt-1 relative z-10 group-hover:text-white/85 transition-colors duration-500">
+                <p className="text-xs font-serif italic text-(--text-secondary) line-clamp-3 mt-1 relative z-10 group-hover:text-(--text-primary) transition-colors duration-500">
                   {col.description || "No description"}
                 </p>
-                <div className="mt-auto flex items-center justify-between text-xs relative z-10 text-white/75">
+                <div className="mt-auto flex items-center justify-between text-xs relative z-10 text-(--text-tertiary)">
                   <span>{col._count?.items ?? col.itemCount ?? 0} items</span>
                   <div className="flex items-center gap-2">
                     {col.isPublic && (
-                      <span className="px-2 py-0.5 rounded-full text-xs border border-white/25 bg-white/10 text-white">
+                      <span className="px-2 py-0.5 rounded-full text-xs border" style={{ borderColor: "var(--border)", background: "var(--bg-elevated)", color: "var(--text-primary)" }}>
                         Public
                       </span>
                     )}
                     <button
                       onClick={(e) => handleDeleteCollection(e, col.id, col.name)}
                       disabled={deletingId === col.id}
-                      className="px-2 py-0.5 rounded-full text-xs border border-white/25 bg-black/25 text-white disabled:opacity-60"
+                      className="px-2 py-0.5 rounded-full text-xs border disabled:opacity-60"
+                      style={{ borderColor: "var(--border)", background: "var(--bg-tertiary)", color: "var(--text-primary)" }}
                     >
                       {deletingId === col.id ? "Deleting..." : "Delete"}
                     </button>
@@ -217,8 +219,7 @@ export default function CollectionsPage() {
             className="relative w-full max-w-lg p-5 rounded-xl border space-y-3 overflow-hidden"
             style={{
               borderColor: "var(--border)",
-              background:
-                "linear-gradient(120deg, color-mix(in srgb, var(--bg-secondary) 92%, black 8%), color-mix(in srgb, var(--bg-secondary) 78%, black 22%))",
+              background: "linear-gradient(120deg, var(--bg-secondary), var(--bg-tertiary))",
             }}
           >
             <div className="absolute inset-0 pointer-events-none opacity-80 bg-[radial-gradient(circle_at_top_right,rgba(192,192,192,0.16),transparent_52%)]" />

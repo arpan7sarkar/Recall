@@ -164,9 +164,9 @@ export default function CollectionDetailPage() {
         <div
           className="p-8 text-center rounded-lg border"
           style={{
-            color: "color-mix(in srgb, #ef4444 70%, var(--text-primary) 30%)",
-            background: "color-mix(in srgb, var(--bg-secondary) 88%, #b91c1c 12%)",
-            borderColor: "color-mix(in srgb, var(--border) 50%, #dc2626 50%)",
+            color: "var(--danger)",
+            background: "var(--danger-bg)",
+            borderColor: "var(--danger-border)",
           }}
         >
           Failed to load this collection.
@@ -194,8 +194,7 @@ export default function CollectionDetailPage() {
             className="mb-8 rounded-2xl border"
             style={{
               borderColor: "var(--border)",
-              background:
-                "linear-gradient(120deg, color-mix(in srgb, var(--bg-secondary) 92%, black 8%), color-mix(in srgb, var(--bg-secondary) 78%, black 22%))",
+              background: "linear-gradient(120deg, var(--bg-secondary), var(--bg-tertiary))",
             }}
           >
             <div className="relative px-5 py-5 md:px-7 md:py-6">
@@ -221,7 +220,7 @@ export default function CollectionDetailPage() {
                     style={{
                       borderColor: "var(--border)",
                       color: "var(--text-primary)",
-                      background: "color-mix(in srgb, var(--bg-primary) 84%, black 16%)",
+                      background: "var(--bg-tertiary)",
                     }}
                   >
                     <span>Share via Link</span>
@@ -235,7 +234,7 @@ export default function CollectionDetailPage() {
                       style={{
                         borderColor: "var(--border)",
                         color: "var(--text-secondary)",
-                        background: "color-mix(in srgb, var(--bg-primary) 84%, black 16%)",
+                        background: "var(--bg-tertiary)",
                       }}
                       aria-label="Collection settings"
                     >
@@ -292,7 +291,7 @@ export default function CollectionDetailPage() {
                             handleDeleteCollection();
                           }}
                           className="w-full text-left px-3 py-2 text-sm border-t"
-                          style={{ color: "var(--danger, #ef4444)", borderColor: "var(--border)" }}
+                          style={{ color: "var(--danger)", borderColor: "var(--border)" }}
                         >
                           Delete collection
                         </button>
@@ -330,7 +329,7 @@ export default function CollectionDetailPage() {
                 <p
                   role="alert"
                   className="relative text-xs mt-2"
-                  style={{ color: "color-mix(in srgb, #ef4444 75%, var(--text-primary) 25%)" }}
+                  style={{ color: "var(--danger)" }}
                 >
                   {collectionActionError}
                 </p>
@@ -386,8 +385,7 @@ export default function CollectionDetailPage() {
                 className="relative w-full max-w-lg p-5 rounded-xl border space-y-3 overflow-hidden"
                 style={{
                   borderColor: "var(--border)",
-                  background:
-                    "linear-gradient(120deg, color-mix(in srgb, var(--bg-secondary) 92%, black 8%), color-mix(in srgb, var(--bg-secondary) 78%, black 22%))",
+                  background: "linear-gradient(120deg, var(--bg-secondary), var(--bg-tertiary))",
                 }}
               >
                 <div className="absolute inset-0 pointer-events-none opacity-80 bg-[radial-gradient(circle_at_top_right,rgba(192,192,192,0.16),transparent_52%)]" />

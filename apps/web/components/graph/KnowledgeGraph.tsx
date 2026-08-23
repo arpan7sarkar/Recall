@@ -8,6 +8,7 @@ import type { ForceGraphMethods } from "react-force-graph-2d";
 import { useUIStore } from "@/store/uiStore";
 import { LoaderFour } from "@/components/ui/unique-loader-components";
 import { getGraphRenderPolicy } from "@/lib/dashboardPerformance";
+import { getGraphNodeColor } from "@/lib/graphTheme";
 import { getGraphDimensions } from "./graphDimensions";
 
 // ForceGraph must be dynamically imported for SSR compatibility in Next.js
@@ -146,19 +147,6 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
     }
   }, [isDocumentVisible, isVisible]);
 
-  const getNodeColor = (type: string) => {
-    switch (type) {
-      case "article": return "#3b82f6"; // Sapphire
-      case "youtube": return "#e11d48"; // Ruby
-      case "tweet": return "#94a3b8"; // Silver
-      case "pdf": return "#ca8a04"; // Gold
-      case "image": return "#27272a"; // Obsidian
-      case "instagram": return "#d946ef"; // Amethyst
-      case "linkedin": return "#0a66c2"; // LinkedIn Blue
-      default: return "#18181b"; // Obsidian Deep
-    }
-  };
-
   const getNodeLabel = (node: unknown) => {
     const label = (node as { label?: unknown })?.label;
     return typeof label === "string" ? label : "";
@@ -200,7 +188,7 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
         // Node styling
         nodeLabel={(node) => getNodeLabel(node)}
         nodeRelSize={6}
-        nodeColor={(node) => getNodeColor(getNodeType(node))}
+        nodeColor={(node) => getGraphNodeColor(getNodeType(node))}
         
         // Link styling
         linkColor={(link) => {

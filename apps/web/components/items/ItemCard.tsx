@@ -121,9 +121,9 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       role={item.status === "failed" ? undefined : "alert"}
       className="mt-2 rounded-lg border px-3 py-2 text-xs"
       style={{
-        color: "color-mix(in srgb, #ef4444 75%, var(--text-primary) 25%)",
-        borderColor: "color-mix(in srgb, var(--border) 55%, #ef4444 45%)",
-        background: "color-mix(in srgb, var(--bg-primary) 88%, #7f1d1d 12%)",
+        color: "var(--danger-foreground)",
+        borderColor: "var(--danger-border)",
+        background: "var(--danger-bg)",
       }}
     >
       {actionError}
@@ -134,12 +134,12 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       role="alert"
       className="relative z-10 mt-3 rounded-xl border px-3 py-3"
       style={{
-        borderColor: "color-mix(in srgb, var(--border) 55%, #ef4444 45%)",
-        background: "color-mix(in srgb, var(--bg-secondary) 86%, #7f1d1d 14%)",
+        borderColor: "var(--danger-border)",
+        background: "var(--danger-bg)",
       }}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium" style={{ color: "#fca5a5" }}>
+        <p className="text-xs font-medium" style={{ color: "var(--danger-foreground)" }}>
           Processing failed
         </p>
         <button
@@ -203,9 +203,9 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
             disabled={isDeletePending}
             className="px-3 py-2 rounded-lg text-sm border disabled:opacity-60"
             style={{
-              borderColor: "color-mix(in srgb, var(--border) 40%, #ef4444 60%)",
-              color: "#fff",
-              background: "var(--danger, #ef4444)",
+              borderColor: "var(--danger-border)",
+              color: "var(--button-primary-text)",
+              background: "var(--danger)",
             }}
           >
             {isDeletePending ? "Deleting..." : "Delete"}
@@ -220,7 +220,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       <>
         <div
           onClick={handleCardClick}
-          className="flex items-center gap-4 p-6 cursor-pointer transition-all duration-500 border rounded-xl bg-card/60 backdrop-blur-sm border-border hover:border-accent/30 hover:bg-zinc-900/40 group/list"
+          className="flex items-center gap-4 p-6 cursor-pointer transition-all duration-500 border rounded-xl bg-card/60 backdrop-blur-sm border-border hover:border-accent/30 hover:bg-(--bg-tertiary) group/list"
           id={`item-card-${item.id}`}
         >
           <div
@@ -245,7 +245,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
                 {trimmedTitle || "Untitled"}
               </h3>
             )}
-            <p className="text-[10px] font-serif italic text-zinc-500 mt-1.5 group-hover/list:text-zinc-400 transition-colors">
+            <p className="text-[10px] font-serif italic text-(--text-tertiary) mt-1.5 group-hover/list:text-(--text-secondary) transition-colors">
               {extractDomain(item.url)} <span className="mx-1 opacity-30">|</span> {timeAgo(item.savedAt)}
             </p>
             {failureState}
@@ -269,7 +269,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
               disabled={isDeletePending}
               className="text-[10px] px-2 py-1 rounded-md border transition-colors disabled:opacity-60"
               style={{
-                color: "var(--danger, #ef4444)",
+                color: "var(--danger)",
                 borderColor: "var(--border)",
                 background: "var(--bg-secondary)",
               }}
@@ -347,8 +347,8 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         <button
           onClick={handleFavoriteToggle}
           disabled={isFavoriteUpdating || isDeletePending || isArchiveUpdating}
-          className="absolute top-4 right-14 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
-          style={{ width: 32, height: 32, color: item.isFavourite ? "var(--accent-500)" : "var(--text-secondary)" }}
+          className="absolute top-4 right-14 z-10 flex items-center justify-center rounded-full text-xs border bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
+          style={{ width: 32, height: 32, borderColor: "var(--border)", color: item.isFavourite ? "var(--accent-500)" : "var(--text-secondary)" }}
           aria-label={favoriteLabel}
           title={favoriteLabel}
         >
@@ -358,8 +358,8 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         <button
           onClick={handleArchiveToggle}
           disabled={isArchiveUpdating || isDeletePending}
-          className="absolute top-4 left-4 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
-          style={{ width: 32, height: 32, color: "var(--text-secondary)" }}
+          className="absolute top-4 left-4 z-10 flex items-center justify-center rounded-full text-xs border bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
+          style={{ width: 32, height: 32, borderColor: "var(--border)", color: "var(--text-secondary)" }}
           aria-label={item.isArchived ? "Unarchive item" : "Archive item"}
         >
           <Icon name="archive" size={14} />
@@ -367,8 +367,8 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         <button
           onClick={handleDelete}
           disabled={isDeletePending || isArchiveUpdating}
-          className="absolute top-4 right-4 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
-          style={{ width: 32, height: 32, color: "var(--danger, #ef4444)" }}
+          className="absolute top-4 right-4 z-10 flex items-center justify-center rounded-full text-xs border bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
+          style={{ width: 32, height: 32, borderColor: "var(--border)", color: "var(--danger)" }}
           aria-label="Delete item"
         >
           <Trash2 size={14} />
@@ -384,13 +384,13 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
           </div>
 
           {shouldShowTitle && (
-            <h3 className="text-lg font-serif italic text-white/90 tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-accent transition-colors duration-500">
+            <h3 className="text-lg font-serif italic text-(--text-primary) tracking-tight line-clamp-2 mt-1 relative z-10 group-hover:text-accent transition-colors duration-500">
               {trimmedTitle || "Untitled"}
             </h3>
           )}
 
           {item.description && item.itemType !== "tweet" && (
-            <p className="text-xs font-serif italic text-zinc-500 line-clamp-3 mt-2 relative z-10 leading-relaxed group-hover:text-zinc-400 transition-colors duration-500">
+            <p className="text-xs font-serif italic text-(--text-tertiary) line-clamp-3 mt-2 relative z-10 leading-relaxed group-hover:text-(--text-secondary) transition-colors duration-500">
               {item.description}
             </p>
           )}

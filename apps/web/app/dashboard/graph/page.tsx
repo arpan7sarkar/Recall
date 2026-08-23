@@ -5,19 +5,10 @@ import { KnowledgeGraph } from "@/components/graph/KnowledgeGraph";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LoaderFive } from "@/components/ui/unique-loader-components";
 import { MousePointer2, Maximize2, Pointer } from "lucide-react";
+import { GRAPH_LEGEND_ITEMS } from "@/lib/graphTheme";
 
 export default function GraphPage() {
   const { data, isLoading, error, refetch, isFetching } = useGraphData();
-  const legendItems = [
-    { label: "LinkedIn", color: "#0a66c2", shadow: "rgba(10,102,194,0.5)" },
-    { label: "Article", color: "#3b82f6", shadow: "rgba(59,130,246,0.5)" },
-    { label: "Video", color: "#e11d48", shadow: "rgba(225,29,72,0.5)" },
-    { label: "Tweet", color: "#94a3b8", shadow: "rgba(148,163,184,0.5)" },
-    { label: "PDF", color: "#ca8a04", shadow: "rgba(202,138,4,0.5)" },
-    { label: "Image", color: "#27272a", shadow: "rgba(39,39,42,0.5)", withBorder: true },
-    { label: "Instagram", color: "#d946ef", shadow: "rgba(217,70,239,0.5)", withBorder: true },
-  ];
-
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 animate-in fade-in duration-700">
@@ -65,11 +56,15 @@ export default function GraphPage() {
 
         {/* Legend */}
         <div className="hidden md:flex items-center gap-5 px-5 py-2.5 rounded-2xl bg-muted/50 border border-border backdrop-blur-sm shadow-sm group/legend">
-           {legendItems.map((item) => (
+           {GRAPH_LEGEND_ITEMS.map((item) => (
              <div key={item.label} className="flex items-center gap-2 group-hover/legend:opacity-100 transition-opacity">
                <div
-                 className={`w-2.5 h-2.5 rounded-full ${item.withBorder ? "border border-white/10" : ""}`}
-                 style={{ background: item.color, boxShadow: `0 0 8px ${item.shadow}` }}
+                 className={`w-2.5 h-2.5 rounded-full ${item.withBorder ? "border" : ""}`}
+                 style={{
+                   background: item.color,
+                   borderColor: item.withBorder ? "var(--border)" : undefined,
+                   boxShadow: `0 0 8px color-mix(in srgb, ${item.color} 50%, transparent)`,
+                 }}
                />
              <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{item.label}</span>
              </div>

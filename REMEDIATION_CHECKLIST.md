@@ -302,14 +302,14 @@ Related ledger IDs: `UI-011` through `UI-013`, `UI-016`, and the dashboard porti
 
 Completion gate: dashboard screens pass visual, accessibility, and responsive checks across loading, empty, error, disabled, success, and dense states.
 
-- [ ] Establish the restrained dashboard color and semantic-state token map.
-- [ ] Remove hardcoded dark-theme colors from item and collection cards.
+- [x] Establish the restrained dashboard color and semantic-state token map. (`apps/web/app/globals.css`, `--danger-*` and existing `--bg-*`/`--text-*` tokens)
+- [x] Remove hardcoded dark-theme colors from item and collection cards. (`apps/web/app/dashboard/collections/page.tsx`, collection detail, and `apps/web/components/items/ItemCard.tsx`)
 - [x] Fix root color-scheme behavior for light mode. (`apps/web/app/globals.css`, verified by web build)
 - [ ] Persist theme, view mode, and sidebar preferences safely.
 - [x] Start the mobile sidebar closed unless explicitly restored by the user. (`apps/web/store/uiStore.ts`, `apps/web/tests/dashboard-shell.test.tsx`)
 - [ ] Standardize button, form, icon, card, modal, toast, and error component states.
 - [ ] Add visible focus states and keyboard navigation.
-- [ ] Fix invalid selected-source CSS.
+- [x] Fix invalid selected-source CSS. (`apps/web/components/add-content/SourceTypePicker.tsx`, `apps/web/tests/graph-theme.test.tsx`)
 - [x] Verify text contrast in dark and light themes. (accessible `--text-tertiary` tokens and native color-scheme alignment in `apps/web/app/globals.css`)
 - [ ] Verify responsive structure at phone, tablet, laptop, and wide desktop sizes.
 - [ ] Replace decorative dashboard motion with state-driven transitions.
@@ -329,7 +329,7 @@ Completion gate: graph layout remains usable across sidebar states and dataset s
 - [x] Add a failing responsive test for graph sizing from the available content width. (`apps/web/tests/dashboard-shell.test.tsx`)
 - [ ] Measure graph render cost for small, medium, and large datasets.
 - [x] Remove the fixed sidebar-width assumption. (`apps/web/components/graph/KnowledgeGraph.tsx`, `apps/web/components/graph/graphDimensions.ts`)
-- [ ] Add podcast and link legend entries and color mappings.
+- [x] Add podcast and link legend entries and color mappings. (`apps/web/lib/graphTheme.ts`, `apps/web/app/dashboard/graph/page.tsx`, `apps/web/components/graph/KnowledgeGraph.tsx`)
 - [x] Pause graph simulation when the page is hidden or backgrounded. (`apps/web/components/graph/KnowledgeGraph.tsx`)
 - [x] Reduce or gate directional particles based on dataset size and user preference. (`apps/web/lib/dashboardPerformance.ts`)
 - [ ] Add graph loading, empty, error, and stale-data states.
@@ -483,3 +483,4 @@ Browser-level pagination and live multi-page API checks remain part of Session 1
 | 16 | `recall-release-verification` |  |  |  |  |  |  |
 | 17 | `recall-pagination-consistency` | `/tmp/recall-worktrees/pagination-consistency` | 2026-08-24 | 2026-08-24 | Focused web 7/7; full web 49/49; web `tsc --noEmit`; changed-file ESLint clean | `useInfiniteItems` loads API pages and exposes visible Load more controls; archive, unarchive, and delete invalidate all item projections | Browser-level pagination and live multi-page API verification remain part of Session 16. |
 | 18 | `recall-config-cors` | `/tmp/recall-worktrees/config-cors` | 2026-08-24 | 2026-08-24 | Web API configuration and transport tests 8/8; API CORS preflight tests 4/4; API/web type checks and changed-file lint pass | Commit recorded in the integration history; production base gating, environment-aware CORS options, and CI/docs configuration are covered by `apps/web/tests/api-config.test.ts`, `apps/web/tests/api-client.test.ts`, and `apps/api/src/runtime/cors.test.ts` | Live deployed-origin browser smoke and production service verification remain part of Session 16. |
+| 19 | `recall-graph-theme` | `/tmp/recall-worktrees/graph-theme` | 2026-08-24 | 2026-08-24 | Focused graph/theme tests 3/3; web typecheck; changed-file ESLint passed | Graph palette covers all item types, collection and item cards use semantic theme tokens, and source picker selected styles are valid and pressed-state accessible | Full browser visual checks, persisted theme preferences, graph keyboard navigation, and large-graph profiling remain. |

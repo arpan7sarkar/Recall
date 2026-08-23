@@ -30,11 +30,20 @@ export function SourceTypePicker() {
               "flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all duration-150 focus-ring",
               selectedType === opt.type && "ring-2"
             )}
+            aria-pressed={selectedType === opt.type}
             style={{
               background:
                 selectedType === opt.type
-                  ? "var(--accent-50) text-[var(--accent-500)]"
+                  ? "var(--accent-50)"
                   : "var(--bg-secondary)",
+              color:
+                selectedType === opt.type
+                  ? "var(--accent-500)"
+                  : "var(--text-primary)",
+              boxShadow:
+                selectedType === opt.type
+                  ? "0 0 0 2px var(--accent-500)"
+                  : undefined,
               border: `1px solid ${
                 selectedType === opt.type
                   ? "var(--accent-500)"
