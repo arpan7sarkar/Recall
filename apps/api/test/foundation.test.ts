@@ -18,5 +18,8 @@ describe("API test foundation", () => {
 
     expect(schema).toContain("model Item");
     expect(schema).toContain("enum ProcessingStatus");
+    expect(schema).toContain("processingStage");
+    expect(schema).toContain("processingError");
+    expect(schema).toContain("processingAttempt");
   });
 });

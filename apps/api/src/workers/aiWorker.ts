@@ -2,12 +2,19 @@ import OpenAI from "openai";
 import { PDFParse } from "pdf-parse";
 import prisma from "@/lib/prisma";
 import { embedQueue } from "@/queues";
+import { buildPipelineJobId, buildProcessingFailureUpdate } from "@/queues/pipeline";
 import axios from "axios";
 import redis from "@/lib/redis";
 
-function isFinalAttempt(job: any): boolean {
-  const totalAttempts = Number(job?.opts?.attempts ?? 1);
-  return Number(job?.attemptsMade ?? 0) + 1 >= totalAttempts;
+async function markReady(itemId: string, warning: string | null = null): Promise<void> {
+  await prisma.item.update({
+    where: { id: itemId },
+    data: {
+      status: "ready",
+      processingStage: "complete",
+      processingError: warning,
+    },
+  });
 }
 
 function parseSuggestedTags(raw: string | null | undefined): string[] {
@@ -55,6 +62,8 @@ function buildAiContext(item: {
  */
 export async function processAi(job: any) {
   const { itemId, userId } = job.data;
+  let failureStage = "ai";
+  let enrichmentWarning: string | null = null;
 
   try {
     // 1. Fetch item with existing tags
@@ -66,6 +75,11 @@ export async function processAi(job: any) {
     });
 
     if (!item) throw new Error(`Item ${itemId} not found`);
+
+    await prisma.item.update({
+      where: { id: itemId },
+      data: { status: "processing", processingStage: "ai", processingError: null },
+    });
 
     let contentToAnalyze = item.contentText || "";
     let suggestedTags: string[] = [];
@@ -90,6 +104,7 @@ export async function processAi(job: any) {
         });
       } catch (err: any) {
         console.error(`[AI] Failed to parse PDF:`, err.message);
+        enrichmentWarning = `PDF text extraction was unavailable: ${err.message}`;
       }
     }
 
@@ -104,6 +119,7 @@ export async function processAi(job: any) {
     // 3. Generate tags (best effort). Even if this fails, continue to embedding.
     if (!process.env.OPENAI_API_KEY) {
       console.warn(`[AI] OPENAI_API_KEY missing. Skipping tag generation for ${itemId}.`);
+      enrichmentWarning = "AI enrichment was skipped because OPENAI_API_KEY is not configured.";
     } else {
       try {
         const openai = new OpenAI({
@@ -135,6 +151,7 @@ export async function processAi(job: any) {
         console.log(`[AI] Suggested tags for ${itemId}:`, suggestedTags);
       } catch (error: any) {
         console.error(`[AI] Tag generation failed for ${itemId}:`, error.message);
+        enrichmentWarning = `AI tag enrichment failed: ${error.message}`;
       }
     }
 
@@ -159,29 +176,52 @@ export async function processAi(job: any) {
             confidence: 0.9, // Placeholder confidence level
           }
         });
-      } catch (err) {
+      } catch {
         console.warn(`[AI] Failed to link tag ${normalized} to item ${itemId}`);
       }
+    }
+
+    // AI and vectors are optional enrichments. A durable saved item is ready
+    // even when provider credentials are unavailable.
+    if (!process.env.OPENAI_API_KEY || !process.env.PINECONE_API_KEY) {
+      if (!process.env.PINECONE_API_KEY) {
+        enrichmentWarning ||= "Vector enrichment was skipped because PINECONE_API_KEY is not configured.";
+      }
+      await markReady(itemId, enrichmentWarning);
+      await redis.del(`graph:${userId}`).catch(() => null);
+      return { success: true, tags: suggestedTags, enrichmentSkipped: true };
     }
 
     // 5. Keep item in processing and hand off to embeddings.
     await prisma.item.update({
       where: { id: itemId },
-      data: { status: "processing" },
+      data: { status: "processing", processingStage: "embed", processingError: enrichmentWarning },
     });
 
-    await embedQueue.add("process-embed", { itemId, userId }, { jobId: `embed-${itemId}` });
-    await redis.del(`graph:${userId}`);
+    failureStage = "queue";
+    try {
+      await embedQueue.add(
+        "process-embed",
+        { itemId, userId },
+        { jobId: buildPipelineJobId("embed", itemId, item.processingAttempt) },
+      );
+    } catch (error: any) {
+      enrichmentWarning = `Vector enrichment could not be queued: ${error.message}`;
+      await markReady(itemId, enrichmentWarning);
+    }
+    await redis.del(`graph:${userId}`).catch(() => null);
 
     return { success: true, tags: suggestedTags };
   } catch (error: any) {
     console.error(`[AI] Worker failed for ${itemId}:`, error.message);
-    if (isFinalAttempt(job)) {
-      await prisma.item.update({
-        where: { id: itemId },
-        data: { status: "failed" },
-      }).catch(() => null);
-    }
+    await prisma.item.update({
+      where: { id: itemId },
+      data: buildProcessingFailureUpdate(
+        job,
+        failureStage,
+        error?.message || "AI processing failed",
+      ),
+    }).catch(() => null);
     throw error; // Retry
   }
 }

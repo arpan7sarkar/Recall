@@ -5,8 +5,9 @@ import redis from "@/lib/redis";
 import { authenticateClerk } from "@/middleware/auth";
 import { deleteEmbedding, fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
 import { upload } from "@/middleware/upload";
-import { scrapeQueue, aiQueue } from "@/queues";
-import { buildKey, uploadFile } from "@/lib/storage";
+import { QueueUnavailableError, scrapeQueue, aiQueue } from "@/queues";
+import { buildPipelineJobId } from "@/queues/pipeline";
+import { buildKey, deleteFile, uploadFile } from "@/lib/storage";
 
 const router = Router();
 const ITEM_TYPES: ItemType[] = ["article", "tweet", "youtube", "pdf", "image", "podcast", "instagram", "linkedin", "link"];
@@ -99,24 +100,28 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
     return res.status(400).json({ error: "Title is required for uploads" });
   }
 
+  let item: any;
+  let uploadedFile: { key: string; url: string } | null = null;
   try {
     const normalizedTags = normalizeTagsInput(tags);
     const inferredType: ItemType =
       isItemType(itemType) ? itemType : file.mimetype.startsWith("image") ? "image" : "pdf";
     const key = buildKey(userId, "files", file.originalname);
     const uploaded = await uploadFile(file.buffer, key, file.mimetype);
+    uploadedFile = uploaded;
 
-    const item = await prisma.item.create({
+    item = await prisma.item.create({
       data: {
         userId,
         title,
         itemType: inferredType,
         saveSource: "web_upload",
         userNote: note,
-        fileUrl: uploaded.url,
-        thumbnailUrl: inferredType === "image" ? uploaded.url : null,
+        fileUrl: uploadedFile.url,
+        thumbnailUrl: inferredType === "image" ? uploadedFile.url : null,
         sourceDomain: "upload",
-        status: "processing", // No scraping needed, just AI processing
+        status: "processing",
+        processingStage: "ai",
         // If collection provided
         ...(collectionId && {
           collections: {
@@ -143,14 +148,43 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
       },
     });
 
-    // 3.1.5 Push to aiQueue directly (syncing not needed for files)
-    await aiQueue.add("process-upload", { itemId: item.id, userId });
-
-    res.status(201).json(mapItemWithTags(item));
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to upload item metadata" });
+    let cleanupError: string | null = null;
+    if (uploadedFile) {
+      try {
+        await deleteFile(uploadedFile.key);
+      } catch (cleanupFailure: any) {
+        cleanupError = cleanupFailure?.message || "Uploaded file cleanup failed";
+        console.error(`[Items] Failed to clean up orphaned upload ${uploadedFile.key}:`, cleanupFailure);
+      }
+    }
+    return res.status(500).json({
+      error: "Failed to upload item metadata",
+      recovery: cleanupError
+        ? { storageKey: uploadedFile?.key, action: "Delete this orphaned object from storage." }
+        : undefined,
+    });
   }
+
+  try {
+    await aiQueue.add(
+      "process-upload",
+      { itemId: item.id, userId },
+      { jobId: buildPipelineJobId("ai", item.id, item.processingAttempt ?? 0) },
+    );
+  } catch (error) {
+    const message = getQueueFailureMessage(error);
+    await markQueueFailure(item.id, message);
+    return res.status(503).json({
+      error: "Item saved, but processing could not be queued.",
+      reason: message,
+      item: mapItemWithTags({ ...item, status: "failed", processingStage: "queue", processingError: message }),
+      retryable: true,
+    });
+  }
+
+  return res.status(201).json(mapItemWithTags(item));
 });
 
 /**
@@ -167,6 +201,25 @@ const mapItemWithTags = (item: any) => ({
   })) || [],
 });
 
+function getQueueFailureMessage(error: unknown): string {
+  if (error instanceof QueueUnavailableError) return error.message;
+  if (error instanceof Error && error.message) return error.message;
+  return "The processing queue could not accept this item.";
+}
+
+async function markQueueFailure(itemId: string, message: string): Promise<void> {
+  await prisma.item.update({
+    where: { id: itemId },
+    data: {
+      status: "failed",
+      processingStage: "queue",
+      processingError: message,
+    },
+  }).catch((updateError: unknown) => {
+    console.error(`[Items] Failed to persist queue failure for ${itemId}:`, updateError);
+  });
+}
+
 async function requeueStaleItems(userId: string) {
   const staleThreshold = new Date(Date.now() - 15 * 60 * 1000);
   const staleItems = await prisma.item.findMany({
@@ -182,36 +235,66 @@ async function requeueStaleItems(userId: string) {
       description: true,
       contentText: true,
       status: true,
+      processingAttempt: true,
     },
     take: 10,
   });
+
+  let requeued = 0;
+  let failed = 0;
 
   for (const stale of staleItems) {
     const hasUsefulScrapeData = Boolean(
       stale.contentText || stale.description || (stale.title && stale.title !== "Untitled")
     );
+    const stage = stale.url && !hasUsefulScrapeData ? "scrape" : "ai";
+    const nextAttempt = stale.processingAttempt + 1;
 
     try {
-      if (stale.url && !hasUsefulScrapeData) {
-        scrapeQueue.add(
+      const claimed = await prisma.item.updateMany({
+        where: {
+          id: stale.id,
+          userId,
+          status: { in: ["pending", "processing"] },
+          processingAttempt: stale.processingAttempt,
+        },
+        data: {
+          processingAttempt: { increment: 1 },
+          processingStage: stage,
+          processingError: null,
+          status: stage === "scrape" ? "pending" : "processing",
+        },
+      });
+
+      if (claimed.count !== 1) continue;
+
+      if (stage === "scrape" && stale.url) {
+        await scrapeQueue.add(
           "retry-stale-scrape",
           { itemId: stale.id, url: stale.url, userId },
-          { jobId: `scrape-${stale.id}` }
-        ).catch(() => {});
+          { jobId: buildPipelineJobId("scrape", stale.id, nextAttempt) },
+        );
       } else {
-        aiQueue.add(
+        await aiQueue.add(
           "retry-stale-ai",
           { itemId: stale.id, userId },
-          { jobId: `ai-${stale.id}` }
-        ).catch(() => {});
+          { jobId: buildPipelineJobId("ai", stale.id, nextAttempt) },
+        );
       }
+      requeued += 1;
     } catch (error: any) {
-      // Ignore duplicate-job errors; another worker/job may already be handling it.
-      if (!String(error?.message || "").toLowerCase().includes("job id")) {
-        console.warn(`[Items] Failed to requeue stale item ${stale.id}:`, error.message);
-      }
+      failed += 1;
+      const message = getQueueFailureMessage(error);
+      await markQueueFailure(stale.id, message);
+      console.warn(`[Items] Failed to requeue stale item ${stale.id}:`, message);
     }
   }
+
+  if (staleItems.length > 0) {
+    console.info(`[Items] Stale recovery: inspected=${staleItems.length} requeued=${requeued} failed=${failed}`);
+  }
+
+  return { inspected: staleItems.length, requeued, failed };
 }
 
 /**
@@ -283,8 +366,10 @@ router.post("/", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "URL is required" });
   }
 
+  let item: any;
+  let normalizedUrl: string;
   try {
-    const normalizedUrl = normalizeUrl(url);
+    normalizedUrl = normalizeUrl(url);
     const normalizedTags = normalizeTagsInput(tags);
     const normalizedItemType = isItemType(itemType) ? itemType : detectItemTypeFromUrl(normalizedUrl);
     const parsedYoutubeTimestamp = youtubeTimestamp ? parseInt(String(youtubeTimestamp), 10) : null;
@@ -292,7 +377,7 @@ router.post("/", async (req: Request, res: Response) => {
       saveSource === "extension" || saveSource === "web_url" ? saveSource : "web_url";
 
     // Initial creation - metadata will be filled by worker later
-    const item = await prisma.item.create({
+    item = await prisma.item.create({
       data: {
         userId,
         url: normalizedUrl,
@@ -301,6 +386,7 @@ router.post("/", async (req: Request, res: Response) => {
         userNote: note,
         youtubeTimestamp: Number.isFinite(parsedYoutubeTimestamp) ? parsedYoutubeTimestamp : null,
         status: "pending",
+        processingStage: "scrape",
         isArchived: Boolean(isArchived),
         // If collection provided
         ...(collectionId && {
@@ -328,17 +414,30 @@ router.post("/", async (req: Request, res: Response) => {
       },
     });
 
-    // 3.1.4 Push to scrapeQueue - fire and forget to avoid hanging if Redis is down
-    scrapeQueue.add("scrape-url", { itemId: item.id, url: normalizedUrl, userId })
-      .catch((err: any) => {
-        console.warn(`[Items] Failed to enqueue scrape for ${item.id}:`, err.message);
-      });
-
-    res.status(201).json(mapItemWithTags(item));
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to create item" });
+    return;
   }
+
+  try {
+    await scrapeQueue.add(
+      "scrape-url",
+      { itemId: item.id, url: normalizedUrl, userId },
+      { jobId: buildPipelineJobId("scrape", item.id, item.processingAttempt ?? 0) },
+    );
+  } catch (error) {
+    const message = getQueueFailureMessage(error);
+    await markQueueFailure(item.id, message);
+    return res.status(503).json({
+      error: "Item saved, but processing could not be queued.",
+      reason: message,
+      item: mapItemWithTags({ ...item, status: "failed", processingStage: "queue", processingError: message }),
+      retryable: true,
+    });
+  }
+
+  return res.status(201).json(mapItemWithTags(item));
 });
 
 /**
@@ -363,7 +462,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 
     res.json(mapItemWithTags(item));
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to fetch item" });
   }
 });
@@ -398,7 +497,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
     });
 
     res.json(mapItemWithTags(updated));
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to update item" });
   }
 });
@@ -426,7 +525,7 @@ router.post("/:id/archive", async (req: Request, res: Response) => {
     });
 
     res.json(mapItemWithTags(updated));
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to archive item" });
   }
 });
@@ -454,7 +553,7 @@ router.post("/:id/unarchive", async (req: Request, res: Response) => {
     });
 
     res.json(mapItemWithTags(updated));
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to unarchive item" });
   }
 });
@@ -486,7 +585,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     await redis.del(`graph:${userId}`).catch(() => {});
 
     res.status(204).send();
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to delete item" });
   }
 });
@@ -593,18 +692,48 @@ router.post("/:id/retry", async (req: Request, res: Response) => {
 
     const hasUsefulScrapeData = Boolean(item.contentText || item.description || (item.title && item.title !== "Untitled"));
 
-    if (item.url && !hasUsefulScrapeData) {
-      await prisma.item.update({
-        where: { id },
-        data: { status: "pending" },
+    const stage = item.url && !hasUsefulScrapeData ? "scrape" : "ai";
+    const nextAttempt = item.processingAttempt + 1;
+    const claimed = await prisma.item.updateMany({
+      where: {
+        id,
+        userId,
+        processingAttempt: item.processingAttempt,
+      },
+      data: {
+        processingAttempt: { increment: 1 },
+        status: stage === "scrape" ? "pending" : "processing",
+        processingStage: stage,
+        processingError: null,
+      },
+    });
+
+    if (claimed.count !== 1) {
+      return res.status(409).json({ error: "Item is already being retried. Refresh and try again." });
+    }
+
+    try {
+      if (stage === "scrape" && item.url) {
+        await scrapeQueue.add(
+          "retry-scrape",
+          { itemId: id, url: item.url, userId },
+          { jobId: buildPipelineJobId("scrape", id, nextAttempt) },
+        );
+      } else {
+        await aiQueue.add(
+          "retry-ai",
+          { itemId: id, userId },
+          { jobId: buildPipelineJobId("ai", id, nextAttempt) },
+        );
+      }
+    } catch (error) {
+      const message = getQueueFailureMessage(error);
+      await markQueueFailure(id, message);
+      return res.status(503).json({
+        error: "Retry could not be queued.",
+        reason: message,
+        retryable: true,
       });
-      await scrapeQueue.add("retry-scrape", { itemId: id, url: item.url, userId }, { jobId: `scrape-${id}` });
-    } else {
-      await prisma.item.update({
-        where: { id },
-        data: { status: "processing" },
-      });
-      await aiQueue.add("retry-ai", { itemId: id, userId }, { jobId: `ai-${id}` });
     }
 
     const refreshed = await prisma.item.findUnique({

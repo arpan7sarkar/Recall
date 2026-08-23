@@ -82,20 +82,23 @@ Related ledger IDs: `RUN-002`, `RUN-003`, `RUN-005` through `RUN-008`, `RUN-011`
 
 Completion gate: a saved URL progresses through scrape, AI, embed, and terminal state under healthy services, and dependency failures are visible and retryable.
 
-- [ ] Enforce or validate the BullMQ-compatible Redis eviction policy.
-- [ ] Make URL enqueue failure visible instead of returning an unexplained successful pending item.
-- [ ] Decide and implement durable handoff semantics between database creation and queue creation.
-- [ ] Prevent upload responses from reporting failure after partial R2 and database persistence without recovery information.
-- [ ] Replace stable retry job IDs that collide with retained failed jobs.
-- [ ] Configure failed-job retention and cleanup deliberately.
+- [x] Enforce or validate the BullMQ-compatible Redis eviction policy.
+- [x] Make URL enqueue failure visible instead of returning an unexplained successful pending item.
+- [x] Decide and implement durable handoff semantics between database creation and queue creation.
+- [x] Prevent upload responses from reporting failure after partial R2 and database persistence without recovery information.
+- [x] Replace stable retry job IDs that collide with retained failed jobs.
+- [x] Configure failed-job retention and cleanup deliberately.
 - [ ] Make stale-item requeueing idempotent and observable.
-- [ ] Ensure scraper status becomes failed only under the defined final-attempt rule.
-- [ ] Persist processing stage and user-readable failure reason.
-- [ ] Add retry behavior that schedules fresh work after a failed job.
-- [ ] Ensure optional AI and vector failures do not erase a valid durable save.
-- [ ] Define the meaning of `pending`, `processing`, `ready`, and `failed`.
-- [ ] Add terminal-state tests for scrape failure, AI failure, embed failure, and worker outage.
+- [x] Ensure scraper status becomes failed only under the defined final-attempt rule.
+- [x] Persist processing stage and user-readable failure reason.
+- [x] Add retry behavior that schedules fresh work after a failed job.
+- [x] Ensure optional AI and vector failures do not erase a valid durable save.
+- [x] Define the meaning of `pending`, `processing`, `ready`, and `failed`.
+- [x] Add terminal-state tests for scrape failure, AI failure, embed failure, and worker outage.
 - [ ] Verify all eight currently waiting scraper jobs through a controlled recovery procedure.
+
+Verification evidence: `apps/api/src/queues/pipeline.test.ts` covers Redis policy validation, explicit no-Redis enqueue failure, bounded retention, fresh retry IDs, final-attempt status transitions, and ready-state optional enrichment warnings.
+The controlled recovery of the eight live Redis jobs remains pending because this isolated environment has no configured Redis service.
 
 ## Session 03: Authentication and User Synchronization
 

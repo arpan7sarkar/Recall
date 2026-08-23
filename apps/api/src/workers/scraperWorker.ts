@@ -10,6 +10,7 @@ import metascraperReadability from "metascraper-readability";
 import prisma from "@/lib/prisma";
 import { uploadFromUrl, buildKey } from "@/lib/storage";
 import { aiQueue } from "@/queues";
+import { buildPipelineJobId, buildProcessingFailureUpdate } from "@/queues/pipeline";
 
 interface TweetFallbackData {
   text: string | null;
@@ -192,6 +193,7 @@ async function fetchLinkedInFallback(url: string): Promise<LinkedInFallbackData>
 
 export async function processScrape(job: any) {
   const { itemId, url, userId } = job.data;
+  let failureStage = "scrape";
 
   try {
     // 1. Fetch item from DB
@@ -201,7 +203,11 @@ export async function processScrape(job: any) {
     // 2. Set status to processing immediately
     await prisma.item.update({
       where: { id: itemId },
-      data: { status: "processing" },
+      data: {
+        status: "processing",
+        processingStage: "scrape",
+        processingError: null,
+      },
     });
 
     // 3. Detect type
@@ -323,22 +329,33 @@ export async function processScrape(job: any) {
         author,
         publishedAt,
         sourceDomain: new URL(url).hostname,
-        status: "processing", // Next: AI step
+        status: "processing",
+        processingStage: "ai",
+        processingError: null,
       },
     });
 
     // 8. Push to AI Queue
-    await aiQueue.add("process-ai", { itemId, userId }, { jobId: `ai-${itemId}` });
+    failureStage = "queue";
+    await aiQueue.add(
+      "process-ai",
+      { itemId, userId },
+      { jobId: buildPipelineJobId("ai", itemId, item.processingAttempt) },
+    );
 
     return { success: true };
   } catch (error: any) {
     console.error(`[Scrape] Failed to scrape ${url}:`, error.message);
 
-    // Update status to failed
+    const failureUpdate = buildProcessingFailureUpdate(
+      job,
+      failureStage,
+      error?.message || "Scraping failed",
+    );
     await prisma.item.update({
       where: { id: itemId },
-      data: { status: "failed" },
-    }).catch(console.error);
+      data: failureUpdate,
+    }).catch((updateError) => console.error(`[Scrape] Failed to persist status for ${itemId}:`, updateError));
 
     throw error; // Let BullMQ handle retry
   }
