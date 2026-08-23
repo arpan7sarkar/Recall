@@ -35,13 +35,14 @@ Related ledger IDs: `TEST-001` through `TEST-006`.
 
 Completion gate: deterministic unit and integration commands exist, the primary save E2E reproduces the current failure, and CI runs the same quality gates.
 
-- [ ] Install and configure API unit and integration testing.
-- [ ] Install and configure web component testing.
+- [x] Install and configure API unit and integration testing.
+- [x] Install and configure web component testing.
 - [ ] Add Playwright E2E coverage for the primary save flow.
+- [x] Add a public Playwright browser smoke test.
 - [ ] Add isolated PostgreSQL and Redis test services.
 - [ ] Add deterministic adapters for Clerk, R2, OpenAI, Pinecone, and remote fetches.
-- [ ] Repair the API test script so it runs an installed test runner.
-- [ ] Repair the API lint script so it runs an installed linter.
+- [x] Repair the API test script so it runs an installed test runner.
+- [x] Repair the API lint script so it runs an installed linter.
 - [ ] Add root commands for API, worker, web, build, lint, unit, integration, and E2E checks.
 - [ ] Add CI workflows for build, lint, tests, migrations, E2E, and artifact upload.
 - [ ] Add a failing save test that proves the user-visible error state is currently missing.
