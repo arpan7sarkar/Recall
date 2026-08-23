@@ -5,6 +5,7 @@ import { useAddContentStore } from "@/store/addContentStore";
 import { SOURCE_TYPE_OPTIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { normalizeSaveUrl, parseYoutubeTimestamp, SaveFormValidationError } from "@/lib/saveContract";
+import { UploadFormValidationError, validateBrowserUpload } from "@/lib/uploadContract";
 
 export function ContentDetailsForm() {
   const {
@@ -52,14 +53,31 @@ export function ContentDetailsForm() {
       e.preventDefault();
       setDragActive(false);
       const dropped = e.dataTransfer.files[0];
-      if (dropped) setFile(dropped);
+      if (dropped) {
+        try {
+          validateBrowserUpload(dropped, isPdf ? "pdf" : "image");
+          setInputError(null);
+          setFile(dropped);
+        } catch (error) {
+          setInputError(error instanceof UploadFormValidationError ? error.message : "This file cannot be uploaded.");
+        }
+      }
     },
-    [setFile]
+    [isPdf, setFile]
   );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
-    if (selected) setFile(selected);
+    if (selected) {
+      try {
+        validateBrowserUpload(selected, isPdf ? "pdf" : "image");
+        setInputError(null);
+        setFile(selected);
+      } catch (error) {
+        setInputError(error instanceof UploadFormValidationError ? error.message : "This file cannot be uploaded.");
+        e.target.value = "";
+      }
+    }
   };
 
   const usesUrlInput = mode === "url" || (mode === "both" && activeTab === "url");

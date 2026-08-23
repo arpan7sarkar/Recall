@@ -5,6 +5,7 @@ import redis from "@/lib/redis";
 import { authenticateClerk } from "@/middleware/auth";
 import { deleteEmbedding, fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
 import { upload } from "@/middleware/upload";
+import { UploadValidationError, validateUploadBuffer } from "@/middleware/uploadContract";
 import { QueueUnavailableError, scrapeQueue, aiQueue } from "@/queues";
 import { buildPipelineJobId } from "@/queues/pipeline";
 import { buildKey, deleteFile, uploadFile } from "@/lib/storage";
@@ -72,6 +73,15 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
 
   if (!file) {
     return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  try {
+    validateUploadBuffer(file.buffer, file.mimetype);
+  } catch (error) {
+    if (error instanceof UploadValidationError) {
+      return res.status(error.status).json({ error: error.message, code: "INVALID_UPLOAD" });
+    }
+    throw error;
   }
 
   const metadata = normalizeSaveMetadata({ title, author, podcastName, note });

@@ -131,6 +131,15 @@ app.get("/", (_req: Request, res: Response) => {
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error("[GlobalError]", err.name, err.message);
   console.error(err.stack);
+  const code = (err as Error & { code?: string }).code;
+  if (code === "LIMIT_FILE_SIZE") {
+    res.status(413).json({ error: "File exceeds the configured upload limit.", code });
+    return;
+  }
+  if (err.name === "MulterError" || err.message.startsWith("Invalid file type")) {
+    res.status(415).json({ error: err.message, code: "INVALID_UPLOAD" });
+    return;
+  }
   res.status(500).json({ error: "Something went wrong!" });
 });
 
