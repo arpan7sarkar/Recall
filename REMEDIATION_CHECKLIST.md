@@ -217,7 +217,7 @@ Completion gate: each supported source has typed results, deterministic fixtures
 
 ## Session 08: Dashboard Synchronization and Cache Correctness
 
-Branch: `recall-sync`
+Branch: `recall-sync-fix`
 
 Worktree scope: TanStack Query invalidation, Redis graph cache, polling, refresh, and consistency rules.
 
@@ -225,17 +225,19 @@ Related ledger IDs: `UI-001` through `UI-006`.
 
 Completion gate: every mutation has a documented consistency result, and the dashboard never presents known stale state as a successful resync.
 
-- [ ] Add a failing test for graph resync returning a stale Redis response.
-- [ ] Define one invalidation contract for browser and server caches.
-- [ ] Invalidate graph cache after every graph-affecting mutation.
-- [ ] Invalidate search cache or remove server-side search caching where appropriate.
-- [ ] Invalidate collections and tags after save mutations that affect them.
-- [ ] Replace indefinite five-second polling with bounded, status-aware refresh.
+- [x] Add a failing test for graph resync returning a stale Redis response.
+- [x] Define one invalidation contract for browser and server caches.
+- [x] Invalidate graph cache after every graph-affecting mutation.
+- [x] Verify that search has no server-side cache requiring invalidation.
+- [x] Invalidate collections and tags after save mutations that affect them.
+- [x] Replace indefinite five-second polling with bounded, status-aware refresh.
 - [ ] Add server-driven or event-driven completion updates if justified by the baseline.
 - [ ] Add pagination or infinite loading for items and archive.
-- [ ] Reconcile total counts with loaded-page processing counts.
+- [x] Reconcile total counts with loaded-page processing counts using a server-provided processing count.
 - [ ] Add explicit refresh status and last-updated information.
 - [ ] Add integration tests for save, update, archive, unarchive, delete, tag, collection, graph, and search consistency.
+
+Session 08 evidence: API graph route tests cover stale-cache bypass and ordinary cache hits, web tests cover the resync request contract, item listing now bounds page size and applies tag/source filters to both data and totals, and dashboard processing counts are server-consistent.
 
 ## Session 09: Dashboard Item Actions and Recovery UX
 
@@ -419,8 +421,8 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 05 | `recall-save-flow` | `/tmp/recall-worktrees/save-flow` (salvaged into integration branch) | 2026-08-24 | 2026-08-24 | API 30/30; web 13/13; API and web type checks passed; API and web lint passed | Commit recorded in integration history after focused URL, metadata, timestamp, error, and duplicate-submit tests | E2E save, retry action, optimistic item display, attachment feedback, and refresh/reauth checks remain. |
 | 06 | `recall-uploads-fix` | `/tmp/recall-worktrees/uploads-fix` | 2026-08-24 | 2026-08-24 | API 32/32; web 15/15; API and web type checks passed; API lint passed | Commit `e40ed6a`, integrated as `c1be157`; browser/API size and signature tests passed | Drag-drop-specific test, mode-path E2E, durable key/fresh URL lifecycle, and full storage failure matrix remain. |
 | 07 | `recall-parser` |  |  |  |  |  |  |
-| 08 | `recall-sync` |  |  |  |  |  |  |
-| 09 | `recall-item-actions-fix` | `/tmp/recall-worktrees/item-actions-fix` | 2026-08-24 | 2026-08-24 | Web 28/28; web `tsc --noEmit`; changed-file ESLint clean | Item-card and detail-action regression tests cover favorite, retry, failure reason/stage, queued success, duplicate retry, and queue failure states | Browser E2E action coverage remains unchecked. |
+| 08 | `recall-sync-fix` | `/tmp/recall-worktrees/sync-fix` | 2026-08-24 | 2026-08-24 | API 35/35; web 21/21; API/web type checks passed; changed-file lint passed | Graph cache route tests, web resync contract, bounded pagination and processing count consistency | Full web lint retains pre-existing errors outside this session; live Redis and full save consistency E2E remain. |
+| 09 | `recall-item-actions-fix` | `/tmp/recall-worktrees/item-actions-fix` | 2026-08-24 | 2026-08-24 | Web 28/28; web `tsc --noEmit`; changed-file ESLint clean | Commit `a17ad75`, integrated as `2eafd2b`; item-card and detail-action regression tests cover favorite, retry, failure reason/stage, queued success, duplicate retry, and queue failure states | Browser E2E action coverage remains unchecked. |
 | 10 | `recall-dashboard-features` |  |  |  |  |  |  |
 | 11 | `recall-dashboard-ui` |  |  |  |  |  |  |
 | 12 | `recall-graph-ui` |  |  |  |  |  |  |

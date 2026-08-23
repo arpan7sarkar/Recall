@@ -1,8 +1,10 @@
 "use client";
 
+import { useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { api } from "@/lib/api";
+import { invalidateGraphQuery } from "@/lib/queryKeys";
 import type { Item, PaginatedResponse } from "@/types";
 
 interface UseItemsOptions {
@@ -17,6 +19,7 @@ interface UseItemsOptions {
 
 export function useItems(opts: UseItemsOptions = {}) {
   const { getToken, isLoaded, isSignedIn } = useAuth();
+  const pollingStartedAt = useRef<number | null>(null);
   const { page = 1, limit = 20, type, tag, source, archived, favorite } = opts;
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (type && type !== "all") params.set("type", type);
@@ -35,10 +38,17 @@ export function useItems(opts: UseItemsOptions = {}) {
     enabled: isLoaded && Boolean(isSignedIn),
     refetchInterval: (query) => {
       const data = query.state.data as PaginatedResponse<Item> | undefined;
-      const hasPendingProcessing = data?.data?.some(
-        (item) => item.status === "pending" || item.status === "processing"
-      );
-      return hasPendingProcessing ? 5000 : false;
+      const hasPendingProcessing = data?.processingTotal !== undefined
+        ? data.processingTotal > 0
+        : data?.data?.some((item) => item.status === "pending" || item.status === "processing");
+      if (!hasPendingProcessing) {
+        pollingStartedAt.current = null;
+        return false;
+      }
+
+      pollingStartedAt.current ??= Date.now();
+      if (Date.now() - pollingStartedAt.current >= 60_000) return false;
+      return 5000;
     },
   });
 }
@@ -85,7 +95,10 @@ export function useCreateItem() {
       if (!token) throw new Error("Missing auth token");
       return api.post<Item>("/items", data, { token });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["items"] });
+      invalidateGraphQuery(qc);
+    },
   });
 }
 
@@ -98,7 +111,10 @@ export function useUploadItem() {
       if (!token) throw new Error("Missing auth token");
       return api.upload<Item>("/items/upload", formData, { token });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["items"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["items"] });
+      invalidateGraphQuery(qc);
+    },
   });
 }
 
@@ -114,6 +130,7 @@ export function useUpdateItem() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["items"] });
       qc.invalidateQueries({ queryKey: ["item", vars.id] });
+      invalidateGraphQuery(qc);
     },
   });
 }
@@ -165,9 +182,9 @@ export function useDeleteItem() {
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ["items"] });
       qc.invalidateQueries({ queryKey: ["item", id] });
+      invalidateGraphQuery(qc);
       qc.invalidateQueries({ queryKey: ["collections"] });
       qc.invalidateQueries({ queryKey: ["collection"] });
-      qc.invalidateQueries({ queryKey: ["graph"] });
       qc.invalidateQueries({ queryKey: ["search"] });
     },
   });
@@ -185,6 +202,7 @@ export function useArchiveItem() {
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ["items"] });
       qc.invalidateQueries({ queryKey: ["item", id] });
+      invalidateGraphQuery(qc);
     },
   });
 }
@@ -201,6 +219,7 @@ export function useUnarchiveItem() {
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ["items"] });
       qc.invalidateQueries({ queryKey: ["item", id] });
+      invalidateGraphQuery(qc);
     },
   });
 }

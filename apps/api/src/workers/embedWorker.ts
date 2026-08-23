@@ -1,8 +1,8 @@
 import OpenAI from "openai";
 import prisma from "@/lib/prisma";
 import { upsertEmbedding } from "@/lib/vectorDB";
-import redis from "@/lib/redis";
 import { buildProcessingFailureUpdate } from "@/queues/pipeline";
+import { invalidateGraphCache } from "../lib/graphCache";
 
 /**
  * Embed Worker handles vector generation and indexing in Pinecone
@@ -98,7 +98,7 @@ export async function processEmbed(job: any) {
       where: { id: itemId },
       data: { status: "ready", processingStage: "complete" },
     });
-    await redis.del(`graph:${item.userId}`).catch(() => null);
+    await invalidateGraphCache(item.userId);
 
     console.log(`[Embed] Successfully indexed item ${itemId} in Pinecone.`);
     return { success: true };

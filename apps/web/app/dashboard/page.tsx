@@ -23,7 +23,7 @@ export default function DashboardPage() {
 
   const items = data?.data || [];
   const totalItems = data?.total || 0;
-  const processingCount = items.filter((i: Item) => i.status === "processing").length;
+  const processingCount = data?.processingTotal ?? items.filter((i: Item) => i.status === "processing").length;
 
   return (
     <div>

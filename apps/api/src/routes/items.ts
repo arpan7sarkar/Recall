@@ -1,7 +1,6 @@
 import { Router, Request, Response } from "express";
-import type { ItemType, SaveSource } from "@prisma/client";
+import type { ItemType, ProcessingStatus, SaveSource } from "@prisma/client";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
 import { authenticateClerk } from "@/middleware/auth";
 import { deleteEmbedding, fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
 import { upload } from "@/middleware/upload";
@@ -15,12 +14,29 @@ import {
   parseYoutubeTimestamp,
   SaveValidationError,
 } from "./saveContract";
+import { invalidateGraphCache } from "../lib/graphCache";
 
 const router = Router();
 const ITEM_TYPES: ItemType[] = ["article", "tweet", "youtube", "pdf", "image", "podcast", "instagram", "linkedin", "link"];
+const PROCESSING_STATUSES: ProcessingStatus[] = ["pending", "processing", "ready", "failed"];
+const SAVE_SOURCES: SaveSource[] = ["extension", "web_url", "web_upload"];
 
 function isItemType(value: unknown): value is ItemType {
   return typeof value === "string" && ITEM_TYPES.includes(value as ItemType);
+}
+
+function isProcessingStatus(value: unknown): value is ProcessingStatus {
+  return typeof value === "string" && PROCESSING_STATUSES.includes(value as ProcessingStatus);
+}
+
+function isSaveSource(value: unknown): value is SaveSource {
+  return typeof value === "string" && SAVE_SOURCES.includes(value as SaveSource);
+}
+
+function parseBoundedPositiveInt(value: unknown, fallback: number, maximum: number): number {
+  const parsed = typeof value === "string" ? Number.parseInt(value, 10) : Number.NaN;
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.min(parsed, maximum);
 }
 
 function normalizeTagsInput(value: unknown): string[] {
@@ -138,6 +154,7 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
   } catch (error) {
     console.error(error);
@@ -299,23 +316,38 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     await requeueStaleItems(userId);
 
-    const { type, status, favorite, archived, page, limit, sort } = req.query;
+    const { type, status, favorite, archived, page, limit, sort, tag, source } = req.query;
     const normalizedType = isItemType(type) ? type : undefined;
+    const normalizedStatus = isProcessingStatus(status) ? status : undefined;
+    const normalizedSource = isSaveSource(source) ? source : undefined;
+    const normalizedTag = typeof tag === "string" && tag.trim().length > 0 ? tag.trim() : undefined;
     
-    const pageNum = parseInt(page as string) || 1;
-    const limitNum = parseInt(limit as string) || 20;
+    const pageNum = parseBoundedPositiveInt(page, 1, 1_000_000);
+    const limitNum = parseBoundedPositiveInt(limit, 20, 100);
     const skip = (pageNum - 1) * limitNum;
 
     const where = {
       userId,
       ...(normalizedType && { itemType: normalizedType }),
-      ...(status && { status: status as any }),
+      ...(normalizedStatus && { status: normalizedStatus }),
+      ...(normalizedSource && { saveSource: normalizedSource }),
+      ...(normalizedTag && {
+        tags: {
+          some: {
+            tag: { userId, name: normalizedTag },
+          },
+        },
+      }),
       ...(favorite === "true" && { isFavourite: true }),
       ...(archived === "true" && { isArchived: true }),
       ...(archived === "false" && { isArchived: false }),
     };
+    const processingWhere = {
+      ...where,
+      status: { in: ["pending", "processing"] as ProcessingStatus[] },
+    };
 
-    const [items, total] = await Promise.all([
+    const [items, total, processingTotal] = await Promise.all([
       prisma.item.findMany({
         where,
         orderBy: { savedAt: sort === "asc" ? "asc" : "desc" },
@@ -326,6 +358,7 @@ router.get("/", async (req: Request, res: Response) => {
         },
       }),
       prisma.item.count({ where }),
+      prisma.item.count({ where: processingWhere }),
     ]);
 
     res.json({
@@ -334,6 +367,7 @@ router.get("/", async (req: Request, res: Response) => {
       page: pageNum,
       limit: limitNum,
       totalPages: Math.ceil(total / limitNum),
+      processingTotal,
     });
   } catch (error) {
     console.error(error);
@@ -416,6 +450,7 @@ router.post("/", async (req: Request, res: Response) => {
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
   } catch (error) {
     if (error instanceof SaveValidationError) {
@@ -504,6 +539,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
     res.json(mapItemWithTags(updated));
   } catch {
@@ -532,6 +568,7 @@ router.post("/:id/archive", async (req: Request, res: Response) => {
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
     res.json(mapItemWithTags(updated));
   } catch {
@@ -560,6 +597,7 @@ router.post("/:id/unarchive", async (req: Request, res: Response) => {
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
     res.json(mapItemWithTags(updated));
   } catch {
@@ -591,7 +629,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     }
 
     // Invalidate cached graph so deleted items disappear immediately from graph view.
-    await redis.del(`graph:${userId}`).catch(() => {});
+    await invalidateGraphCache(userId);
 
     res.status(204).send();
   } catch {

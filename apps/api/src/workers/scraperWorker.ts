@@ -11,6 +11,7 @@ import prisma from "@/lib/prisma";
 import { uploadFromUrl, buildKey } from "@/lib/storage";
 import { aiQueue } from "@/queues";
 import { buildPipelineJobId, buildProcessingFailureUpdate } from "@/queues/pipeline";
+import { invalidateGraphCache } from "../lib/graphCache";
 
 interface TweetFallbackData {
   text: string | null;
@@ -335,6 +336,7 @@ export async function processScrape(job: any) {
         processingError: null,
       },
     });
+    await invalidateGraphCache(userId);
 
     // 8. Push to AI Queue
     failureStage = "queue";

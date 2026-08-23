@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api";
 import { buildUrlSavePayload } from "@/lib/saveContract";
+import { invalidateGraphQuery } from "@/lib/queryKeys";
 import { SourceTypePicker } from "./SourceTypePicker";
 import { ContentDetailsForm } from "./ContentDetailsForm";
 import { MetadataForm } from "./MetadataForm";
@@ -79,7 +80,7 @@ export function AddContentStepper() {
       await performSave();
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["items"] }),
-        queryClient.invalidateQueries({ queryKey: ["graph"] }),
+        invalidateGraphQuery(queryClient),
         queryClient.invalidateQueries({ queryKey: ["collections"] }),
         queryClient.invalidateQueries({ queryKey: ["tags"] }),
       ]);
@@ -102,7 +103,7 @@ export function AddContentStepper() {
       await performSave();
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["items"] }),
-        queryClient.invalidateQueries({ queryKey: ["graph"] }),
+        invalidateGraphQuery(queryClient),
         queryClient.invalidateQueries({ queryKey: ["collections"] }),
         queryClient.invalidateQueries({ queryKey: ["tags"] }),
       ]);

@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { embedQueue } from "@/queues";
 import { buildPipelineJobId, buildProcessingFailureUpdate } from "@/queues/pipeline";
 import axios from "axios";
-import redis from "@/lib/redis";
+import { invalidateGraphCache } from "../lib/graphCache";
 
 async function markReady(itemId: string, warning: string | null = null): Promise<void> {
   await prisma.item.update({
@@ -188,7 +188,7 @@ export async function processAi(job: any) {
         enrichmentWarning ||= "Vector enrichment was skipped because PINECONE_API_KEY is not configured.";
       }
       await markReady(itemId, enrichmentWarning);
-      await redis.del(`graph:${userId}`).catch(() => null);
+      await invalidateGraphCache(userId);
       return { success: true, tags: suggestedTags, enrichmentSkipped: true };
     }
 
@@ -209,7 +209,7 @@ export async function processAi(job: any) {
       enrichmentWarning = `Vector enrichment could not be queued: ${error.message}`;
       await markReady(itemId, enrichmentWarning);
     }
-    await redis.del(`graph:${userId}`).catch(() => null);
+    await invalidateGraphCache(userId);
 
     return { success: true, tags: suggestedTags };
   } catch (error: any) {

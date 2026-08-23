@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { api } from "@/lib/api";
+import { invalidateGraphQuery } from "@/lib/queryKeys";
 import type { Tag } from "@/types";
 
 export function useTags() {
@@ -47,6 +48,7 @@ export function useAttachTag() {
       qc.invalidateQueries({ queryKey: ["item", vars.itemId] });
       qc.invalidateQueries({ queryKey: ["items"] });
       qc.invalidateQueries({ queryKey: ["tags"] });
+      invalidateGraphQuery(qc);
     },
   });
 }
@@ -61,7 +63,10 @@ export function useUpdateTag() {
       if (!token) throw new Error("Missing auth token");
       return api.patch<Tag>(`/tags/${id}`, data, { token });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tags"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tags"] });
+      invalidateGraphQuery(qc);
+    },
   });
 }
 
@@ -75,6 +80,9 @@ export function useDeleteTag() {
       if (!token) throw new Error("Missing auth token");
       return api.delete(`/tags/${id}`, { token });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tags"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tags"] });
+      invalidateGraphQuery(qc);
+    },
   });
 }

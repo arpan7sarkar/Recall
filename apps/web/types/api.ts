@@ -4,6 +4,7 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+  processingTotal?: number;
 }
 
 export interface ApiErrorBody {
