@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import type { Job, JobsOptions } from "bullmq";
+import type { Job, JobType, JobsOptions } from "bullmq";
 import IORedis from "ioredis";
 import dotenv from "dotenv";
 
@@ -42,6 +42,7 @@ export class QueueUnavailableError extends Error {
 
 export interface PipelineQueue {
   add(name: string, data: Record<string, unknown>, opts?: JobsOptions): Promise<Job | null>;
+  getJobCounts(...types: JobType[]): Promise<Record<string, number>>;
   close(): Promise<void>;
 }
 
@@ -65,6 +66,9 @@ function createQueue(name: string, opts: JobsOptions = {}): PipelineQueue {
       add: async () => {
         throw new QueueUnavailableError(name);
       },
+      getJobCounts: async () => {
+        throw new QueueUnavailableError(name);
+      },
       close: async () => {},
     };
   }
@@ -79,6 +83,15 @@ function createQueue(name: string, opts: JobsOptions = {}): PipelineQueue {
       try {
         await ensureRedisQueuePolicy();
         return await queue.add(jobName, data, buildQueueOptions(jobOptions));
+      } catch (error) {
+        if (error instanceof QueueUnavailableError) throw error;
+        throw new QueueUnavailableError(name, error);
+      }
+    },
+    getJobCounts: async (...types: JobType[]) => {
+      try {
+        await ensureRedisQueuePolicy();
+        return await queue.getJobCounts(...types);
       } catch (error) {
         if (error instanceof QueueUnavailableError) throw error;
         throw new QueueUnavailableError(name, error);

@@ -19,6 +19,12 @@ describe("pipeline queue policy", () => {
       .rejects.toBeInstanceOf(QueueUnavailableError);
   });
 
+  it("exposes a readiness count operation and fails it when Redis is unavailable", async () => {
+    if (process.env.REDIS_URL) return;
+
+    await expect(scrapeQueue.getJobCounts()).rejects.toBeInstanceOf(QueueUnavailableError);
+  });
+
   it("retains a bounded failed-job history while cleaning up completed jobs", () => {
     const options = buildQueueOptions({ attempts: 3, backoff: { type: "exponential", delay: 5000 } });
 
