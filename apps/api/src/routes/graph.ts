@@ -3,6 +3,11 @@ import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { authenticateClerk } from "@/middleware/auth";
 import { fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
+import {
+  GRAPH_CACHE_TTL_SECONDS,
+  graphCacheKey,
+  shouldBypassGraphCache,
+} from "../lib/graphCache";
 
 const router = Router();
 
@@ -17,13 +22,32 @@ router.get("/", async (req: Request, res: Response) => {
   const userId = (req as any).auth?.userId;
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-  const CACHE_KEY = `graph:${userId}`;
+  const cacheKey = graphCacheKey(userId);
+  const bypassCache = shouldBypassGraphCache(req.query.refresh);
 
   try {
-    // 1. Check Redis Cache (PRD 4.1.3)
-    const cachedData = await redis.get(CACHE_KEY);
-    if (cachedData) {
-      return res.json(JSON.parse(cachedData));
+    // A manual dashboard resync must bypass Redis, otherwise refetching the
+    // same query can keep returning a stale five-minute snapshot.
+    if (!bypassCache) {
+      let cachedData: string | null = null;
+      try {
+        cachedData = await redis.get(cacheKey);
+      } catch (cacheError: any) {
+        console.warn(`[Graph] Cache read failed: ${cacheError?.message || cacheError}`);
+      }
+
+      if (cachedData) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          if (parsed && Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)) {
+            res.setHeader("X-Graph-Cache", "hit");
+            return res.json(parsed);
+          }
+        } catch (parseError: any) {
+          console.warn(`[Graph] Ignoring malformed cache entry: ${parseError?.message || parseError}`);
+          await redis.del(cacheKey).catch(() => null);
+        }
+      }
     }
 
     // 2. Fetch all user items (PRD 4.1.2 step 1)
@@ -36,7 +60,12 @@ router.get("/", async (req: Request, res: Response) => {
     });
 
     if (items.length === 0) {
-      return res.json({ nodes: [], edges: [] });
+      const emptyResult = { nodes: [], edges: [] };
+      await redis
+        .set(cacheKey, JSON.stringify(emptyResult), "EX", GRAPH_CACHE_TTL_SECONDS)
+        .catch((cacheError: any) => console.warn(`[Graph] Cache write failed: ${cacheError?.message || cacheError}`));
+      res.setHeader("X-Graph-Cache", bypassCache ? "bypass" : "miss");
+      return res.json(emptyResult);
     }
 
     // 3. Build nodes array (PRD 4.1.2 step 3)
@@ -120,8 +149,11 @@ router.get("/", async (req: Request, res: Response) => {
     const result = { nodes, edges };
 
     // 6. Save to Redis Cache for 5 minutes (PRD 4.1.3)
-    await redis.set(CACHE_KEY, JSON.stringify(result), "EX", 300);
+    await redis
+      .set(cacheKey, JSON.stringify(result), "EX", GRAPH_CACHE_TTL_SECONDS)
+      .catch((cacheError: any) => console.warn(`[Graph] Cache write failed: ${cacheError?.message || cacheError}`));
 
+    res.setHeader("X-Graph-Cache", bypassCache ? "bypass" : "miss");
     res.json(result);
   } catch (error: any) {
     console.error(`[Graph] Error:`, error.message);

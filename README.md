@@ -174,6 +174,54 @@ sequenceDiagram
    └─ shared/     # Reserved shared package space
 ```
 
+## Local Runtime
+
+Copy `apps/api/.env.example` to `apps/api/.env` and set `CLERK_SECRET_KEY` plus any optional enrichment credentials you plan to use.
+
+Start the local PostgreSQL and Redis services with `npm run services:up`.
+
+The Redis service is configured with BullMQ's required `noeviction` policy.
+
+Run `npm run validate:env` before starting the application to check the required API and worker variables without printing secret values.
+
+Run `npm run dev` to start the web app, API, and worker together.
+
+The orchestrator forwards Ctrl-C and termination signals to all three child processes and stops the group if one process exits unexpectedly.
+
+API liveness is available at `http://localhost:4000/live`.
+
+API readiness is available at `http://localhost:4000/ready` and verifies PostgreSQL, Redis, and all BullMQ queues.
+
+Worker liveness is available at `http://localhost:4001/live`.
+
+Worker readiness is available at `http://localhost:4001/ready` and remains unhealthy until Redis responds with `PONG`.
+
+Run `npm run check:services` to check both readiness endpoints.
+
+Stop local dependency services with `npm run services:down`.
+
+### Runtime Environment Contract
+
+`DATABASE_URL` is required by the API for PostgreSQL connectivity and Prisma operations.
+
+`REDIS_URL` is required by the API and worker for BullMQ queue operations.
+
+Production API and worker services must use the same `REDIS_URL` value and Redis database.
+
+`HOST`, `PORT`, and `CORS_ORIGINS` control API and worker binding and browser access.
+
+`CLERK_SECRET_KEY` is required for authenticated API requests.
+
+`OPENAI_API_KEY`, Pinecone variables, and Cloudflare R2 variables are optional at process startup but are required by the corresponding enrichment or upload features.
+
+The web app reads `NEXT_PUBLIC_API_URL_DEV` during local development and requires `NEXT_PUBLIC_RENDER_API_URL` (or the explicit `NEXT_PUBLIC_API_URL_PROD` alias) for production builds.
+
+There is no hardcoded production API fallback, so a production build fails with an actionable configuration error instead of sending requests to an unknown deployment.
+
+`CORS_ORIGINS` must contain the exact deployed web origin in production, separated by commas.
+
+The API keeps localhost origins as a development and test convenience only.
+
 ## Route Map
 
 ### Web
@@ -325,8 +373,9 @@ Local endpoints:
 
 ## Environment Notes
 
-- `NODE_ENV=development` uses `NEXT_PUBLIC_API_URL_DEV`
-- `NODE_ENV=production` uses `NEXT_PUBLIC_RENDER_API_URL`
+- `NODE_ENV=development` uses `NEXT_PUBLIC_API_URL_DEV` and falls back to `http://localhost:4000/v1`
+- `NODE_ENV=production` requires `NEXT_PUBLIC_RENDER_API_URL` or `NEXT_PUBLIC_API_URL_PROD`
+- Production API CORS requires the deployed web origin in `CORS_ORIGINS`
 - Pinecone must use **1024 dimensions** because embeddings are generated with `text-embedding-3-small` at `1024`
 
 ## Available Scripts

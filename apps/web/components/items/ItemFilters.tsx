@@ -23,7 +23,9 @@ export function ItemFilters({
         {CONTENT_TYPE_FILTERS.map((filter) => (
           <button
             key={filter.value}
+            type="button"
             onClick={() => onFilterChange(filter.value)}
+            aria-pressed={activeFilter === filter.value}
             className={cn(
               "px-5 py-1.5 rounded-full text-xs font-light tracking-tight transition-all duration-300 border",
               activeFilter === filter.value
@@ -39,6 +41,7 @@ export function ItemFilters({
       {/* View mode toggle */}
       <div className="flex items-center rounded-lg overflow-hidden shrink-0 border border-[var(--border)] bg-[var(--bg-primary)]/40">
         <button
+          type="button"
           onClick={() => onViewModeChange("grid")}
           className={cn(
             "p-2 transition-all duration-300",
@@ -46,6 +49,7 @@ export function ItemFilters({
           )}
           title="Grid view"
           aria-label="Grid view"
+          aria-pressed={viewMode === "grid"}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <rect x="1" y="1" width="6" height="6" rx="1" />
@@ -55,6 +59,7 @@ export function ItemFilters({
           </svg>
         </button>
         <button
+          type="button"
           onClick={() => onViewModeChange("list")}
           className={cn(
             "p-2 transition-all duration-300",
@@ -62,6 +67,7 @@ export function ItemFilters({
           )}
           title="List view"
           aria-label="List view"
+          aria-pressed={viewMode === "list"}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <rect x="1" y="2" width="14" height="3" rx="1" />

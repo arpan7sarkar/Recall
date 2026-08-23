@@ -1,18 +1,14 @@
 import OpenAI from "openai";
 import prisma from "@/lib/prisma";
 import { upsertEmbedding } from "@/lib/vectorDB";
-import redis from "@/lib/redis";
-
-function isFinalAttempt(job: any): boolean {
-  const totalAttempts = Number(job?.opts?.attempts ?? 1);
-  return Number(job?.attemptsMade ?? 0) + 1 >= totalAttempts;
-}
+import { buildProcessingFailureUpdate } from "@/queues/pipeline";
+import { invalidateGraphCache } from "../lib/graphCache";
 
 /**
  * Embed Worker handles vector generation and indexing in Pinecone
  */
 export async function processEmbed(job: any) {
-  const { itemId, userId } = job.data;
+  const { itemId } = job.data;
 
   try {
     // 1. Fetch item with tags
@@ -24,6 +20,11 @@ export async function processEmbed(job: any) {
     });
 
     if (!item) throw new Error(`Item ${itemId} not found`);
+
+    await prisma.item.update({
+      where: { id: itemId },
+      data: { status: "processing", processingStage: "embed" },
+    });
 
     // 2. Build text to embed (with robust fallbacks)
     const embeddingText = [
@@ -43,16 +44,22 @@ export async function processEmbed(job: any) {
       console.warn(`[Embed] No content to embed for item ${itemId}. Skipping vector generation.`);
       await prisma.item.update({
         where: { id: itemId },
-        data: { status: "ready" },
+        data: { status: "ready", processingStage: "complete" },
       });
       return { success: false, reason: "No content to embed" };
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is missing");
-    }
-    if (!process.env.PINECONE_API_KEY) {
-      throw new Error("PINECONE_API_KEY is missing");
+    if (!process.env.OPENAI_API_KEY || !process.env.PINECONE_API_KEY) {
+      const missing = [
+        !process.env.OPENAI_API_KEY ? "OPENAI_API_KEY" : null,
+        !process.env.PINECONE_API_KEY ? "PINECONE_API_KEY" : null,
+      ].filter(Boolean).join(", ");
+      const warning = `Vector enrichment was skipped because ${missing} is not configured.`;
+      await prisma.item.update({
+        where: { id: itemId },
+        data: { status: "ready", processingStage: "complete", processingError: warning },
+      });
+      return { success: false, reason: warning };
     }
 
     const openai = new OpenAI({
@@ -89,20 +96,33 @@ export async function processEmbed(job: any) {
     // 6. Update Item Status as Ready
     await prisma.item.update({
       where: { id: itemId },
-      data: { status: "ready" },
+      data: { status: "ready", processingStage: "complete" },
     });
-    await redis.del(`graph:${item.userId}`);
+    await invalidateGraphCache(item.userId);
 
     console.log(`[Embed] Successfully indexed item ${itemId} in Pinecone.`);
     return { success: true };
   } catch (error: any) {
     console.error(`[Embed] Worker failed for ${itemId}:`, error.message);
-    if (isFinalAttempt(job)) {
+    if (buildProcessingFailureUpdate(job, "embed", error.message).status === "failed") {
       await prisma.item.update({
         where: { id: itemId },
-        data: { status: "failed" },
+        data: {
+          status: "ready",
+          processingStage: "complete",
+          processingError: `Vector enrichment failed after retries: ${error.message}`,
+        },
       }).catch(() => null);
+      return { success: false, reason: error.message, enrichmentSkipped: true };
     }
-    throw error; // Let BullMQ handle retry
+    await prisma.item.update({
+      where: { id: itemId },
+      data: {
+        status: "processing",
+        processingStage: "embed",
+        processingError: error?.message || "Embedding failed; retrying",
+      },
+    }).catch(() => null);
+    throw error;
   }
 }

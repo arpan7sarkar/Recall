@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { NAV_ITEMS, ROUTES } from "@/lib/constants";
 import { useUIStore } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
@@ -10,23 +11,40 @@ import { Icon } from "@/components/shared/Icon";
 import SwitchButton from "@/components/ui/SwitchButton";
 
 export function Sidebar() {
-
   const pathname = usePathname();
-  const { sidebarOpen, sidebarCollapsed, toggleSidebar, toggleSidebarCollapse, theme, setTheme } = useUIStore();
+  const { sidebarOpen, sidebarCollapsed, toggleSidebar, toggleSidebarCollapse } = useUIStore();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const updateViewport = () => setIsMobile(mediaQuery.matches);
+
+    updateViewport();
+    mediaQuery.addEventListener("change", updateViewport);
+    return () => mediaQuery.removeEventListener("change", updateViewport);
+  }, []);
+
+  const sidebarHidden = isMobile && !sidebarOpen;
 
   return (
     <>
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
+        <button
+          type="button"
           className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
           onClick={toggleSidebar}
+          aria-label="Close sidebar"
         />
       )}
 
       <aside
+        id="dashboard-sidebar"
+        aria-label="Dashboard navigation"
+        aria-hidden={sidebarHidden || undefined}
+        inert={sidebarHidden ? true : undefined}
         className={cn(
           "z-50 shrink-0 flex flex-col transition-all duration-300 ease-in-out border rounded-2xl overflow-hidden",
           "fixed inset-y-4 left-4 shadow-2xl backdrop-blur-xl",
@@ -61,6 +79,7 @@ export function Sidebar() {
 
           {/* Mobile close */}
           <button
+            type="button"
             onClick={toggleSidebar}
             className="ml-auto lg:hidden p-1.5 rounded-lg focus-ring"
             style={{ color: "var(--text-tertiary)" }}
@@ -71,7 +90,7 @@ export function Sidebar() {
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto">
+        <nav aria-label="Primary" className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const isHomePath = item.href === ROUTES.dashboard;
             const isActive = isHomePath 
@@ -84,6 +103,7 @@ export function Sidebar() {
                 onClick={() => {
                   if (window.innerWidth < 1024) toggleSidebar();
                 }}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 focus-ring",
                   "text-sm font-light",
@@ -112,6 +132,7 @@ export function Sidebar() {
 
           {/* Collapse toggle — desktop only */}
           <button
+            type="button"
             onClick={toggleSidebarCollapse}
             className="hidden lg:flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-light transition-colors focus-ring text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
             title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -137,6 +158,7 @@ export function Sidebar() {
                 {user?.fullName ?? "User"}
               </p>
               <button
+                type="button"
                 onClick={() => signOut()}
                 className="text-xs font-light text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >

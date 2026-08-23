@@ -6,6 +6,7 @@ import { useSearch } from "@/hooks/useSearch";
 import { ItemCard } from "@/components/items/ItemCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LoaderOne, LoaderThree, LoaderFive } from "@/components/ui/unique-loader-components";
+import { getApiErrorMessage } from "@/lib/api";
 
 type SearchType = "semantic" | "keyword";
 
@@ -26,7 +27,13 @@ export default function SearchPage() {
     router.replace(`/dashboard/search?${params.toString()}`, { scroll: false });
   }, [query, searchType, router]);
 
-  const { data: results = [], isLoading, isFetching } = useSearch(query, searchType);
+  const {
+    data: results = [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useSearch(query, searchType);
 
   const isSearching = isLoading || isFetching;
 
@@ -86,7 +93,9 @@ export default function SearchPage() {
           {(["semantic", "keyword"] as const).map((t) => (
             <button
               key={t}
+              type="button"
               onClick={() => setSearchType(t)}
+              aria-pressed={searchType === t}
               className="px-4 py-3 text-xs font-medium capitalize transition-all duration-150"
               style={{
                 background: searchType === t ? "var(--accent-50)" : "transparent",
@@ -119,6 +128,28 @@ export default function SearchPage() {
         <div className="flex flex-col items-center justify-center py-20 gap-6">
           <LoaderFive text="Searching your brain" />
           <LoaderThree />
+        </div>
+      ) : error ? (
+        <div
+          role="alert"
+          className="flex flex-col items-center justify-center py-16 px-6 text-center rounded-xl border"
+          style={{
+            color: "var(--text-primary)",
+            background: "color-mix(in srgb, var(--bg-secondary) 88%, #b91c1c 12%)",
+            borderColor: "color-mix(in srgb, var(--border) 50%, #dc2626 50%)",
+          }}
+        >
+          <h2 className="text-lg font-semibold mb-2">Search could not be completed</h2>
+          <p className="text-sm mb-5" style={{ color: "var(--text-secondary)" }}>
+            {getApiErrorMessage(error, "The search service is unavailable. Please try again.")}
+          </p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="btn-primary focus-ring rounded-lg px-4 py-2 text-sm font-medium"
+          >
+            Try search again
+          </button>
         </div>
       ) : results.length === 0 ? (
         <EmptyState

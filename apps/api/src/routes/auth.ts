@@ -200,46 +200,98 @@ router.post("/extension/validate", async (req: Request, res: Response) => {
 // Existing routes: Sync & Me
 // ────────────────────────────────────────────────────────────
 
+type LocalUserIdentity = {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+  avatarUrl?: string | null;
+};
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+}
+
+function isPlaceholderEmail(email: string | null | undefined, userId: string): boolean {
+  return email === `${userId}@clerk.local`;
+}
+
 /**
- * @route   POST /auth/sync
- * @desc    Sync Clerk user with local database
- * @access  Private (Clerk)
+ * Sync Clerk user with the local database.
+ *
+ * The auth middleware attaches the local row before this handler runs. That
+ * lets legacy rows linked through `googleId` be updated in place instead of
+ * creating a second row keyed by the Clerk id.
  */
-router.post("/sync", authenticateClerk, async (req: Request, res: Response) => {
+export async function syncClerkUser(req: Request, res: Response) {
   const auth = (req as any).auth;
   const { email, name, avatarUrl } = req.body;
+  const localUser = (req as any).user as LocalUserIdentity | undefined;
 
   if (!auth?.userId || auth?.source !== "clerk") {
     return res.status(401).json({ error: "Missing Clerk userId" });
   }
 
-  try {
-    const normalizedEmail =
-      typeof email === "string" && email.trim().length > 0
-        ? email.trim().toLowerCase()
-        : `${auth.userId}@clerk.local`;
+  const localUserId = localUser?.id ?? auth.userId;
+  const submittedEmail = typeof email === "string" && email.trim().length > 0
+    ? email.trim().toLowerCase()
+    : null;
+  const normalizedEmail = submittedEmail
+    ?? (localUser?.email && !isPlaceholderEmail(localUser.email, auth.userId)
+      ? localUser.email.toLowerCase()
+      : `${auth.userId}@clerk.local`);
+  const normalizedName = typeof name === "string" && name.trim().length > 0
+    ? name.trim()
+    : localUser?.name ?? "Anonymous";
+  const normalizedAvatarUrl = typeof avatarUrl === "string" && avatarUrl.trim().length > 0
+    ? avatarUrl.trim()
+    : localUser?.avatarUrl ?? null;
 
-    const user = await prisma.user.upsert({
-      where: { id: auth.userId },
-      update: {
-        email: normalizedEmail,
-        name: name || undefined,
-        avatarUrl: avatarUrl || undefined,
-      },
-      create: {
-        id: auth.userId,
-        email: normalizedEmail,
-        name: name || "Anonymous",
-        avatarUrl: avatarUrl || null,
-      },
+  try {
+    const existingEmailOwner = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
     });
+
+    if (existingEmailOwner && existingEmailOwner.id !== localUserId) {
+      return res.status(409).json({
+        code: "EMAIL_CONFLICT",
+        error: "This email is already linked to another account",
+      });
+    }
+
+    const data = {
+      email: normalizedEmail,
+      name: normalizedName,
+      avatarUrl: normalizedAvatarUrl,
+    };
+
+    const user = localUser
+      ? await prisma.user.update({ where: { id: localUserId }, data })
+      : await prisma.user.upsert({
+        where: { id: auth.userId },
+        update: data,
+        create: { id: auth.userId, ...data },
+      });
 
     res.json({ user });
   } catch (error) {
     console.error("User sync error:", error);
-    res.status(500).json({ error: "Failed to sync user" });
+    if (isUniqueConstraintError(error)) {
+      return res.status(409).json({
+        code: "EMAIL_CONFLICT",
+        error: "This email is already linked to another account",
+      });
+    }
+    res.status(503).json({ error: "Authentication service temporarily unavailable" });
   }
-});
+}
+
+/**
+ * @route   POST /auth/sync
+ * @desc    Sync Clerk user with local database
+ * @access  Private (Clerk)
+ */
+router.post("/sync", authenticateClerk, syncClerkUser);
 
 /**
  * @route   GET /auth/me

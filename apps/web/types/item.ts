@@ -10,6 +10,7 @@ export type ItemType =
   | "link";
 
 export type ItemStatus = "pending" | "processing" | "ready" | "failed";
+export type ProcessingStage = "queue" | "scrape" | "ai" | "embed" | "complete";
 
 export type SaveSource = "extension" | "web_url" | "web_upload";
 
@@ -25,6 +26,9 @@ export interface Item {
   itemType: ItemType;
   saveSource: SaveSource;
   status: ItemStatus;
+  processingStage?: ProcessingStage | null;
+  processingError?: string | null;
+  processingAttempt?: number;
   readingTime: number | null;
   wordCount: number | null;
   sourceDomain: string | null;

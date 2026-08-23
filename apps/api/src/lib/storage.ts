@@ -6,6 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
+import { fetchRemoteResource } from "./remoteFetch";
 
 dotenv.config();
 
@@ -14,6 +15,8 @@ dotenv.config();
 const R2_BUCKET = process.env.CLOUDFLARE_R2_BUCKET!;
 const R2_ENDPOINT = process.env.CLOUDFLARE_R2_ENDPOINT!;
 const R2_PUBLIC_URL = process.env.CLOUDFLARE_R2_PUBLIC_URL ?? null; // optional public domain
+const REMOTE_FETCH_TIMEOUT_MS = Number(process.env.REMOTE_FETCH_TIMEOUT_MS ?? 15000);
+const REMOTE_FETCH_MAX_BYTES = Number(process.env.REMOTE_FETCH_MAX_BYTES ?? 5 * 1024 * 1024);
 
 const r2 = new S3Client({
   region: "auto",
@@ -125,15 +128,15 @@ export async function uploadFromUrl(
   key: string,
   mimeType = "image/jpeg"
 ): Promise<UploadResult> {
-  const response = await fetch(remoteUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch remote file: ${response.status} ${response.statusText}`);
-  }
+  const maxBytes = Number.isFinite(REMOTE_FETCH_MAX_BYTES) && REMOTE_FETCH_MAX_BYTES > 0 ? REMOTE_FETCH_MAX_BYTES : 5 * 1024 * 1024;
+  const resource = await fetchRemoteResource(remoteUrl, {
+    timeoutMs: Number.isFinite(REMOTE_FETCH_TIMEOUT_MS) && REMOTE_FETCH_TIMEOUT_MS > 0 ? REMOTE_FETCH_TIMEOUT_MS : 15000,
+    maxBytes,
+    maxRedirects: 3,
+    allowedContentTypes: [mimeType.startsWith("image/") ? "image/" : mimeType],
+  });
 
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);  
-
-  return uploadFile(buffer, key, mimeType);
+  return uploadFile(resource.buffer, key, mimeType);
 }
 
 export { r2 };

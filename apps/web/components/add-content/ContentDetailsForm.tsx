@@ -4,6 +4,8 @@ import { useRef, useState, useCallback } from "react";
 import { useAddContentStore } from "@/store/addContentStore";
 import { SOURCE_TYPE_OPTIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { normalizeSaveUrl, parseYoutubeTimestamp, SaveFormValidationError } from "@/lib/saveContract";
+import { UploadFormValidationError, validateBrowserUpload } from "@/lib/uploadContract";
 
 export function ContentDetailsForm() {
   const {
@@ -27,6 +29,7 @@ export function ContentDetailsForm() {
 
   const [activeTab, setActiveTab] = useState<"url" | "file">("url");
   const [dragActive, setDragActive] = useState(false);
+  const [inputError, setInputError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const sourceOption = SOURCE_TYPE_OPTIONS.find((o) => o.type === selectedType);
@@ -50,17 +53,49 @@ export function ContentDetailsForm() {
       e.preventDefault();
       setDragActive(false);
       const dropped = e.dataTransfer.files[0];
-      if (dropped) setFile(dropped);
+      if (dropped) {
+        try {
+          validateBrowserUpload(dropped, isPdf ? "pdf" : "image");
+          setInputError(null);
+          setFile(dropped);
+        } catch (error) {
+          setInputError(error instanceof UploadFormValidationError ? error.message : "This file cannot be uploaded.");
+        }
+      }
     },
-    [setFile]
+    [isPdf, setFile]
   );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
-    if (selected) setFile(selected);
+    if (selected) {
+      try {
+        validateBrowserUpload(selected, isPdf ? "pdf" : "image");
+        setInputError(null);
+        setFile(selected);
+      } catch (error) {
+        setInputError(error instanceof UploadFormValidationError ? error.message : "This file cannot be uploaded.");
+        e.target.value = "";
+      }
+    }
   };
 
-  const isNextDisabled = activeTab === "url" ? !url.trim() : !file || (isImage || isPdf ? !title.trim() : false);
+  const usesUrlInput = mode === "url" || (mode === "both" && activeTab === "url");
+  const usesFileInput = mode === "file" || (mode === "both" && activeTab === "file");
+  const isNextDisabled = usesUrlInput ? !url.trim() : usesFileInput && (!file || (isImage || isPdf ? !title.trim() : false));
+
+  const handleNext = () => {
+    try {
+      setInputError(null);
+      if (usesUrlInput) {
+        normalizeSaveUrl(url);
+        if (isYoutube) parseYoutubeTimestamp(youtubeTimestamp);
+      }
+      setStep("metadata");
+    } catch (error) {
+      setInputError(error instanceof SaveFormValidationError ? error.message : "Please check the source details and try again.");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -138,7 +173,9 @@ export function ContentDetailsForm() {
                 borderRadius: "var(--radius-md)",
               }}
               required
+              aria-invalid={Boolean(inputError)}
             />
+            {inputError && <p role="alert" className="mt-1.5 text-xs text-red-500">{inputError}</p>}
           </div>
         </div>
       )}
@@ -310,7 +347,7 @@ export function ContentDetailsForm() {
       </div>
 
       <button
-        onClick={() => setStep("metadata")}
+        onClick={handleNext}
         disabled={isNextDisabled}
         className="btn-primary focus-ring w-full rounded-lg py-2.5 text-sm font-medium disabled:opacity-40"
       >

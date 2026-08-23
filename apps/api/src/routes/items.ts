@@ -1,18 +1,62 @@
 import { Router, Request, Response } from "express";
-import type { ItemType, SaveSource } from "@prisma/client";
+import type { ItemType, ProcessingStatus, SaveSource } from "@prisma/client";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
 import { authenticateClerk } from "@/middleware/auth";
 import { deleteEmbedding, fetchEmbedding, queryEmbedding } from "@/lib/vectorDB";
 import { upload } from "@/middleware/upload";
-import { scrapeQueue, aiQueue } from "@/queues";
-import { buildKey, uploadFile } from "@/lib/storage";
+import { UploadValidationError, validateUploadBuffer } from "@/middleware/uploadContract";
+import { QueueUnavailableError, scrapeQueue, aiQueue } from "@/queues";
+import { buildPipelineJobId } from "@/queues/pipeline";
+import { buildKey, deleteFile, uploadFile } from "@/lib/storage";
+import {
+  normalizeSaveMetadata,
+  normalizeSaveUrl,
+  parseYoutubeTimestamp,
+  SaveValidationError,
+} from "./saveContract";
+import { invalidateGraphCache } from "../lib/graphCache";
 
 const router = Router();
 const ITEM_TYPES: ItemType[] = ["article", "tweet", "youtube", "pdf", "image", "podcast", "instagram", "linkedin", "link"];
+const PROCESSING_STATUSES: ProcessingStatus[] = ["pending", "processing", "ready", "failed"];
+const SAVE_SOURCES: SaveSource[] = ["extension", "web_url", "web_upload"];
+
+class OwnershipError extends Error {
+  readonly status = 404;
+
+  constructor(message: string) {
+    super(message);
+    this.name = "OwnershipError";
+  }
+}
+
+async function requireOwnedCollection(userId: string, collectionId: unknown): Promise<void> {
+  if (typeof collectionId !== "string" || collectionId.trim().length === 0) return;
+
+  const collection = await prisma.collection.findFirst({
+    where: { id: collectionId, userId },
+    select: { id: true },
+  });
+
+  if (!collection) throw new OwnershipError("Collection not found");
+}
 
 function isItemType(value: unknown): value is ItemType {
   return typeof value === "string" && ITEM_TYPES.includes(value as ItemType);
+}
+
+function isProcessingStatus(value: unknown): value is ProcessingStatus {
+  return typeof value === "string" && PROCESSING_STATUSES.includes(value as ProcessingStatus);
+}
+
+function isSaveSource(value: unknown): value is SaveSource {
+  return typeof value === "string" && SAVE_SOURCES.includes(value as SaveSource);
+}
+
+function parseBoundedPositiveInt(value: unknown, fallback: number, maximum: number): number {
+  const parsed = typeof value === "string" ? Number.parseInt(value, 10) : Number.NaN;
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.min(parsed, maximum);
 }
 
 function normalizeTagsInput(value: unknown): string[] {
@@ -27,34 +71,6 @@ function normalizeTagsInput(value: unknown): string[] {
         .filter((entry) => entry.length > 0)
     )
   );
-}
-
-function normalizeUrl(rawUrl: string): string {
-  const trimmed = rawUrl.trim();
-
-  try {
-    const parsed = new URL(trimmed);
-    parsed.hash = "";
-
-    const host = parsed.hostname.toLowerCase();
-
-    // Remove noisy tracking params for Instagram URLs so the same reel/post dedupes cleanly.
-    if (host.includes("instagram.com")) {
-      parsed.search = "";
-      const parts = parsed.pathname.split("/").filter(Boolean);
-      if (parts.length >= 2 && ["reel", "p", "tv"].includes(parts[0])) {
-        parsed.pathname = `/${parts[0]}/${parts[1]}/`;
-      }
-    }
-    // LinkedIn links are commonly shared with tracking query params.
-    if (host.includes("linkedin.com")) {
-      parsed.search = "";
-    }
-
-    return parsed.toString();
-  } catch {
-    return trimmed;
-  }
 }
 
 function detectItemTypeFromUrl(rawUrl: string): ItemType {
@@ -84,7 +100,7 @@ router.use(authenticateClerk);
  */
 router.post("/upload", upload.single("file"), async (req: Request, res: Response) => {
   const userId = (req as any).auth?.userId;
-  const { title, itemType, tags, collectionId, note } = req.body;
+  const { title, author, podcastName, itemType, tags, collectionId, note } = req.body;
   const file = req.file;
 
   if (!userId) {
@@ -95,28 +111,45 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
     return res.status(400).json({ error: "No file uploaded" });
   }
 
-  if (!title) {
+  try {
+    validateUploadBuffer(file.buffer, file.mimetype);
+  } catch (error) {
+    if (error instanceof UploadValidationError) {
+      return res.status(error.status).json({ error: error.message, code: "INVALID_UPLOAD" });
+    }
+    throw error;
+  }
+
+  const metadata = normalizeSaveMetadata({ title, author, podcastName, note });
+  if (!metadata.title) {
     return res.status(400).json({ error: "Title is required for uploads" });
   }
 
+  let item: any;
+  let uploadedFile: { key: string; url: string } | null = null;
   try {
+    await requireOwnedCollection(userId, collectionId);
     const normalizedTags = normalizeTagsInput(tags);
     const inferredType: ItemType =
       isItemType(itemType) ? itemType : file.mimetype.startsWith("image") ? "image" : "pdf";
     const key = buildKey(userId, "files", file.originalname);
     const uploaded = await uploadFile(file.buffer, key, file.mimetype);
+    uploadedFile = uploaded;
 
-    const item = await prisma.item.create({
+    item = await prisma.item.create({
       data: {
         userId,
-        title,
+        title: metadata.title,
         itemType: inferredType,
         saveSource: "web_upload",
-        userNote: note,
-        fileUrl: uploaded.url,
-        thumbnailUrl: inferredType === "image" ? uploaded.url : null,
+        author: metadata.author,
+        podcastName: metadata.podcastName,
+        userNote: metadata.note,
+        fileUrl: uploadedFile.url,
+        thumbnailUrl: inferredType === "image" ? uploadedFile.url : null,
         sourceDomain: "upload",
-        status: "processing", // No scraping needed, just AI processing
+        status: "processing",
+        processingStage: "ai",
         // If collection provided
         ...(collectionId && {
           collections: {
@@ -142,15 +175,48 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
-    // 3.1.5 Push to aiQueue directly (syncing not needed for files)
-    await aiQueue.add("process-upload", { itemId: item.id, userId });
-
-    res.status(201).json(mapItemWithTags(item));
   } catch (error) {
+    if (error instanceof OwnershipError) {
+      return res.status(error.status).json({ error: error.message });
+    }
     console.error(error);
-    res.status(500).json({ error: "Failed to upload item metadata" });
+    let cleanupError: string | null = null;
+    if (uploadedFile) {
+      try {
+        await deleteFile(uploadedFile.key);
+      } catch (cleanupFailure: any) {
+        cleanupError = cleanupFailure?.message || "Uploaded file cleanup failed";
+        console.error(`[Items] Failed to clean up orphaned upload ${uploadedFile.key}:`, cleanupFailure);
+      }
+    }
+    return res.status(500).json({
+      error: "Failed to upload item metadata",
+      recovery: cleanupError
+        ? { storageKey: uploadedFile?.key, action: "Delete this orphaned object from storage." }
+        : undefined,
+    });
   }
+
+  try {
+    await aiQueue.add(
+      "process-upload",
+      { itemId: item.id, userId },
+      { jobId: buildPipelineJobId("ai", item.id, item.processingAttempt ?? 0) },
+    );
+  } catch (error) {
+    const message = getQueueFailureMessage(error);
+    await markQueueFailure(item.id, message);
+    return res.status(503).json({
+      error: "Item saved, but processing could not be queued.",
+      reason: message,
+      item: mapItemWithTags({ ...item, status: "failed", processingStage: "queue", processingError: message }),
+      retryable: true,
+    });
+  }
+
+  return res.status(201).json(mapItemWithTags(item));
 });
 
 /**
@@ -167,6 +233,25 @@ const mapItemWithTags = (item: any) => ({
   })) || [],
 });
 
+function getQueueFailureMessage(error: unknown): string {
+  if (error instanceof QueueUnavailableError) return error.message;
+  if (error instanceof Error && error.message) return error.message;
+  return "The processing queue could not accept this item.";
+}
+
+async function markQueueFailure(itemId: string, message: string): Promise<void> {
+  await prisma.item.update({
+    where: { id: itemId },
+    data: {
+      status: "failed",
+      processingStage: "queue",
+      processingError: message,
+    },
+  }).catch((updateError: unknown) => {
+    console.error(`[Items] Failed to persist queue failure for ${itemId}:`, updateError);
+  });
+}
+
 async function requeueStaleItems(userId: string) {
   const staleThreshold = new Date(Date.now() - 15 * 60 * 1000);
   const staleItems = await prisma.item.findMany({
@@ -182,36 +267,66 @@ async function requeueStaleItems(userId: string) {
       description: true,
       contentText: true,
       status: true,
+      processingAttempt: true,
     },
     take: 10,
   });
+
+  let requeued = 0;
+  let failed = 0;
 
   for (const stale of staleItems) {
     const hasUsefulScrapeData = Boolean(
       stale.contentText || stale.description || (stale.title && stale.title !== "Untitled")
     );
+    const stage = stale.url && !hasUsefulScrapeData ? "scrape" : "ai";
+    const nextAttempt = stale.processingAttempt + 1;
 
     try {
-      if (stale.url && !hasUsefulScrapeData) {
-        scrapeQueue.add(
+      const claimed = await prisma.item.updateMany({
+        where: {
+          id: stale.id,
+          userId,
+          status: { in: ["pending", "processing"] },
+          processingAttempt: stale.processingAttempt,
+        },
+        data: {
+          processingAttempt: { increment: 1 },
+          processingStage: stage,
+          processingError: null,
+          status: stage === "scrape" ? "pending" : "processing",
+        },
+      });
+
+      if (claimed.count !== 1) continue;
+
+      if (stage === "scrape" && stale.url) {
+        await scrapeQueue.add(
           "retry-stale-scrape",
           { itemId: stale.id, url: stale.url, userId },
-          { jobId: `scrape-${stale.id}` }
-        ).catch(() => {});
+          { jobId: buildPipelineJobId("scrape", stale.id, nextAttempt) },
+        );
       } else {
-        aiQueue.add(
+        await aiQueue.add(
           "retry-stale-ai",
           { itemId: stale.id, userId },
-          { jobId: `ai-${stale.id}` }
-        ).catch(() => {});
+          { jobId: buildPipelineJobId("ai", stale.id, nextAttempt) },
+        );
       }
+      requeued += 1;
     } catch (error: any) {
-      // Ignore duplicate-job errors; another worker/job may already be handling it.
-      if (!String(error?.message || "").toLowerCase().includes("job id")) {
-        console.warn(`[Items] Failed to requeue stale item ${stale.id}:`, error.message);
-      }
+      failed += 1;
+      const message = getQueueFailureMessage(error);
+      await markQueueFailure(stale.id, message);
+      console.warn(`[Items] Failed to requeue stale item ${stale.id}:`, message);
     }
   }
+
+  if (staleItems.length > 0) {
+    console.info(`[Items] Stale recovery: inspected=${staleItems.length} requeued=${requeued} failed=${failed}`);
+  }
+
+  return { inspected: staleItems.length, requeued, failed };
 }
 
 /**
@@ -225,23 +340,38 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     await requeueStaleItems(userId);
 
-    const { type, status, favorite, archived, page, limit, sort } = req.query;
+    const { type, status, favorite, archived, page, limit, sort, tag, source } = req.query;
     const normalizedType = isItemType(type) ? type : undefined;
+    const normalizedStatus = isProcessingStatus(status) ? status : undefined;
+    const normalizedSource = isSaveSource(source) ? source : undefined;
+    const normalizedTag = typeof tag === "string" && tag.trim().length > 0 ? tag.trim() : undefined;
     
-    const pageNum = parseInt(page as string) || 1;
-    const limitNum = parseInt(limit as string) || 20;
+    const pageNum = parseBoundedPositiveInt(page, 1, 1_000_000);
+    const limitNum = parseBoundedPositiveInt(limit, 20, 100);
     const skip = (pageNum - 1) * limitNum;
 
     const where = {
       userId,
       ...(normalizedType && { itemType: normalizedType }),
-      ...(status && { status: status as any }),
+      ...(normalizedStatus && { status: normalizedStatus }),
+      ...(normalizedSource && { saveSource: normalizedSource }),
+      ...(normalizedTag && {
+        tags: {
+          some: {
+            tag: { userId, name: normalizedTag },
+          },
+        },
+      }),
       ...(favorite === "true" && { isFavourite: true }),
       ...(archived === "true" && { isArchived: true }),
       ...(archived === "false" && { isArchived: false }),
     };
+    const processingWhere = {
+      ...where,
+      status: { in: ["pending", "processing"] as ProcessingStatus[] },
+    };
 
-    const [items, total] = await Promise.all([
+    const [items, total, processingTotal] = await Promise.all([
       prisma.item.findMany({
         where,
         orderBy: { savedAt: sort === "asc" ? "asc" : "desc" },
@@ -252,6 +382,7 @@ router.get("/", async (req: Request, res: Response) => {
         },
       }),
       prisma.item.count({ where }),
+      prisma.item.count({ where: processingWhere }),
     ]);
 
     res.json({
@@ -260,6 +391,7 @@ router.get("/", async (req: Request, res: Response) => {
       page: pageNum,
       limit: limitNum,
       totalPages: Math.ceil(total / limitNum),
+      processingTotal,
     });
   } catch (error) {
     console.error(error);
@@ -273,34 +405,50 @@ router.get("/", async (req: Request, res: Response) => {
  */
 router.post("/", async (req: Request, res: Response) => {
   const userId = (req as any).auth?.userId;
-  const { url, itemType, tags, collectionId, note, youtubeTimestamp, saveSource, isArchived } = req.body;
+  const {
+    url,
+    title,
+    author,
+    podcastName,
+    itemType,
+    tags,
+    collectionId,
+    note,
+    youtubeTimestamp,
+    saveSource,
+    isArchived,
+  } = req.body;
 
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  if (!url || typeof url !== "string") {
-    return res.status(400).json({ error: "URL is required" });
-  }
-
+  let item: any;
+  let normalizedUrl: string;
   try {
-    const normalizedUrl = normalizeUrl(url);
+    await requireOwnedCollection(userId, collectionId);
+    normalizedUrl = normalizeSaveUrl(url);
     const normalizedTags = normalizeTagsInput(tags);
     const normalizedItemType = isItemType(itemType) ? itemType : detectItemTypeFromUrl(normalizedUrl);
-    const parsedYoutubeTimestamp = youtubeTimestamp ? parseInt(String(youtubeTimestamp), 10) : null;
+    const parsedYoutubeTimestamp = parseYoutubeTimestamp(youtubeTimestamp);
+    const metadata = normalizeSaveMetadata({ title, author, podcastName, note });
     const normalizedSaveSource: SaveSource =
       saveSource === "extension" || saveSource === "web_url" ? saveSource : "web_url";
 
     // Initial creation - metadata will be filled by worker later
-    const item = await prisma.item.create({
+    item = await prisma.item.create({
       data: {
         userId,
         url: normalizedUrl,
         itemType: normalizedItemType,
         saveSource: normalizedSaveSource,
-        userNote: note,
-        youtubeTimestamp: Number.isFinite(parsedYoutubeTimestamp) ? parsedYoutubeTimestamp : null,
+        title: metadata.title,
+        author: metadata.author,
+        podcastName: metadata.podcastName,
+        userNote: metadata.note,
+        youtubeTimestamp: parsedYoutubeTimestamp,
         status: "pending",
+        processingStage: "scrape",
         isArchived: Boolean(isArchived),
         // If collection provided
         ...(collectionId && {
@@ -327,18 +475,41 @@ router.post("/", async (req: Request, res: Response) => {
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
-    // 3.1.4 Push to scrapeQueue - fire and forget to avoid hanging if Redis is down
-    scrapeQueue.add("scrape-url", { itemId: item.id, url: normalizedUrl, userId })
-      .catch((err: any) => {
-        console.warn(`[Items] Failed to enqueue scrape for ${item.id}:`, err.message);
-      });
-
-    res.status(201).json(mapItemWithTags(item));
   } catch (error) {
+    if (error instanceof OwnershipError) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    if (error instanceof SaveValidationError) {
+      return res.status(error.status).json({
+        error: error.message,
+        code: "INVALID_SAVE_REQUEST",
+      });
+    }
     console.error(error);
     res.status(500).json({ error: "Failed to create item" });
+    return;
   }
+
+  try {
+    await scrapeQueue.add(
+      "scrape-url",
+      { itemId: item.id, url: normalizedUrl, userId },
+      { jobId: buildPipelineJobId("scrape", item.id, item.processingAttempt ?? 0) },
+    );
+  } catch (error) {
+    const message = getQueueFailureMessage(error);
+    await markQueueFailure(item.id, message);
+    return res.status(503).json({
+      error: "Item saved, but processing could not be queued.",
+      reason: message,
+      item: mapItemWithTags({ ...item, status: "failed", processingStage: "queue", processingError: message }),
+      retryable: true,
+    });
+  }
+
+  return res.status(201).json(mapItemWithTags(item));
 });
 
 /**
@@ -363,7 +534,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 
     res.json(mapItemWithTags(item));
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to fetch item" });
   }
 });
@@ -396,9 +567,10 @@ router.patch("/:id", async (req: Request, res: Response) => {
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
     res.json(mapItemWithTags(updated));
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to update item" });
   }
 });
@@ -424,9 +596,10 @@ router.post("/:id/archive", async (req: Request, res: Response) => {
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
     res.json(mapItemWithTags(updated));
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to archive item" });
   }
 });
@@ -452,9 +625,10 @@ router.post("/:id/unarchive", async (req: Request, res: Response) => {
         tags: { include: { tag: true } },
       },
     });
+    await invalidateGraphCache(userId);
 
     res.json(mapItemWithTags(updated));
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to unarchive item" });
   }
 });
@@ -483,10 +657,10 @@ router.delete("/:id", async (req: Request, res: Response) => {
     }
 
     // Invalidate cached graph so deleted items disappear immediately from graph view.
-    await redis.del(`graph:${userId}`).catch(() => {});
+    await invalidateGraphCache(userId);
 
     res.status(204).send();
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to delete item" });
   }
 });
@@ -593,18 +767,48 @@ router.post("/:id/retry", async (req: Request, res: Response) => {
 
     const hasUsefulScrapeData = Boolean(item.contentText || item.description || (item.title && item.title !== "Untitled"));
 
-    if (item.url && !hasUsefulScrapeData) {
-      await prisma.item.update({
-        where: { id },
-        data: { status: "pending" },
+    const stage = item.url && !hasUsefulScrapeData ? "scrape" : "ai";
+    const nextAttempt = item.processingAttempt + 1;
+    const claimed = await prisma.item.updateMany({
+      where: {
+        id,
+        userId,
+        processingAttempt: item.processingAttempt,
+      },
+      data: {
+        processingAttempt: { increment: 1 },
+        status: stage === "scrape" ? "pending" : "processing",
+        processingStage: stage,
+        processingError: null,
+      },
+    });
+
+    if (claimed.count !== 1) {
+      return res.status(409).json({ error: "Item is already being retried. Refresh and try again." });
+    }
+
+    try {
+      if (stage === "scrape" && item.url) {
+        await scrapeQueue.add(
+          "retry-scrape",
+          { itemId: id, url: item.url, userId },
+          { jobId: buildPipelineJobId("scrape", id, nextAttempt) },
+        );
+      } else {
+        await aiQueue.add(
+          "retry-ai",
+          { itemId: id, userId },
+          { jobId: buildPipelineJobId("ai", id, nextAttempt) },
+        );
+      }
+    } catch (error) {
+      const message = getQueueFailureMessage(error);
+      await markQueueFailure(id, message);
+      return res.status(503).json({
+        error: "Retry could not be queued.",
+        reason: message,
+        retryable: true,
       });
-      await scrapeQueue.add("retry-scrape", { itemId: id, url: item.url, userId }, { jobId: `scrape-${id}` });
-    } else {
-      await prisma.item.update({
-        where: { id },
-        data: { status: "processing" },
-      });
-      await aiQueue.add("retry-ai", { itemId: id, userId }, { jobId: `ai-${id}` });
     }
 
     const refreshed = await prisma.item.findUnique({

@@ -1,12 +1,16 @@
 import { Queue } from "bullmq";
+import type { Job, JobType, JobsOptions } from "bullmq";
 import IORedis from "ioredis";
 import dotenv from "dotenv";
+
+import { assertBullMqRedisPolicy, buildQueueOptions } from "./pipeline";
 
 dotenv.config();
 
 const REDIS_URL = process.env.REDIS_URL;
 
 let connection: IORedis | null = null;
+let redisPolicyCheck: Promise<void> | null = null;
 
 if (REDIS_URL) {
   connection = new IORedis(REDIS_URL, {
@@ -15,36 +19,86 @@ if (REDIS_URL) {
   });
 
   connection.on("error", (err) => {
-    console.warn("[Queues] Redis connection error (non-fatal):", err.message);
+    console.warn("[Queues] Redis connection error:", err.message);
   });
 
   connection.connect().catch((err) => {
-    console.warn("[Queues] Redis initial connect failed (will retry):", err.message);
+    console.warn("[Queues] Redis initial connect failed:", err.message);
   });
 } else {
-  console.warn("[Queues] REDIS_URL not set — job queues will be unavailable");
+  console.warn("[Queues] REDIS_URL not set - job queues are unavailable");
 }
 
-const defaultJobOptions = {
-  removeOnComplete: true,
-};
+export class QueueUnavailableError extends Error {
+  readonly code = "QUEUE_UNAVAILABLE";
 
-// Create queues only if Redis is available; otherwise create no-op stubs
-function createQueue(name: string, opts: any = {}) {
-  if (connection) {
-    return new Queue(name, {
-      connection,
-      defaultJobOptions: { ...defaultJobOptions, ...opts },
-    });
+  constructor(queueName: string, cause?: unknown) {
+    const detail = cause instanceof Error ? ` ${cause.message}` : "";
+    super(`Queue "${queueName}" is unavailable. Check the worker and Redis configuration.${detail}`);
+    this.name = "QueueUnavailableError";
+    if (cause) this.cause = cause;
   }
-  // Return a stub that logs warnings instead of crashing
+}
+
+export interface PipelineQueue {
+  add(name: string, data: Record<string, unknown>, opts?: JobsOptions): Promise<Job | null>;
+  getJobCounts(...types: JobType[]): Promise<Record<string, number>>;
+  close(): Promise<void>;
+}
+
+async function ensureRedisQueuePolicy(): Promise<void> {
+  if (!connection) throw new QueueUnavailableError("redis");
+  if (!redisPolicyCheck) {
+    redisPolicyCheck = connection
+      .info("memory")
+      .then((info) => assertBullMqRedisPolicy(info))
+      .catch((error) => {
+        redisPolicyCheck = null;
+        throw error;
+      });
+  }
+  await redisPolicyCheck;
+}
+
+function createQueue(name: string, opts: JobsOptions = {}): PipelineQueue {
+  if (!connection) {
+    return {
+      add: async () => {
+        throw new QueueUnavailableError(name);
+      },
+      getJobCounts: async () => {
+        throw new QueueUnavailableError(name);
+      },
+      close: async () => {},
+    };
+  }
+
+  const queue = new Queue(name, {
+    connection,
+    defaultJobOptions: buildQueueOptions(opts),
+  });
+
   return {
-    add: async (...args: any[]) => {
-      console.warn(`[Queues] Cannot add job to "${name}" — no Redis connection`);
-      return null;
+    add: async (jobName, data, jobOptions) => {
+      try {
+        await ensureRedisQueuePolicy();
+        return await queue.add(jobName, data, buildQueueOptions(jobOptions));
+      } catch (error) {
+        if (error instanceof QueueUnavailableError) throw error;
+        throw new QueueUnavailableError(name, error);
+      }
     },
-    close: async () => {},
-  } as unknown as Queue;
+    getJobCounts: async (...types: JobType[]) => {
+      try {
+        await ensureRedisQueuePolicy();
+        return await queue.getJobCounts(...types);
+      } catch (error) {
+        if (error instanceof QueueUnavailableError) throw error;
+        throw new QueueUnavailableError(name, error);
+      }
+    },
+    close: () => queue.close(),
+  };
 }
 
 // Queue for scraping content from URLs

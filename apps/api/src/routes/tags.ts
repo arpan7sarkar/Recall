@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import prisma from "@/lib/prisma";
 import { authenticateClerk } from "@/middleware/auth";
+import { invalidateGraphCache } from "../lib/graphCache";
 
 const router = Router();
 
@@ -67,6 +68,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
       where: { id, userId },
       data: { name, color },
     });
+    await invalidateGraphCache(userId);
     res.json(tag);
   } catch (error) {
     res.status(500).json({ error: "Failed to update tag" });
@@ -83,6 +85,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 
   try {
     await prisma.tag.delete({ where: { id, userId } });
+    await invalidateGraphCache(userId);
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: "Failed to delete tag" });
@@ -102,19 +105,33 @@ router.post("/attach/:itemId", async (req: Request, res: Response) => {
     const { tagId, tagName } = req.body;
 
     try {
+        const item = await prisma.item.findFirst({
+            where: { id: itemId, userId },
+            select: { id: true },
+        });
+        if (!item) return res.status(404).json({ error: "Item not found" });
+
         let finalTagId = tagId;
 
         // If tag name provided but no ID, find or create
         if (!tagId && tagName) {
+            const normalizedName = typeof tagName === "string" ? tagName.trim() : "";
+            if (!normalizedName) return res.status(400).json({ error: "Tag ID or Name is required" });
             const tag = await prisma.tag.upsert({
-                where: { userId_name: { userId: userId!, name: tagName } },
+                where: { userId_name: { userId: userId!, name: normalizedName } },
                 update: {},
-                create: { userId: userId!, name: tagName }
+                create: { userId: userId!, name: normalizedName }
             });
             finalTagId = tag.id;
         }
 
         if (!finalTagId) return res.status(400).json({ error: "Tag ID or Name is required" });
+
+        const ownedTag = await prisma.tag.findFirst({
+            where: { id: finalTagId, userId },
+            select: { id: true },
+        });
+        if (!ownedTag) return res.status(404).json({ error: "Tag not found" });
 
         const itemTag = await prisma.itemTag.upsert({
             where: { itemId_tagId: { itemId, tagId: finalTagId } },
@@ -122,6 +139,7 @@ router.post("/attach/:itemId", async (req: Request, res: Response) => {
             create: { itemId, tagId: finalTagId, confidence: 1.0 }
         });
 
+        await invalidateGraphCache(userId);
         res.json(itemTag);
     } catch (error) {
         res.status(500).json({ error: "Failed to attach tag" });

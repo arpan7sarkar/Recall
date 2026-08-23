@@ -69,6 +69,9 @@ model Item {
   itemType        ItemType         @map("item_type")
   saveSource      SaveSource       @map("save_source")
   status          ProcessingStatus @default(pending)
+  processingStage String?          @map("processing_stage")
+  processingError String?          @db.Text @map("processing_error")
+  processingAttempt Int            @default(0) @map("processing_attempt")
   readingTime     Int?             @map("reading_time")
   wordCount       Int?             @map("word_count")
   sourceDomain    String?          @map("source_domain")
@@ -80,6 +83,7 @@ model Item {
   isArchived      Boolean          @default(false) @map("is_archived")
   isFavourite     Boolean          @default(false) @map("is_favourite")
   userNote        String?          @db.Text @map("user_note")
+  podcastName     String?          @map("podcast_name")
   youtubeTimestamp Int?            @map("youtube_timestamp")
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)

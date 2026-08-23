@@ -1,6 +1,6 @@
 "use client";
 
-import { useItems } from "@/hooks/useItems";
+import { useInfiniteItems } from "@/hooks/useItems";
 import { ItemCard } from "@/components/items/ItemCard";
 import { ItemCardSkeleton } from "@/components/items/ItemCardSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -10,9 +10,15 @@ import type { Item } from "@/types";
 
 export default function ArchivePage() {
   const { viewMode } = useUIStore();
-  const { data, isLoading, error } = useItems({ archived: true });
-
-  const items = data?.data || [];
+  const {
+    items,
+    isLoading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfiniteItems({ archived: true });
 
   return (
     <div>
@@ -61,6 +67,31 @@ export default function ArchivePage() {
           {items.map((item: Item) => (
             <ItemCard key={item.id} item={item} viewMode={viewMode} />
           ))}
+        </div>
+      )}
+
+      {items.length > 0 && (hasNextPage || isFetchNextPageError) && (
+        <div className="mt-8 flex flex-col items-center gap-3">
+          {isFetchNextPageError && (
+            <p role="alert" className="text-sm text-red-500">
+              Failed to load more archived items. Please try again.
+            </p>
+          )}
+          {hasNextPage && (
+            <button
+              type="button"
+              onClick={() => void fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="rounded-xl border px-4 py-2 text-sm disabled:opacity-60"
+              style={{
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+                background: "var(--bg-secondary)",
+              }}
+            >
+              {isFetchingNextPage ? "Loading more..." : "Load more archived items"}
+            </button>
+          )}
         </div>
       )}
     </div>

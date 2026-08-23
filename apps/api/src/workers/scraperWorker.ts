@@ -1,4 +1,3 @@
-import axios from "axios";
 import * as cheerio from "cheerio";
 import createMetascraper from "metascraper";
 import metascraperTitle from "metascraper-title";
@@ -10,6 +9,10 @@ import metascraperReadability from "metascraper-readability";
 import prisma from "@/lib/prisma";
 import { uploadFromUrl, buildKey } from "@/lib/storage";
 import { aiQueue } from "@/queues";
+import { buildPipelineJobId, buildProcessingFailureUpdate } from "@/queues/pipeline";
+import { invalidateGraphCache } from "../lib/graphCache";
+import { fetchRemoteJson, fetchRemoteText } from "../lib/remoteFetch";
+import { calculateTextStats } from "./parserStats";
 
 interface TweetFallbackData {
   text: string | null;
@@ -112,21 +115,27 @@ function buildFallbackTitle(url: string, type: string, mainText: string): string
 async function fetchTweetFallback(url: string): Promise<TweetFallbackData> {
   try {
     const endpoint = `https://publish.twitter.com/oembed?omit_script=1&dnt=true&url=${encodeURIComponent(url)}`;
-    const { data } = await axios.get(endpoint, { timeout: 8000 });
-    const html = typeof data?.html === "string" ? data.html : "";
+    const data = await fetchRemoteJson<Record<string, unknown>>(endpoint, {
+      timeoutMs: 8000,
+      maxBytes: 512 * 1024,
+      maxRedirects: 2,
+      allowedContentTypes: ["application/json"],
+    });
+    const html = typeof data.html === "string" ? data.html : "";
     if (!html) return { text: null, author: null, thumbnailUrl: null };
 
     const $ = cheerio.load(html);
     const tweetText = normalizeText($("blockquote p").first().text());
-    const author = typeof data?.author_name === "string" ? data.author_name : null;
-    const thumbnailUrl = typeof data?.thumbnail_url === "string" ? data.thumbnail_url : null;
+    const author = typeof data.author_name === "string" ? data.author_name : null;
+    const thumbnailUrl = typeof data.thumbnail_url === "string" ? data.thumbnail_url : null;
 
     return {
       text: tweetText || null,
       author,
       thumbnailUrl,
     };
-  } catch {
+  } catch (error: any) {
+    console.warn(`[Scrape] Twitter fallback unavailable: ${error?.message || "unknown error"}`);
     return { text: null, author: null, thumbnailUrl: null };
   }
 }
@@ -135,10 +144,15 @@ async function fetchInstagramFallback(url: string): Promise<InstagramFallbackDat
   const endpoint = `https://www.instagram.com/oembed/?url=${encodeURIComponent(url)}`;
 
   try {
-    const { data } = await axios.get(endpoint, { timeout: 8000 });
-    const title = typeof data?.title === "string" ? normalizeText(data.title) : "";
-    const author = typeof data?.author_name === "string" ? normalizeText(data.author_name) : "";
-    const thumbnailUrl = typeof data?.thumbnail_url === "string" ? data.thumbnail_url : null;
+    const data = await fetchRemoteJson<Record<string, unknown>>(endpoint, {
+      timeoutMs: 8000,
+      maxBytes: 512 * 1024,
+      maxRedirects: 2,
+      allowedContentTypes: ["application/json"],
+    });
+    const title = typeof data.title === "string" ? normalizeText(data.title) : "";
+    const author = typeof data.author_name === "string" ? normalizeText(data.author_name) : "";
+    const thumbnailUrl = typeof data.thumbnail_url === "string" ? data.thumbnail_url : null;
 
     return {
       title: title || null,
@@ -146,7 +160,8 @@ async function fetchInstagramFallback(url: string): Promise<InstagramFallbackDat
       author: author || null,
       thumbnailUrl,
     };
-  } catch {
+  } catch (error: any) {
+    console.warn(`[Scrape] Instagram fallback unavailable: ${error?.message || "unknown error"}`);
     return {
       title: null,
       text: null,
@@ -171,17 +186,23 @@ async function fetchLinkedInFallback(url: string): Promise<LinkedInFallbackData>
   const endpoint = `https://www.linkedin.com/oembed?url=${encodeURIComponent(url)}&format=json`;
 
   try {
-    const { data } = await axios.get(endpoint, { timeout: 8000 });
-    const title = typeof data?.title === "string" ? normalizeText(data.title) : "";
-    const author = typeof data?.author_name === "string" ? normalizeText(data.author_name) : "";
-    const thumbnailUrl = typeof data?.thumbnail_url === "string" ? data.thumbnail_url : null;
+    const data = await fetchRemoteJson<Record<string, unknown>>(endpoint, {
+      timeoutMs: 8000,
+      maxBytes: 512 * 1024,
+      maxRedirects: 2,
+      allowedContentTypes: ["application/json"],
+    });
+    const title = typeof data.title === "string" ? normalizeText(data.title) : "";
+    const author = typeof data.author_name === "string" ? normalizeText(data.author_name) : "";
+    const thumbnailUrl = typeof data.thumbnail_url === "string" ? data.thumbnail_url : null;
 
     return {
       text: title || buildLinkedInTextFromUrl(url),
       author: author || null,
       thumbnailUrl,
     };
-  } catch {
+  } catch (error: any) {
+    console.warn(`[Scrape] LinkedIn fallback unavailable: ${error?.message || "unknown error"}`);
     return {
       text: buildLinkedInTextFromUrl(url),
       author: null,
@@ -192,6 +213,7 @@ async function fetchLinkedInFallback(url: string): Promise<LinkedInFallbackData>
 
 export async function processScrape(job: any) {
   const { itemId, url, userId } = job.data;
+  let failureStage = "scrape";
 
   try {
     // 1. Fetch item from DB
@@ -201,7 +223,11 @@ export async function processScrape(job: any) {
     // 2. Set status to processing immediately
     await prisma.item.update({
       where: { id: itemId },
-      data: { status: "processing" },
+      data: {
+        status: "processing",
+        processingStage: "scrape",
+        processingError: null,
+      },
     });
 
     // 3. Detect type
@@ -215,13 +241,13 @@ export async function processScrape(job: any) {
 
     try {
       console.log(`[Scrape] Fetching ${url}...`);
-      const response = await axios.get(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-        },
-        timeout: 10000,
+      const response = await fetchRemoteText(url, {
+        timeoutMs: 10000,
+        maxBytes: Number(process.env.REMOTE_HTML_MAX_BYTES ?? 2 * 1024 * 1024),
+        maxRedirects: Number(process.env.REMOTE_MAX_REDIRECTS ?? 3),
+        allowedContentTypes: ["text/html", "application/xhtml+xml", "text/plain", "application/pdf"],
       });
-      html = response.data;
+      html = response.text;
     } catch (error: any) {
       if (finalType !== "tweet" && finalType !== "instagram" && finalType !== "linkedin") {
         throw error;
@@ -281,8 +307,8 @@ export async function processScrape(job: any) {
         thumbnailUrl = upload.url;
       } catch (err) {
         console.warn(`[Scrape] Failed to upload thumbnail for ${itemId}:`, err);
-        // Fallback to original image URL
-        thumbnailUrl = candidateImage;
+        // Do not retain an unvalidated remote URL after a failed safe fetch.
+        thumbnailUrl = null;
       }
     }
 
@@ -303,6 +329,7 @@ export async function processScrape(job: any) {
       (linkedInFallback.text && finalType === "linkedin" ? linkedInFallback.text : null) ||
       (mainText ? shorten(mainText, 240) : null);
     const author =
+      item.author ||
       (metadata as any).author ||
       tweetFallback.author ||
       instagramFallback.author ||
@@ -310,6 +337,7 @@ export async function processScrape(job: any) {
       null;
     const publishedAtRaw = (metadata as any).date ? new Date((metadata as any).date) : null;
     const publishedAt = publishedAtRaw && !Number.isNaN(publishedAtRaw.getTime()) ? publishedAtRaw : null;
+    const textStats = calculateTextStats(mainText);
 
     // 7. Update DB record
     await prisma.item.update({
@@ -319,26 +347,40 @@ export async function processScrape(job: any) {
         description,
         thumbnailUrl: thumbnailUrl,
         contentText: mainText,
+        readingTime: textStats.readingTime,
+        wordCount: textStats.wordCount,
         itemType: finalType as any,
         author,
         publishedAt,
         sourceDomain: new URL(url).hostname,
-        status: "processing", // Next: AI step
+        status: "processing",
+        processingStage: "ai",
+        processingError: null,
       },
     });
+    await invalidateGraphCache(userId);
 
     // 8. Push to AI Queue
-    await aiQueue.add("process-ai", { itemId, userId }, { jobId: `ai-${itemId}` });
+    failureStage = "queue";
+    await aiQueue.add(
+      "process-ai",
+      { itemId, userId },
+      { jobId: buildPipelineJobId("ai", itemId, item.processingAttempt) },
+    );
 
     return { success: true };
   } catch (error: any) {
     console.error(`[Scrape] Failed to scrape ${url}:`, error.message);
 
-    // Update status to failed
+    const failureUpdate = buildProcessingFailureUpdate(
+      job,
+      failureStage,
+      error?.message || "Scraping failed",
+    );
     await prisma.item.update({
       where: { id: itemId },
-      data: { status: "failed" },
-    }).catch(console.error);
+      data: failureUpdate,
+    }).catch((updateError) => console.error(`[Scrape] Failed to persist status for ${itemId}:`, updateError));
 
     throw error; // Let BullMQ handle retry
   }
