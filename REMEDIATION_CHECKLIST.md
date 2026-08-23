@@ -58,19 +58,19 @@ Related ledger IDs: `RUN-001`, `RUN-004`, `RUN-009`, `RUN-010`, `AUTH-004`, `AUT
 
 Completion gate: one documented local command starts the API, web app, worker, PostgreSQL, and Redis, and readiness fails when a required dependency is unavailable.
 
-- [ ] Make the root development workflow start or clearly validate the API.
-- [ ] Make the root development workflow start or clearly validate the worker.
-- [ ] Add dependency service startup and shutdown instructions.
-- [ ] Make API readiness verify PostgreSQL connectivity.
-- [ ] Make API readiness verify Redis connectivity.
-- [ ] Make API readiness verify queue availability.
-- [ ] Make worker readiness verify Redis connectivity before reporting healthy.
-- [ ] Separate liveness from readiness responses.
-- [ ] Ensure fatal uncaught exceptions terminate the process for supervisor recovery.
-- [ ] Add structured startup diagnostics without exposing secrets.
-- [ ] Complete `.env.example` with Clerk, CORS, readiness, storage, host, port, and clock-skew variables.
-- [ ] Document the required API, worker, and web environment contract.
-- [ ] Verify production and worker services use the same Redis configuration.
+- [x] Make the root development workflow start or clearly validate the API.
+- [x] Make the root development workflow start or clearly validate the worker.
+- [x] Add dependency service startup and shutdown instructions.
+- [x] Make API readiness verify PostgreSQL connectivity.
+- [x] Make API readiness verify Redis connectivity.
+- [x] Make API readiness verify queue availability.
+- [x] Make worker readiness verify Redis connectivity before reporting healthy.
+- [x] Separate liveness from readiness responses.
+- [x] Ensure fatal uncaught exceptions terminate the process for supervisor recovery.
+- [x] Add structured startup diagnostics without exposing secrets.
+- [x] Complete `.env.example` with Clerk, CORS, readiness, storage, host, port, and clock-skew variables.
+- [x] Document the required API, worker, and web environment contract.
+- [x] Verify production and worker services use the same Redis configuration.
 
 ## Session 02: Redis and BullMQ Pipeline Recovery
 

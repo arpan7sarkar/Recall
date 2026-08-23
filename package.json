@@ -1,0 +1,33 @@
+{
+  "name": "recall",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:all": "node scripts/dev.mjs",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:api": "npm --prefix apps/api run dev",
+    "dev:worker": "npm --prefix apps/api run worker",
+    "build": "npm run build:api && npm run build:web",
+    "build:api": "npm --prefix apps/api run build",
+    "build:web": "npm --prefix apps/web run build",
+    "start:api": "npm --prefix apps/api run start",
+    "start:worker": "npm --prefix apps/api run start:worker",
+    "start:web": "npm --prefix apps/web run start",
+    "lint": "npm run lint:api && npm run lint:web",
+    "lint:api": "npm --prefix apps/api run lint",
+    "lint:web": "npm --prefix apps/web run lint",
+    "test": "npm run test:api && npm run test:web",
+    "test:unit": "npm run test:api && npm run test:web",
+    "test:api": "npm --prefix apps/api run test",
+    "test:web": "npm --prefix apps/web run test",
+    "test:integration": "npm --prefix apps/api run test",
+    "test:e2e": "npm --prefix apps/web run test:e2e",
+    "test:runtime": "node --test scripts/*.test.mjs",
+    "validate:env": "node scripts/validate-env.mjs",
+    "check:services": "node scripts/check-services.mjs",
+    "prisma:generate": "npm --prefix apps/api run prisma:generate",
+    "services:up": "docker compose up -d postgres redis",
+    "services:down": "docker compose down",
+    "services:logs": "docker compose logs -f postgres redis"
+  }
+}
