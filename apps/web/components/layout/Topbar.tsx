@@ -12,7 +12,7 @@ import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Topbar() {
-  const { openAddContent, toggleSidebar } = useUIStore();
+  const { openAddContent, toggleSidebar, sidebarOpen } = useUIStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const router = useRouter();
@@ -43,9 +43,12 @@ export function Topbar() {
     >
       {/* Mobile hamburger */}
       <button
+        type="button"
         onClick={toggleSidebar}
         className="lg:hidden p-2 rounded-lg focus-ring transition-colors bg-muted text-muted-foreground hover:text-(--text-primary) shrink-0"
         aria-label="Toggle sidebar"
+        aria-expanded={sidebarOpen}
+        aria-controls="dashboard-sidebar"
       >
         <Menu size={20} />
       </button>
@@ -59,10 +62,11 @@ export function Topbar() {
               showDropdown && searchQuery.length >= 2 ? "border-(--accent-500)/50 shadow-[0_0_15px_rgba(192,192,192,0.1)]" : "border-border"
             )}
           >
-            <div className="flex items-center justify-center opacity-40 shrink-0" style={{ width: 14 }}>
+            <div className="flex items-center justify-center text-(--text-tertiary) shrink-0" style={{ width: 14 }}>
               <Icon name="search" size={14} />
             </div>
             <input
+              aria-label="Search your knowledge base"
               type="text"
               value={searchQuery}
               onChange={(e) => {
@@ -115,6 +119,7 @@ export function Topbar() {
       <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 shrink-0">
         {/* Add Content CTA */}
         <button
+          type="button"
           onClick={openAddContent}
           className={cn(
             "flex items-center justify-center gap-2 rounded-full font-serif text-xs transition-all duration-300 hover:scale-102 active:scale-97",

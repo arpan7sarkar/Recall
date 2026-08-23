@@ -8,6 +8,7 @@ import type { ForceGraphMethods } from "react-force-graph-2d";
 import { useUIStore } from "@/store/uiStore";
 import { LoaderFour } from "@/components/ui/unique-loader-components";
 import { getGraphRenderPolicy } from "@/lib/dashboardPerformance";
+import { getGraphDimensions } from "./graphDimensions";
 
 // ForceGraph must be dynamically imported for SSR compatibility in Next.js
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
@@ -53,16 +54,21 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
   const router = useRouter();
   const theme = useUIStore((s) => s.theme);
   const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [dimensions, setDimensions] = useState(() =>
+    getGraphDimensions({ width: 300, height: 400 })
+  );
   const [isVisible, setIsVisible] = useState(false);
   const [isDocumentVisible, setIsDocumentVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  const graphData = useMemo<GraphData>(() => ({
-    nodes: data.nodes,
-    links: data.edges,
-  }), [data.edges, data.nodes]);
+  const graphData = useMemo<GraphData>(
+    () => ({
+      nodes: data.nodes,
+      links: data.edges,
+    }),
+    [data.edges, data.nodes]
+  );
 
   const renderPolicy = getGraphRenderPolicy({
     nodeCount: graphData.nodes.length,
@@ -72,19 +78,29 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
   });
 
   useEffect(() => {
-    const handleResize = () => {
-      // Calculate responsive dimensions
-      const sidebarWidth = window.innerWidth > 1024 ? 280 : 0;
-      setDimensions({
-        width: Math.max(300, window.innerWidth - sidebarWidth - 48),
-        height: Math.max(400, window.innerHeight - 240),
-      });
+    const element = containerRef.current;
+    if (!element) return;
+
+    const updateDimensions = () => {
+      const rect = element.getBoundingClientRect();
+      setDimensions(
+        getGraphDimensions({
+          width: rect.width,
+          height: window.innerHeight - 240,
+        })
+      );
     };
 
-    window.addEventListener("resize", handleResize);
-    handleResize();
+    updateDimensions();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateDimensions);
+      return () => window.removeEventListener("resize", updateDimensions);
+    }
 
-    return () => window.removeEventListener("resize", handleResize);
+    const observer = new ResizeObserver(updateDimensions);
+    observer.observe(element);
+
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -168,7 +184,9 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
   return (
     <div
       ref={containerRef}
-      className="rounded-2xl overflow-hidden border bg-background shadow-sm transition-colors duration-500" 
+      role="img"
+      aria-label="Interactive knowledge graph. Select a node to open its saved item."
+      className="w-full min-w-0 rounded-2xl overflow-hidden border bg-background shadow-sm transition-colors duration-500"
       style={{ borderColor: "var(--border)" }}
       id="knowledge-graph-container"
     >

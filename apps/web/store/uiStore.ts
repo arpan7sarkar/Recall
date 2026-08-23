@@ -21,7 +21,10 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  sidebarOpen: true,
+  // The desktop layout forces the sidebar into view with its lg breakpoint.
+  // Keeping this closed by default prevents a mobile dashboard from opening
+  // underneath a modal overlay before the user asks for navigation.
+  sidebarOpen: false,
   sidebarCollapsed: false,
   viewMode: "grid",
   theme: "dark",

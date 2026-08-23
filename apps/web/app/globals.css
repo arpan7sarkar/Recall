@@ -15,7 +15,7 @@
   /* Deep Graphite / Stone Text */
   --text-primary: #18181b; 
   --text-secondary: #52525b; 
-  --text-tertiary: #a1a1aa; 
+  --text-tertiary: #71717a;
 
   /* Sophisticated Slate Accents */
   --accent-50: #f8fafc;
@@ -72,7 +72,7 @@
   
   --text-primary: #f2f2f2; /* Silver/Off-white Text */
   --text-secondary: #888888; 
-  --text-tertiary: #555555; 
+  --text-tertiary: #a3a3a3;
   
   --border: rgba(255, 255, 255, 0.06); 
   --border-hover: rgba(255, 255, 255, 0.12);
@@ -233,8 +233,11 @@ body {
   transform: translateY(-1px) !important;
 }
 
-/* Fix for light-dark() function defaulting to light in some environments */
+/* Keep native form controls and scrollbars aligned with the active theme. */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
+[data-theme="dark"] {
+  color-scheme: dark;
+}

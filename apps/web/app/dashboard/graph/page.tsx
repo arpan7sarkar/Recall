@@ -7,7 +7,7 @@ import { LoaderFive } from "@/components/ui/unique-loader-components";
 import { MousePointer2, Maximize2, Pointer } from "lucide-react";
 
 export default function GraphPage() {
-  const { data, isLoading, error, refetch } = useGraphData();
+  const { data, isLoading, error, refetch, isFetching } = useGraphData();
   const legendItems = [
     { label: "LinkedIn", color: "#0a66c2", shadow: "rgba(10,102,194,0.5)" },
     { label: "Article", color: "#3b82f6", shadow: "rgba(59,130,246,0.5)" },
@@ -71,13 +71,13 @@ export default function GraphPage() {
                  className={`w-2.5 h-2.5 rounded-full ${item.withBorder ? "border border-white/10" : ""}`}
                  style={{ background: item.color, boxShadow: `0 0 8px ${item.shadow}` }}
                />
-               <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{item.label}</span>
+             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{item.label}</span>
              </div>
            ))}
            <div className="h-4 w-px bg-border/50 mx-1" />
            <div className="flex items-center gap-2">
              <div className="w-5 h-px border-t border-dashed border-muted-foreground/30" />
-             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/60 italic">Connections</span>
+             <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground italic">Connections</span>
            </div>
         </div>
       </div>
@@ -113,10 +113,13 @@ export default function GraphPage() {
         </div>
         
         <button
+          type="button"
           onClick={() => refetch()}
-          className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 focus-ring bg-muted border border-border text-muted-foreground hover:bg-card hover:text-(--text-primary) shadow-sm active:scale-95"
+          disabled={isFetching}
+          aria-busy={isFetching}
+          className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 focus-ring bg-muted border border-border text-muted-foreground hover:bg-card hover:text-(--text-primary) shadow-sm active:scale-95 disabled:pointer-events-none disabled:opacity-60"
         >
-          Resync Graph
+          {isFetching ? "Resyncing Graph..." : "Resync Graph"}
         </button>
       </div>
     </div>

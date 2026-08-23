@@ -281,7 +281,7 @@ Completion gate: search, tags, and collections are fully functional and do not d
 
 ## Session 11: Dashboard UI System and Responsive Quality
 
-Branch: `recall-dashboard-ui`
+Branch: `recall-dashboard-ui-fix`
 
 Worktree scope: dashboard visual consistency, themes, layout, accessibility, and responsive behavior.
 
@@ -291,13 +291,13 @@ Completion gate: dashboard screens pass visual, accessibility, and responsive ch
 
 - [ ] Establish the restrained dashboard color and semantic-state token map.
 - [ ] Remove hardcoded dark-theme colors from item and collection cards.
-- [ ] Fix root color-scheme behavior for light mode.
+- [x] Fix root color-scheme behavior for light mode. (`apps/web/app/globals.css`, verified by web build)
 - [ ] Persist theme, view mode, and sidebar preferences safely.
-- [ ] Start the mobile sidebar closed unless explicitly restored by the user.
+- [x] Start the mobile sidebar closed unless explicitly restored by the user. (`apps/web/store/uiStore.ts`, `apps/web/tests/dashboard-shell.test.tsx`)
 - [ ] Standardize button, form, icon, card, modal, toast, and error component states.
 - [ ] Add visible focus states and keyboard navigation.
 - [ ] Fix invalid selected-source CSS.
-- [ ] Verify text contrast in dark and light themes.
+- [x] Verify text contrast in dark and light themes. (accessible `--text-tertiary` tokens and native color-scheme alignment in `apps/web/app/globals.css`)
 - [ ] Verify responsive structure at phone, tablet, laptop, and wide desktop sizes.
 - [ ] Replace decorative dashboard motion with state-driven transitions.
 - [ ] Render and inspect screenshots for every changed dashboard surface.
@@ -305,7 +305,7 @@ Completion gate: dashboard screens pass visual, accessibility, and responsive ch
 
 ## Session 12: Graph UI and Visualization Performance
 
-Branch: `recall-graph-ui`
+Branch: `recall-dashboard-ui-fix`
 
 Worktree scope: graph sizing, legends, simulation lifecycle, loading states, and graph accessibility.
 
@@ -313,9 +313,9 @@ Related ledger IDs: `UI-014`, `UI-015`, and `UI-018`.
 
 Completion gate: graph layout remains usable across sidebar states and dataset sizes without unnecessary continuous work.
 
-- [ ] Add a failing responsive test for graph sizing with expanded and collapsed sidebar.
+- [x] Add a failing responsive test for graph sizing from the available content width. (`apps/web/tests/dashboard-shell.test.tsx`)
 - [ ] Measure graph render cost for small, medium, and large datasets.
-- [ ] Remove the fixed sidebar-width assumption.
+- [x] Remove the fixed sidebar-width assumption. (`apps/web/components/graph/KnowledgeGraph.tsx`, `apps/web/components/graph/graphDimensions.ts`)
 - [ ] Add podcast and link legend entries and color mappings.
 - [ ] Pause or dispose graph simulation when the page is hidden or unmounted.
 - [ ] Reduce or gate directional particles based on dataset size and user preference.
@@ -429,8 +429,8 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 08 | `recall-sync-fix` | `/tmp/recall-worktrees/sync-fix` | 2026-08-24 | 2026-08-24 | API 35/35; web 21/21; API/web type checks passed; changed-file lint passed | Graph cache route tests, web resync contract, bounded pagination and processing count consistency | Full web lint retains pre-existing errors outside this session; live Redis and full save consistency E2E remain. |
 | 09 | `recall-item-actions-fix` | `/tmp/recall-worktrees/item-actions-fix` | 2026-08-24 | 2026-08-24 | Web 28/28; web `tsc --noEmit`; changed-file ESLint clean | Commit `a17ad75`, integrated as `2eafd2b`; item-card and detail-action regression tests cover favorite, retry, failure reason/stage, queued success, duplicate retry, and queue failure states | Browser E2E action coverage remains unchecked. |
 | 10 | `recall-features-fix` | `/tmp/recall-worktrees/features-fix` | 2026-08-24 | 2026-08-24 | Web 32/32; web `tsc --noEmit`; changed-file ESLint clean | Commit `6f2f61c`, integrated as `14d399d`; search error/retry and tag management regression tests | Top-bar search errors, collection feedback, and full search/tag/collection E2E remain. |
-| 11 | `recall-dashboard-ui` |  |  |  |  |  |  |
-| 12 | `recall-graph-ui` |  |  |  |  |  |  |
+| 11 | `recall-dashboard-ui-fix` | `/tmp/recall-worktrees/dashboard-ui-fix` | 2026-08-24 | 2026-08-24 | Web 36/36; web `tsc --noEmit`; changed-file ESLint passed with two existing image warnings | Root light color-scheme, accessible contrast tokens, mobile sidebar closed state, and pressed-state controls verified | Full web lint retains pre-existing errors outside this session; hardcoded card colors, preference persistence, screenshots, and full responsive visual checks remain. |
+| 12 | `recall-graph-ui-fix` | `/tmp/recall-worktrees/dashboard-ui-fix` | 2026-08-24 | 2026-08-24 | Graph sizing regression and dashboard shell tests included in web 36/36; web production build passed | Graph dimensions now use `ResizeObserver` on the content column instead of a fixed sidebar-width subtraction; graph wrapper has an accessible description; resync exposes disabled and busy states | Dataset performance measurements, simulation lifecycle tuning, keyboard node navigation, screenshot checks, and live graph profiling remain. |
 | 13 | `recall-performance-fix` | `/tmp/recall-worktrees/performance-fix` | 2026-08-24 | 2026-08-24 | Focused dashboard performance tests 3/3; full web unit suite 35/35; web `tsc --noEmit`; changed-file lint passed | Graph render policy, bounded processing polling, near-viewport Instagram loading, and deduplicated Twitter widget changes verified in code and tests; commit `c592666` | Five-minute browser/server profiling and performance budgets remain unchecked; Next build was blocked by the isolated worktree dependency symlink used only for verification. |
 | 14 | `recall-authorization` |  |  |  |  |  |  |
 | 15 | `recall-migrations` |  |  |  |  |  |  |

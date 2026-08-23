@@ -93,7 +93,9 @@ export default function SearchPage() {
           {(["semantic", "keyword"] as const).map((t) => (
             <button
               key={t}
+              type="button"
               onClick={() => setSearchType(t)}
+              aria-pressed={searchType === t}
               className="px-4 py-3 text-xs font-medium capitalize transition-all duration-150"
               style={{
                 background: searchType === t ? "var(--accent-50)" : "transparent",

@@ -59,6 +59,9 @@ export default function SwitchButton({
   return (
     <Button
       variant="ghost"
+      type="button"
+      aria-pressed={theme === "dark"}
+      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
       className={cn(
         "group relative",
         "transition-all duration-300 ease-out",
