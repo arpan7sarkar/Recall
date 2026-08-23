@@ -43,8 +43,8 @@ Completion gate: deterministic unit and integration commands exist, the primary 
 - [ ] Add deterministic adapters for Clerk, R2, OpenAI, Pinecone, and remote fetches.
 - [x] Repair the API test script so it runs an installed test runner.
 - [x] Repair the API lint script so it runs an installed linter.
-- [ ] Add root commands for API, worker, web, build, lint, unit, integration, and E2E checks.
-- [ ] Add CI workflows for build, lint, tests, migrations, E2E, and artifact upload.
+- [x] Add root commands for API, worker, web, build, lint, unit, integration, and E2E checks. (`package.json`)
+- [x] Add CI workflows for build, lint, tests, migrations, E2E, and artifact upload. (`.github/workflows/quality.yml`)
 - [ ] Add a failing save test that proves the user-visible error state is currently missing.
 - [ ] Add a failing pipeline test that proves a queued item can remain pending without a worker.
 
