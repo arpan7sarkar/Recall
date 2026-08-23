@@ -2,3 +2,4 @@ docs
 .env
 dist
 .next
+test-results
