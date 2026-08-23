@@ -155,15 +155,15 @@ Completion gate: URL and file saves provide clear success, failure, offline, val
 
 - [ ] Add a failing E2E test for a successful URL save.
 - [ ] Add a failing E2E test for a failed URL save with an actionable message.
-- [ ] Add a failing test for malformed URL rejection before persistence.
-- [ ] Validate URL scheme and host at the API boundary.
-- [ ] Decide whether manually entered title and author override scraped values or act as fallbacks.
-- [ ] Send and persist the approved title, author, and podcast metadata contract.
-- [ ] Parse `hh:mm:ss`, `mm:ss`, and numeric YouTube timestamps into seconds.
-- [ ] Prevent duplicate submissions while a save is in flight.
-- [ ] Surface API validation and dependency errors inside the modal.
+- [x] Add a failing test for malformed URL rejection before persistence. (`apps/api/src/routes/saveContract.test.ts`, `apps/web/tests/save-contract.test.ts`)
+- [x] Validate URL scheme and host at the API boundary. (`apps/api/src/routes/saveContract.ts`)
+- [x] Decide whether manually entered title and author override scraped values or act as fallbacks. (explicit fields take precedence over scraped metadata)
+- [x] Send and persist the approved title, author, and podcast metadata contract. (`apps/api/prisma/migrations/20260824020000_save_metadata_contract`)
+- [x] Parse `hh:mm:ss`, `mm:ss`, and numeric YouTube timestamps into seconds. (`apps/api/src/routes/saveContract.test.ts`, `apps/web/tests/save-contract.test.ts`)
+- [x] Prevent duplicate submissions while a save is in flight. (`apps/web/tests/add-content-stepper.test.tsx`)
+- [x] Surface API validation and dependency errors inside the modal. (`apps/web/tests/add-content-stepper.test.tsx`)
 - [ ] Add retry and dismiss behavior for save errors.
-- [ ] Preserve the form when a save fails.
+- [x] Preserve the form when a save fails. (`apps/web/tests/add-content-stepper.test.tsx`)
 - [ ] Show the newly saved item immediately with its processing state.
 - [ ] Add collection and tag attachment success and failure feedback.
 - [ ] Verify save behavior after browser refresh and reauthentication.
@@ -416,7 +416,7 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 02 | `recall-pipeline` | `/tmp/recall-worktrees/pipeline` | 2026-08-24 | 2026-08-24 | Focused API 9/9; integrated API 26/26; integrated build passed | Commit `bc5607041905353249c1af03e2bb89fbe0845175`; compatibility commit `75e00dd` | Eight waiting Redis jobs remain unchecked because no live worker recovery was performed. |
 | 03 | `recall-auth` | `/tmp/recall-worktrees/auth` | 2026-08-24 | 2026-08-24 | API 12/12; web 6/6; API `tsc --noEmit` | Web `next build`; commit `5694038` | Web lint has pre-existing errors outside Session 03. |
 | 04 | `recall-api-client` |  |  |  |  |  |  |
-| 05 | `recall-save-flow` |  |  |  |  |  |  |
+| 05 | `recall-save-flow` | `/tmp/recall-worktrees/save-flow` (salvaged into integration branch) | 2026-08-24 | 2026-08-24 | API 30/30; web 13/13; API and web type checks passed; API and web lint passed | Commit recorded in integration history after focused URL, metadata, timestamp, error, and duplicate-submit tests | E2E save, retry action, optimistic item display, attachment feedback, and refresh/reauth checks remain. |
 | 06 | `recall-uploads` |  |  |  |  |  |  |
 | 07 | `recall-parser` |  |  |  |  |  |  |
 | 08 | `recall-sync` |  |  |  |  |  |  |

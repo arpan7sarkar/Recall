@@ -42,6 +42,19 @@ export class ApiError extends Error {
   }
 }
 
+export function getApiErrorMessage(error: unknown, fallback = "Something went wrong. Please try again."): string {
+  if (error instanceof ApiError && typeof error.body === "object" && error.body !== null) {
+    const body = error.body as { error?: unknown; message?: unknown; reason?: unknown };
+    const primary = typeof body.error === "string" ? body.error : typeof body.message === "string" ? body.message : null;
+    const reason = typeof body.reason === "string" ? body.reason : null;
+    if (primary && reason && !primary.toLowerCase().includes(reason.toLowerCase())) return `${primary} ${reason}`;
+    if (primary) return primary;
+    if (reason) return reason;
+  }
+  if (error instanceof Error && error.message && !error.message.startsWith("API ")) return error.message;
+  return fallback;
+}
+
 function getAuthHeaders(token?: string): Record<string, string> {
   if (token) return { Authorization: `Bearer ${token}` };
   if (typeof window === "undefined") return {};

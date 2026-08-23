@@ -8,6 +8,12 @@ import { upload } from "@/middleware/upload";
 import { QueueUnavailableError, scrapeQueue, aiQueue } from "@/queues";
 import { buildPipelineJobId } from "@/queues/pipeline";
 import { buildKey, deleteFile, uploadFile } from "@/lib/storage";
+import {
+  normalizeSaveMetadata,
+  normalizeSaveUrl,
+  parseYoutubeTimestamp,
+  SaveValidationError,
+} from "./saveContract";
 
 const router = Router();
 const ITEM_TYPES: ItemType[] = ["article", "tweet", "youtube", "pdf", "image", "podcast", "instagram", "linkedin", "link"];
@@ -28,34 +34,6 @@ function normalizeTagsInput(value: unknown): string[] {
         .filter((entry) => entry.length > 0)
     )
   );
-}
-
-function normalizeUrl(rawUrl: string): string {
-  const trimmed = rawUrl.trim();
-
-  try {
-    const parsed = new URL(trimmed);
-    parsed.hash = "";
-
-    const host = parsed.hostname.toLowerCase();
-
-    // Remove noisy tracking params for Instagram URLs so the same reel/post dedupes cleanly.
-    if (host.includes("instagram.com")) {
-      parsed.search = "";
-      const parts = parsed.pathname.split("/").filter(Boolean);
-      if (parts.length >= 2 && ["reel", "p", "tv"].includes(parts[0])) {
-        parsed.pathname = `/${parts[0]}/${parts[1]}/`;
-      }
-    }
-    // LinkedIn links are commonly shared with tracking query params.
-    if (host.includes("linkedin.com")) {
-      parsed.search = "";
-    }
-
-    return parsed.toString();
-  } catch {
-    return trimmed;
-  }
 }
 
 function detectItemTypeFromUrl(rawUrl: string): ItemType {
@@ -85,7 +63,7 @@ router.use(authenticateClerk);
  */
 router.post("/upload", upload.single("file"), async (req: Request, res: Response) => {
   const userId = (req as any).auth?.userId;
-  const { title, itemType, tags, collectionId, note } = req.body;
+  const { title, author, podcastName, itemType, tags, collectionId, note } = req.body;
   const file = req.file;
 
   if (!userId) {
@@ -96,7 +74,8 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
     return res.status(400).json({ error: "No file uploaded" });
   }
 
-  if (!title) {
+  const metadata = normalizeSaveMetadata({ title, author, podcastName, note });
+  if (!metadata.title) {
     return res.status(400).json({ error: "Title is required for uploads" });
   }
 
@@ -113,10 +92,12 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
     item = await prisma.item.create({
       data: {
         userId,
-        title,
+        title: metadata.title,
         itemType: inferredType,
         saveSource: "web_upload",
-        userNote: note,
+        author: metadata.author,
+        podcastName: metadata.podcastName,
+        userNote: metadata.note,
         fileUrl: uploadedFile.url,
         thumbnailUrl: inferredType === "image" ? uploadedFile.url : null,
         sourceDomain: "upload",
@@ -356,23 +337,32 @@ router.get("/", async (req: Request, res: Response) => {
  */
 router.post("/", async (req: Request, res: Response) => {
   const userId = (req as any).auth?.userId;
-  const { url, itemType, tags, collectionId, note, youtubeTimestamp, saveSource, isArchived } = req.body;
+  const {
+    url,
+    title,
+    author,
+    podcastName,
+    itemType,
+    tags,
+    collectionId,
+    note,
+    youtubeTimestamp,
+    saveSource,
+    isArchived,
+  } = req.body;
 
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  if (!url || typeof url !== "string") {
-    return res.status(400).json({ error: "URL is required" });
-  }
-
   let item: any;
   let normalizedUrl: string;
   try {
-    normalizedUrl = normalizeUrl(url);
+    normalizedUrl = normalizeSaveUrl(url);
     const normalizedTags = normalizeTagsInput(tags);
     const normalizedItemType = isItemType(itemType) ? itemType : detectItemTypeFromUrl(normalizedUrl);
-    const parsedYoutubeTimestamp = youtubeTimestamp ? parseInt(String(youtubeTimestamp), 10) : null;
+    const parsedYoutubeTimestamp = parseYoutubeTimestamp(youtubeTimestamp);
+    const metadata = normalizeSaveMetadata({ title, author, podcastName, note });
     const normalizedSaveSource: SaveSource =
       saveSource === "extension" || saveSource === "web_url" ? saveSource : "web_url";
 
@@ -383,8 +373,11 @@ router.post("/", async (req: Request, res: Response) => {
         url: normalizedUrl,
         itemType: normalizedItemType,
         saveSource: normalizedSaveSource,
-        userNote: note,
-        youtubeTimestamp: Number.isFinite(parsedYoutubeTimestamp) ? parsedYoutubeTimestamp : null,
+        title: metadata.title,
+        author: metadata.author,
+        podcastName: metadata.podcastName,
+        userNote: metadata.note,
+        youtubeTimestamp: parsedYoutubeTimestamp,
         status: "pending",
         processingStage: "scrape",
         isArchived: Boolean(isArchived),
@@ -415,6 +408,12 @@ router.post("/", async (req: Request, res: Response) => {
     });
 
   } catch (error) {
+    if (error instanceof SaveValidationError) {
+      return res.status(error.status).json({
+        error: error.message,
+        code: "INVALID_SAVE_REQUEST",
+      });
+    }
     console.error(error);
     res.status(500).json({ error: "Failed to create item" });
     return;

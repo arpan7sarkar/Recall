@@ -309,6 +309,7 @@ export async function processScrape(job: any) {
       (linkedInFallback.text && finalType === "linkedin" ? linkedInFallback.text : null) ||
       (mainText ? shorten(mainText, 240) : null);
     const author =
+      item.author ||
       (metadata as any).author ||
       tweetFallback.author ||
       instagramFallback.author ||
