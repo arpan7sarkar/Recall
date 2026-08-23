@@ -313,6 +313,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
               <a href={(item.url || "").replace("x.com", "twitter.com")} target="_blank"></a>
             </blockquote>
             <Script
+              id="twitter-widgets-script"
               src="https://platform.twitter.com/widgets.js"
               strategy="afterInteractive"
               onLoad={() => {

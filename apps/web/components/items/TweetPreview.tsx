@@ -20,10 +20,11 @@ export function TweetPreview({ item }: TweetPreviewProps) {
           <a href={tweetUrl.replace("x.com", "twitter.com")} target="_blank"></a>
         </blockquote>
         <Script 
+          id="twitter-widgets-script"
           src="https://platform.twitter.com/widgets.js" 
           strategy="lazyOnload" 
           onLoad={() => {
-            // @ts-ignore - Twitter widget initialization
+            // @ts-expect-error Twitter injects the widget runtime globally.
             if (window.twttr) window.twttr.widgets.load();
           }}
         />

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { ForceGraphMethods } from "react-force-graph-2d";
 
 import { useUIStore } from "@/store/uiStore";
 import { LoaderFour } from "@/components/ui/unique-loader-components";
+import { getGraphRenderPolicy } from "@/lib/dashboardPerformance";
 
 // ForceGraph must be dynamically imported for SSR compatibility in Next.js
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
@@ -52,12 +53,23 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
   const router = useRouter();
   const theme = useUIStore((s) => s.theme);
   const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [isVisible, setIsVisible] = useState(false);
+  const [isDocumentVisible, setIsDocumentVisible] = useState(true);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  const graphData: GraphData = {
+  const graphData = useMemo<GraphData>(() => ({
     nodes: data.nodes,
     links: data.edges,
-  };
+  }), [data.edges, data.nodes]);
+
+  const renderPolicy = getGraphRenderPolicy({
+    nodeCount: graphData.nodes.length,
+    isVisible,
+    isDocumentVisible,
+    prefersReducedMotion,
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -74,6 +86,49 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const supportsIntersectionObserver = "IntersectionObserver" in window;
+    if (!supportsIntersectionObserver) {
+      const frameId = window.requestAnimationFrame(() => setIsVisible(true));
+      return () => window.cancelAnimationFrame(frameId);
+    } else {
+      const observer = new IntersectionObserver(
+        ([entry]) => setIsVisible(Boolean(entry?.isIntersecting)),
+        { rootMargin: "200px 0px", threshold: 0.01 },
+      );
+      observer.observe(container);
+
+      return () => observer.disconnect();
+    }
+  }, []);
+
+  useEffect(() => {
+    const updateVisibility = () => setIsDocumentVisible(document.visibilityState === "visible");
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotionPreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    updateVisibility();
+    updateMotionPreference();
+    document.addEventListener("visibilitychange", updateVisibility);
+    mediaQuery.addEventListener?.("change", updateMotionPreference);
+
+    return () => {
+      document.removeEventListener("visibilitychange", updateVisibility);
+      mediaQuery.removeEventListener?.("change", updateMotionPreference);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible || !isDocumentVisible) {
+      graphRef.current?.pauseAnimation();
+    } else {
+      graphRef.current?.resumeAnimation();
+    }
+  }, [isDocumentVisible, isVisible]);
 
   const getNodeColor = (type: string) => {
     switch (type) {
@@ -111,7 +166,8 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
   const isDark = theme === "dark";
 
   return (
-    <div 
+    <div
+      ref={containerRef}
       className="rounded-2xl overflow-hidden border bg-background shadow-sm transition-colors duration-500" 
       style={{ borderColor: "var(--border)" }}
       id="knowledge-graph-container"
@@ -140,7 +196,7 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
         linkLineDash={(link) => (getLinkType(link) === "similarity" ? [3, 2] : null)}
         
         // Visual particles for active relationships
-        linkDirectionalParticles={1}
+        linkDirectionalParticles={renderPolicy.directionalParticles}
         linkDirectionalParticleSpeed={(link) => getLinkStrength(link) * 0.005}
         linkDirectionalParticleWidth={1.5}
         linkDirectionalParticleColor={() => isDark ? "rgba(255,255,255,0.2)" : "rgba(99, 102, 241, 0.4)"}
@@ -154,7 +210,9 @@ export function KnowledgeGraph({ data }: KnowledgeGraphProps) {
         }}
         
         // Engine settings for better UX
-        d3AlphaDecay={0.02}
+        cooldownTicks={renderPolicy.cooldownTicks}
+        cooldownTime={renderPolicy.cooldownTime}
+        d3AlphaDecay={0.05}
         d3VelocityDecay={0.3}
         onEngineStop={() => {
           if (graphData.nodes.length > 0) {

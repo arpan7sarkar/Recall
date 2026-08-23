@@ -5,6 +5,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { api } from "@/lib/api";
 import { invalidateGraphQuery } from "@/lib/queryKeys";
+import {
+  getItemProcessingPollInterval,
+} from "@/lib/dashboardPerformance";
 import type { Item, PaginatedResponse } from "@/types";
 
 interface UseItemsOptions {
@@ -43,13 +46,21 @@ export function useItems(opts: UseItemsOptions = {}) {
         : data?.data?.some((item) => item.status === "pending" || item.status === "processing");
       if (!hasPendingProcessing) {
         pollingStartedAt.current = null;
-        return false;
+        return getItemProcessingPollInterval({
+          hasPendingProcessing: false,
+          pollingStartedAt: null,
+          now: Date.now(),
+        });
       }
 
       pollingStartedAt.current ??= Date.now();
-      if (Date.now() - pollingStartedAt.current >= 60_000) return false;
-      return 5000;
+      return getItemProcessingPollInterval({
+        hasPendingProcessing: Boolean(hasPendingProcessing),
+        pollingStartedAt: pollingStartedAt.current,
+        now: Date.now(),
+      });
     },
+    refetchIntervalInBackground: false,
   });
 }
 

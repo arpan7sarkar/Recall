@@ -336,16 +336,21 @@ Completion gate: five-minute controlled scenarios show stable memory and bounded
 - [ ] Capture baseline browser RSS, CPU, request rate, long tasks, frame rate, and detached-node measurements.
 - [ ] Capture baseline API and worker RSS, heap, event-loop delay, and Redis queue lengths.
 - [ ] Compare landing page, empty dashboard, 20-card dashboard, social-heavy dashboard, and large graph.
-- [ ] Compare dashboard behavior with polling disabled and enabled.
+- [x] Compare dashboard behavior with polling disabled and enabled. (`apps/web/lib/dashboardPerformance.ts`, `apps/web/tests/dashboard-performance.test.ts`)
 - [ ] Measure Instagram iframe and Twitter widget cost per card.
-- [ ] Lazy-load or replace social embeds until explicitly opened.
-- [ ] Ensure third-party widget loading is deduplicated and cleaned up.
-- [ ] Pause hidden or unnecessary animations.
-- [ ] Investigate graph particles and animation frame loops at scale.
+- [x] Lazy-load social embeds until they are near the viewport. (`apps/web/components/items/InstagramAutoEmbed.tsx`)
+- [x] Deduplicate Twitter widget loading and disconnect social embed observers on unmount. (`apps/web/components/items/ItemCard.tsx`, `apps/web/components/items/TweetPreview.tsx`, `apps/web/components/items/InstagramAutoEmbed.tsx`)
+- [x] Pause dashboard graph particle animation when hidden, backgrounded, reduced-motion, or above the supported node budget. (`apps/web/components/graph/KnowledgeGraph.tsx`)
+- [x] Investigate and gate graph particles and simulation work at scale. (`apps/web/lib/dashboardPerformance.ts`, `apps/web/tests/dashboard-performance.test.ts`)
 - [ ] Measure API memory while Redis is unavailable and stale items are requeued.
 - [ ] Bound scraper, thumbnail, PDF, and remote response memory.
 - [ ] Add performance budgets to CI or scheduled performance checks.
 - [ ] Verify memory plateaus rather than relying only on a fast initial render.
+
+Session 13 evidence: item processing refresh remains a five-second poll only while pending work is present and is bounded to a 60-second recovery window, with background-tab polling disabled.
+Instagram iframes now mount only near the viewport, Twitter's shared widget script has a stable deduplication ID, and graph particles are gated by visibility, document state, reduced-motion preference, and a 60-node budget.
+Focused dashboard performance tests pass (3/3), the full web unit suite passes (35/35), web typecheck passes, and changed-file lint is clean.
+Controlled five-minute browser and server profiling remains unchecked and is required before declaring the overall performance group complete.
 
 ## Session 14: Authorization and Data Integrity
 
@@ -426,7 +431,7 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 10 | `recall-features-fix` | `/tmp/recall-worktrees/features-fix` | 2026-08-24 | 2026-08-24 | Web 32/32; web `tsc --noEmit`; changed-file ESLint clean | Commit `6f2f61c`, integrated as `14d399d`; search error/retry and tag management regression tests | Top-bar search errors, collection feedback, and full search/tag/collection E2E remain. |
 | 11 | `recall-dashboard-ui` |  |  |  |  |  |  |
 | 12 | `recall-graph-ui` |  |  |  |  |  |  |
-| 13 | `recall-performance` |  |  |  |  |  |  |
+| 13 | `recall-performance-fix` | `/tmp/recall-worktrees/performance-fix` | 2026-08-24 | 2026-08-24 | Focused dashboard performance tests 3/3; full web unit suite 35/35; web `tsc --noEmit`; changed-file lint passed | Graph render policy, bounded processing polling, near-viewport Instagram loading, and deduplicated Twitter widget changes verified in code and tests; commit `ce15f95` | Five-minute browser/server profiling and performance budgets remain unchecked; Next build was blocked by the isolated worktree dependency symlink used only for verification. |
 | 14 | `recall-authorization` |  |  |  |  |  |  |
 | 15 | `recall-migrations` |  |  |  |  |  |  |
 | 16 | `recall-release-verification` |  |  |  |  |  |  |
