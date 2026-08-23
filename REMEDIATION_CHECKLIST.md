@@ -411,9 +411,9 @@ Completion gate: all critical and high checklist items are verified or explicitl
 
 | Session | Branch | Worktree | Started | Finished | Test evidence | Verification evidence | Notes |
 |---|---|---|---|---|---|---|---|
-| 00 | `recall-test-foundation` |  |  |  |  |  |  |
-| 01 | `recall-runtime` |  |  |  |  |  |  |
-| 02 | `recall-pipeline` |  |  |  |  |  |  |
+| 00 | `recall-test-foundation` | `/home/arpan/my_laptop/faah/01_TasksForDaily/Recall` | 2026-08-24 | 2026-08-24 | API 26/26; web 6/6; runtime 1/1; browser smoke passed | Commits `2e06a1e`, `24052c4`; integrated build passed | Save-path E2E, CI, service fixtures, and live dependency checks remain. |
+| 01 | `recall-runtime` | `/tmp/recall-worktrees/runtime` | 2026-08-24 | 2026-08-24 | Runtime contract tests; API 26/26; integrated API and web builds passed | Commit `fdef9b7`; integrated commit `e0d313e` | Live service smoke checks remain. |
+| 02 | `recall-pipeline` | `/tmp/recall-worktrees/pipeline` | 2026-08-24 | 2026-08-24 | Focused API 9/9; integrated API 26/26; integrated build passed | Commit `bc5607041905353249c1af03e2bb89fbe0845175`; compatibility commit `75e00dd` | Eight waiting Redis jobs remain unchecked because no live worker recovery was performed. |
 | 03 | `recall-auth` | `/tmp/recall-worktrees/auth` | 2026-08-24 | 2026-08-24 | API 12/12; web 6/6; API `tsc --noEmit` | Web `next build`; commit `5694038` | Web lint has pre-existing errors outside Session 03. |
 | 04 | `recall-api-client` |  |  |  |  |  |  |
 | 05 | `recall-save-flow` |  |  |  |  |  |  |
