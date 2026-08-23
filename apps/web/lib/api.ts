@@ -18,18 +18,22 @@ function isLocalHost(hostname: string): boolean {
   return hostname === "localhost" || hostname === "127.0.0.1";
 }
 
-function resolveApiBase(): string {
-  if (typeof window === "undefined") return PRELIM_API_BASE;
+export function resolveApiBase(location?: Pick<Location, "hostname">): string {
+  const hostname = location?.hostname ?? (typeof window === "undefined" ? undefined : window.location.hostname);
+  const preliminary = PRELIM_API_BASE.replace(/\/$/, "");
+  const production = PROD_API_BASE.replace(/\/$/, "");
+  if (!hostname) return preliminary;
 
   // Safety: if app runs on a non-local host, never call localhost API.
-  if (!isLocalHost(window.location.hostname) && PRELIM_API_BASE.includes("localhost")) {
-    return PROD_API_BASE;
+  if (!isLocalHost(hostname) && preliminary.includes("localhost")) {
+    return production;
   }
 
-  return PRELIM_API_BASE;
+  return preliminary;
 }
 
 const API_BASE = resolveApiBase();
+const REQUEST_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS ?? 15000);
 
 export class ApiError extends Error {
   constructor(
@@ -40,6 +44,25 @@ export class ApiError extends Error {
     super(`API ${status}: ${statusText}`);
     this.name = "ApiError";
   }
+}
+
+export type ApiTransportErrorKind = "timeout" | "offline" | "network";
+
+export class ApiTransportError extends Error {
+  constructor(public kind: ApiTransportErrorKind, message: string, public requestId?: string) {
+    super(message);
+    this.name = "ApiTransportError";
+  }
+}
+
+export function classifyApiError(error: unknown): "auth" | "validation" | "conflict" | "dependency" | "offline" | "unknown" {
+  if (error instanceof ApiTransportError) return "offline";
+  if (!(error instanceof ApiError)) return "unknown";
+  if (error.status === 401 || error.status === 403) return "auth";
+  if (error.status === 400 || error.status === 422) return "validation";
+  if (error.status === 409) return "conflict";
+  if (error.status === 408 || error.status === 429 || error.status >= 500) return "dependency";
+  return "unknown";
 }
 
 export function getApiErrorMessage(error: unknown, fallback = "Something went wrong. Please try again."): string {
@@ -82,26 +105,34 @@ function getAuthHeaders(token?: string): Record<string, string> {
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
-  if (res.status === 401) {
-    // Handle unauthorized - Clerk usually handles this via middleware/layout
-  }
   if (!res.ok) {
-    const body = await res.json().catch(() => null);
+    const body = await res.text().then((text) => {
+      if (!text) return null;
+      try { return JSON.parse(text); } catch { return { error: text }; }
+    });
     throw new ApiError(res.status, res.statusText, body);
   }
   if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  if (!text.trim()) return undefined as T;
+  return JSON.parse(text) as T;
+}
+
+function createRequestId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `recall-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 export async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit & { token?: string } = {}
+  options: RequestInit & { token?: string; requestId?: string } = {}
 ): Promise<T> {
-  const url = `${API_BASE}${endpoint}`;
-  const { token, ...fetchOptions } = options;
+  const url = `${API_BASE}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const { token, requestId = createRequestId(), ...fetchOptions } = options;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "X-Request-ID": requestId,
     ...getAuthHeaders(token),
     ...((fetchOptions.headers as Record<string, string>) ?? {}),
   };
@@ -111,8 +142,24 @@ export async function apiFetch<T>(
     delete headers["Content-Type"];
   }
 
-  const res = await fetch(url, { ...fetchOptions, headers });
-  return handleResponse<T>(res);
+  const controller = new AbortController();
+  const timeoutMs = Number.isFinite(REQUEST_TIMEOUT_MS) && REQUEST_TIMEOUT_MS > 0 ? REQUEST_TIMEOUT_MS : 15000;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...fetchOptions, headers, signal: controller.signal });
+    return await handleResponse<T>(res);
+  } catch (error) {
+    if (error instanceof ApiError || error instanceof ApiTransportError) throw error;
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiTransportError("timeout", `Request timed out after ${timeoutMs}ms.`, requestId);
+    }
+    if (error instanceof TypeError) {
+      throw new ApiTransportError("offline", "The API is unreachable. Check your connection and try again.", requestId);
+    }
+    throw new ApiTransportError("network", "The request could not be completed. Please try again.", requestId);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export const api = {

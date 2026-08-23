@@ -1,4 +1,5 @@
 import "dotenv/config";
+import crypto from "node:crypto";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -58,6 +59,11 @@ app.use(
 // 2. Body parsing (must come before Clerk/auth middleware)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const requestId = req.header("x-request-id") || crypto.randomUUID();
+  res.setHeader("X-Request-ID", requestId);
+  next();
+});
 // 3. Clerk (Registered globally to initialize context)
 app.use(
   clerkMiddleware({
