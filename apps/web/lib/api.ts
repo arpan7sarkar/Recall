@@ -1,31 +1,59 @@
 const LOCAL_API_BASE = "http://localhost:4000/v1";
-const DEFAULT_PROD_API_BASE = "https://recall-z9zo.onrender.com/v1";
 
-const DEV_API_BASE =
-  process.env.NEXT_PUBLIC_API_URL_DEV ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  LOCAL_API_BASE;
+export type ApiEnvironment = Readonly<{
+  NODE_ENV?: string;
+  NEXT_PUBLIC_API_URL_DEV?: string;
+  NEXT_PUBLIC_RENDER_API_URL?: string;
+  NEXT_PUBLIC_API_URL_PROD?: string;
+  NEXT_PUBLIC_API_URL?: string;
+}>;
 
-const PROD_API_BASE =
-  process.env.NEXT_PUBLIC_RENDER_API_URL ??
-  process.env.NEXT_PUBLIC_API_URL_PROD ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  DEFAULT_PROD_API_BASE;
+function firstConfigured(...values: Array<string | undefined>): string | undefined {
+  return values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim().replace(/\/$/, "");
+}
 
-const PRELIM_API_BASE = process.env.NODE_ENV === "production" ? PROD_API_BASE : DEV_API_BASE;
+function getApiBases(environment: ApiEnvironment): { development: string; production?: string } {
+  return {
+    development: firstConfigured(
+      environment.NEXT_PUBLIC_API_URL_DEV,
+      environment.NEXT_PUBLIC_API_URL,
+      LOCAL_API_BASE,
+    ) ?? LOCAL_API_BASE,
+    production: firstConfigured(
+      environment.NEXT_PUBLIC_RENDER_API_URL,
+      environment.NEXT_PUBLIC_API_URL_PROD,
+      environment.NEXT_PUBLIC_API_URL,
+    ),
+  };
+}
 
 function isLocalHost(hostname: string): boolean {
   return hostname === "localhost" || hostname === "127.0.0.1";
 }
 
-export function resolveApiBase(location?: Pick<Location, "hostname">): string {
+export function resolveApiBase(
+  location?: Pick<Location, "hostname">,
+  environment: ApiEnvironment = process.env,
+): string {
   const hostname = location?.hostname ?? (typeof window === "undefined" ? undefined : window.location.hostname);
-  const preliminary = PRELIM_API_BASE.replace(/\/$/, "");
-  const production = PROD_API_BASE.replace(/\/$/, "");
+  const { development, production } = getApiBases(environment);
+  const preliminary = environment.NODE_ENV === "production" ? production : development;
+
+  if (!preliminary) {
+    throw new Error(
+      "Production API base is not configured. Set NEXT_PUBLIC_RENDER_API_URL (or NEXT_PUBLIC_API_URL_PROD) before building the web app.",
+    );
+  }
+
   if (!hostname) return preliminary;
 
   // Safety: if app runs on a non-local host, never call localhost API.
   if (!isLocalHost(hostname) && preliminary.includes("localhost")) {
+    if (!production) {
+      throw new Error(
+        "Production API base is not configured for this deployed host. Set NEXT_PUBLIC_RENDER_API_URL before building the web app.",
+      );
+    }
     return production;
   }
 

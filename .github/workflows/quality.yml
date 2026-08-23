@@ -23,6 +23,7 @@ jobs:
           --health-retries 5
     env:
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+      NEXT_PUBLIC_RENDER_API_URL: https://api.example.invalid/v1
       CLERK_SECRET_KEY: sk_test_ci_placeholder
       DATABASE_URL: postgresql://recall:recall@localhost:5432/recall?schema=public
       REDIS_URL: redis://localhost:6379

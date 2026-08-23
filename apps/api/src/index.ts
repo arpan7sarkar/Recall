@@ -14,48 +14,15 @@ import graphRoutes from "./routes/graph";
 import { getRuntimeDiagnostics } from "./runtime/environment";
 import { getApiReadiness } from "./runtime/apiReadiness";
 import { readinessHttpStatus } from "./runtime/readiness";
+import { createCorsOptions } from "./runtime/cors";
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "4000", 10);
 const HOST = process.env.HOST || "0.0.0.0";
 const clerkClockSkewInMs = Number(process.env.CLERK_CLOCK_SKEW_MS ?? 15000);
-const configuredCorsOrigins = (process.env.CORS_ORIGINS ?? "")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-const defaultCorsOrigins = [
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:3001",
-  "http://127.0.0.1:3001",
-];
-const allowedCorsOrigins = new Set([...defaultCorsOrigins, ...configuredCorsOrigins]);
-
 // Standard middleware - ORDER MATTERS
 // 1. CORS (must be first to handle preflight OPTIONS)
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (origin.startsWith("chrome-extension://")) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedCorsOrigins.has(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  })
-);
+app.use(cors(createCorsOptions()));
 // 2. Body parsing (must come before Clerk/auth middleware)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

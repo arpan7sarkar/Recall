@@ -28,6 +28,10 @@ describe("API client transport", () => {
   });
 
   it("uses the configured production endpoint when a deployed app would otherwise call localhost", () => {
-    expect(resolveApiBase({ hostname: "recall.example.com" })).not.toContain("localhost");
+    expect(resolveApiBase({ hostname: "recall.example.com" }, {
+      NODE_ENV: "development",
+      NEXT_PUBLIC_API_URL_DEV: "http://localhost:4000/v1",
+      NEXT_PUBLIC_RENDER_API_URL: "https://api.example.com/v1",
+    })).toBe("https://api.example.com/v1");
   });
 });

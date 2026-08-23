@@ -214,7 +214,13 @@ Production API and worker services must use the same `REDIS_URL` value and Redis
 
 `OPENAI_API_KEY`, Pinecone variables, and Cloudflare R2 variables are optional at process startup but are required by the corresponding enrichment or upload features.
 
-The web app reads `NEXT_PUBLIC_API_URL_DEV` during local development and the Render API variable for production.
+The web app reads `NEXT_PUBLIC_API_URL_DEV` during local development and requires `NEXT_PUBLIC_RENDER_API_URL` (or the explicit `NEXT_PUBLIC_API_URL_PROD` alias) for production builds.
+
+There is no hardcoded production API fallback, so a production build fails with an actionable configuration error instead of sending requests to an unknown deployment.
+
+`CORS_ORIGINS` must contain the exact deployed web origin in production, separated by commas.
+
+The API keeps localhost origins as a development and test convenience only.
 
 ## Route Map
 
@@ -367,8 +373,9 @@ Local endpoints:
 
 ## Environment Notes
 
-- `NODE_ENV=development` uses `NEXT_PUBLIC_API_URL_DEV`
-- `NODE_ENV=production` uses `NEXT_PUBLIC_RENDER_API_URL`
+- `NODE_ENV=development` uses `NEXT_PUBLIC_API_URL_DEV` and falls back to `http://localhost:4000/v1`
+- `NODE_ENV=production` requires `NEXT_PUBLIC_RENDER_API_URL` or `NEXT_PUBLIC_API_URL_PROD`
+- Production API CORS requires the deployed web origin in `CORS_ORIGINS`
 - Pinecone must use **1024 dimensions** because embeddings are generated with `text-embedding-3-small` at `1024`
 
 ## Available Scripts
