@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useItems } from "@/hooks/useItems";
+import { useInfiniteItems } from "@/hooks/useItems";
 import { ItemCard } from "@/components/items/ItemCard";
 import { ItemFilters } from "@/components/items/ItemFilters";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -16,14 +16,22 @@ export default function DashboardPage() {
   const { viewMode, setViewMode, openAddContent } = useUIStore();
   const [activeFilter, setActiveFilter] = useState("all");
 
-  const { data, isLoading, error } = useItems({
+  const {
+    items,
+    total: totalItems,
+    processingTotal,
+    isLoading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfiniteItems({
     type: activeFilter === "all" ? undefined : activeFilter,
     archived: false,
   });
 
-  const items = data?.data || [];
-  const totalItems = data?.total || 0;
-  const processingCount = data?.processingTotal ?? items.filter((i: Item) => i.status === "processing").length;
+  const processingCount = processingTotal ?? items.filter((i: Item) => i.status === "processing").length;
 
   return (
     <div>
@@ -127,6 +135,31 @@ export default function DashboardPage() {
           {items.map((item: Item) => (
             <ItemCard key={item.id} item={item} viewMode={viewMode} />
           ))}
+        </div>
+      )}
+
+      {items.length > 0 && (hasNextPage || isFetchNextPageError) && (
+        <div className="mt-8 flex flex-col items-center gap-3">
+          {isFetchNextPageError && (
+            <p role="alert" className="text-sm text-red-500">
+              Failed to load more items. Please try again.
+            </p>
+          )}
+          {hasNextPage && (
+            <button
+              type="button"
+              onClick={() => void fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="rounded-xl border px-4 py-2 text-sm disabled:opacity-60"
+              style={{
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+                background: "var(--bg-secondary)",
+              }}
+            >
+              {isFetchingNextPage ? "Loading more..." : "Load more items"}
+            </button>
+          )}
         </div>
       )}
     </div>

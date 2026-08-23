@@ -239,12 +239,14 @@ Completion gate: every mutation has a documented consistency result, and the das
 - [x] Invalidate collections and tags after save mutations that affect them.
 - [x] Replace indefinite five-second polling with bounded, status-aware refresh.
 - [ ] Add server-driven or event-driven completion updates if justified by the baseline.
-- [ ] Add pagination or infinite loading for items and archive.
+- [x] Add user-visible infinite loading for dashboard items and archive. (`apps/web/hooks/useItems.ts`, `apps/web/app/dashboard/page.tsx`, `apps/web/app/dashboard/archive/page.tsx`, `apps/web/tests/dashboard-pagination.test.tsx`)
 - [x] Reconcile total counts with loaded-page processing counts using a server-provided processing count.
 - [ ] Add explicit refresh status and last-updated information.
 - [ ] Add integration tests for save, update, archive, unarchive, delete, tag, collection, graph, and search consistency.
 
 Session 08 evidence: API graph route tests cover stale-cache bypass and ordinary cache hits, web tests cover the resync request contract, item listing now bounds page size and applies tag/source filters to both data and totals, and dashboard processing counts are server-consistent.
+
+Session 08 pagination evidence: dashboard and archive now consume the API's page and totalPages contract through `useInfiniteItems`, flatten loaded pages, and expose a disabled-aware Load more control with a retryable next-page error state.
 
 ## Session 09: Dashboard Item Actions and Recovery UX
 
@@ -262,8 +264,8 @@ Completion gate: every visible item action works, reports its state, and is cove
 - [x] Add failure stage and reason display. (`apps/web/components/items/ItemCard.tsx`, `apps/web/app/dashboard/items/[id]/page.tsx`)
 - [x] Add retry action to item cards and detail views. (`apps/web/hooks/useItems.ts`, `apps/web/tests/item-actions.test.tsx`, `apps/web/tests/item-detail-actions.test.tsx`)
 - [x] Show retry loading, success, duplicate, and failure states. (loading and queued states are rendered locally; API duplicate/failure messages remain visible through `getApiErrorMessage`)
-- [ ] Confirm archive and unarchive update all affected screens.
-- [ ] Confirm delete updates items, collections, graph, and search.
+- [x] Confirm archive and unarchive update all affected screens. (`apps/web/lib/queryKeys.ts`, `apps/web/tests/item-actions-hooks.test.tsx`)
+- [x] Confirm delete updates items, collections, graph, and search. (`apps/web/lib/queryKeys.ts`, `apps/web/tests/item-actions-hooks.test.tsx`)
 - [x] Add keyboard and screen-reader labels for every item action. (favorite and retry labels added; archive/delete labels preserved)
 - [ ] Add browser tests for action success and server failure.
 
@@ -432,6 +434,28 @@ Completion gate: all critical and high checklist items are verified or explicitl
 - [x] Mark only genuinely verified items as `[x]` in this checklist.
 - [ ] Document rollback, recovery, and known deferred work.
 
+## Session 17: Dashboard Pagination and Projection Consistency
+
+Branch: `recall-pagination-consistency`
+
+Worktree scope: dashboard and archive page loading, item action projection invalidation, and focused web regression tests.
+
+Related ledger IDs: `UI-001` and `UI-006`.
+
+Completion gate: users can load every dashboard/archive page through a visible control, and archive, unarchive, and delete refresh item, collection, search, and graph projections together.
+
+- [x] Reproduce the first-page-only dashboard and archive behavior against the existing API pagination contract.
+- [x] Add a failing regression test for visible next-page controls on dashboard and archive.
+- [x] Implement page loading through TanStack Query infinite data and expose next-page loading/error states.
+- [x] Add a failing regression test for archive, unarchive, and delete projection invalidation.
+- [x] Centralize item projection invalidation across items, item detail, collections, collection detail, search, and graph.
+- [x] Run focused and full web unit tests, web typecheck, and changed-file ESLint.
+
+Session 17 evidence: before implementation, `apps/web/app/dashboard/page.tsx` and `apps/web/app/dashboard/archive/page.tsx` called `useItems` without changing its default page, while `GET /items` already returned `page`, `limit`, and `totalPages`.
+The RED tests failed because neither page rendered a next-page control and archive/unarchive omitted collection and search invalidation.
+The focused tests pass 7/7, the full web suite passes 49/49, web typecheck passes, and changed-file ESLint passes.
+Browser-level pagination and live multi-page API checks remain part of Session 16 release verification.
+
 ## Session Log
 
 | Session | Branch | Worktree | Started | Finished | Test evidence | Verification evidence | Notes |
@@ -453,3 +477,4 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 14 | `recall-authorization` | `/tmp/recall-worktrees/authorization` | 2026-08-24 | 2026-08-24 | Source focused authorization tests 4/4; source API 39/39; integrated API 52/52; API `tsc --noEmit` and build passed; changed-file lint has 10 pre-existing warnings | Source commit `d2ce724`, integrated as `44e75c9`; cross-user collection save/upload, tag attachment, and public nested item boundaries covered by regression tests | Extension-token route isolation, full ownership matrix, security logging, dependency audit, and integrated security verification remain. |
 | 15 | `recall-migrations` | `/tmp/recall-worktrees/migrations` | 2026-08-24 | 2026-08-24 | Source migration-history tests 3/3 and API 43/43; integrated API 52/52; API typecheck/build passed; changed-file lint passes | Source commit `8890557`, integrated as `60c1c47`; CI PostgreSQL migration deploy/status/smoke gate, SQL assertions, deterministic history tests, rollback/reconciliation runbook, and upload cleanup regression added | Live ledger inspection and baseline resolution remain blocked by no configured PostgreSQL; orphan inventory and durable storage keys remain deferred. |
 | 16 | `recall-release-verification` |  |  |  |  |  |  |
+| 17 | `recall-pagination-consistency` | `/tmp/recall-worktrees/pagination-consistency` | 2026-08-24 | 2026-08-24 | Focused web 7/7; full web 49/49; web `tsc --noEmit`; changed-file ESLint clean | `useInfiniteItems` loads API pages and exposes visible Load more controls; archive, unarchive, and delete invalidate all item projections | Browser-level pagination and live multi-page API verification remain part of Session 16. |

@@ -16,6 +16,7 @@ const {
   useQueryClientMock,
 } = vi.hoisted(() => ({
   apiMock: {
+    delete: vi.fn(),
     patch: vi.fn(),
     post: vi.fn(),
   },
@@ -35,11 +36,20 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 vi.mock("@/lib/api", () => ({ api: apiMock }));
 
-import { useRetryItem, useToggleFavorite } from "@/hooks/useItems";
+import {
+  useArchiveItem,
+  useDeleteItem,
+  useRetryItem,
+  useToggleFavorite,
+  useUnarchiveItem,
+} from "@/hooks/useItems";
 
 function HookHarness() {
   useToggleFavorite();
   useRetryItem();
+  useArchiveItem();
+  useUnarchiveItem();
+  useDeleteItem();
   return null;
 }
 
@@ -79,5 +89,40 @@ describe("item action mutations", () => {
     expect(apiMock.post).toHaveBeenCalledWith("/items/item-1/retry", undefined, { token: "token" });
     expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["items"] });
     expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["item", "item-1"] });
+  });
+
+  it.each([
+    ["archives", 2, "/items/item-1/archive"],
+    ["unarchives", 3, "/items/item-1/unarchive"],
+  ])("%s an item and refreshes every projection", async (_label, index, path) => {
+    apiMock.post.mockResolvedValue({ id: "item-1", isArchived: path.endsWith("archive") });
+    render(<HookHarness />);
+
+    await mutationOptions[index].mutationFn("item-1");
+    await mutationOptions[index].onSuccess?.(undefined, "item-1");
+
+    expect(apiMock.post).toHaveBeenCalledWith(path, undefined, { token: "token" });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["items"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["item", "item-1"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["collections"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["collection"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["search"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["graph"] });
+  });
+
+  it("deletes an item and refreshes every projection", async () => {
+    apiMock.delete.mockResolvedValue(undefined);
+    render(<HookHarness />);
+
+    await mutationOptions[4].mutationFn("item-1");
+    await mutationOptions[4].onSuccess?.(undefined, "item-1");
+
+    expect(apiMock.delete).toHaveBeenCalledWith("/items/item-1", { token: "token" });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["items"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["item", "item-1"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["collections"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["collection"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["search"] });
+    expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ["graph"] });
   });
 });
