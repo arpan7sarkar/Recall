@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { TypeBadge } from "@/components/shared/TypeBadge";
@@ -21,6 +21,11 @@ import {
   useToggleFavorite,
   useUnarchiveItem,
 } from "@/hooks/useItems";
+import {
+  loadTwitterWidgets,
+  TWITTER_WIDGET_SCRIPT_ID,
+  TWITTER_WIDGET_SCRIPT_SRC,
+} from "@/lib/twitterWidgets";
 
 interface ItemCardProps {
   item: Item;
@@ -37,6 +42,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   const deleteItem = useDeleteItem();
   const toggleFavorite = useToggleFavorite();
   const retryItem = useRetryItem();
+  const tweetContainerRef = useRef<HTMLDivElement>(null);
   const isProcessing = item.status === "processing" || item.status === "pending";
   const isInstagram = item.itemType === "instagram";
   const isStaticSocialPreview = item.itemType === "linkedin";
@@ -308,17 +314,19 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
           }}
         >
         {item.itemType === "tweet" && !isProcessing ? (
-          <div className="w-full flex justify-center pointer-events-auto">
+          <div ref={tweetContainerRef} className="w-full flex justify-center pointer-events-auto">
             <blockquote className="twitter-tweet" data-conversation="none" data-theme="dark" data-align="center">
               <a href={(item.url || "").replace("x.com", "twitter.com")} target="_blank"></a>
             </blockquote>
             <Script
-              id="twitter-widgets-script"
-              src="https://platform.twitter.com/widgets.js"
+              id={TWITTER_WIDGET_SCRIPT_ID}
+              src={TWITTER_WIDGET_SCRIPT_SRC}
               strategy="afterInteractive"
               onLoad={() => {
-                // @ts-expect-error twttr is injected by Twitter's widget script
-                if (window.twttr) window.twttr.widgets.load();
+                loadTwitterWidgets(tweetContainerRef.current);
+              }}
+              onReady={() => {
+                loadTwitterWidgets(tweetContainerRef.current);
               }}
             />
           </div>
