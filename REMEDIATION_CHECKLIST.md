@@ -178,12 +178,12 @@ Related ledger IDs: `SAVE-005`, `PARSE-006`, and `DATA-004`.
 
 Completion gate: unsafe or oversized uploads fail before unbounded buffering, and partial storage never becomes an unexplained orphan.
 
-- [ ] Add a failing test for oversized browser-selected files.
+- [x] Add a failing test for oversized browser-selected files. (`apps/web/tests/upload-contract.test.ts`)
 - [ ] Add a failing test for oversized drag-and-drop files.
-- [ ] Enforce file size in the browser and API.
-- [ ] Enforce allowed MIME types using content inspection where appropriate.
+- [x] Enforce file size in the browser and API. (`apps/web/lib/uploadContract.ts`, `apps/api/src/middleware/uploadContract.ts`)
+- [x] Enforce allowed MIME types using content inspection where appropriate. (MIME plus PDF/image signature checks)
 - [ ] Ensure PDF and image mode transitions select the correct request path.
-- [ ] Add upload timeouts and bounded buffers.
+- [x] Add upload timeouts and bounded buffers. (`apps/api/src/lib/storage.ts`)
 - [ ] Store durable object keys instead of expiring signed URLs.
 - [ ] Generate fresh signed URLs when objects are displayed.
 - [ ] Add cleanup or compensation for R2 upload followed by database failure.
@@ -417,7 +417,7 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 03 | `recall-auth` | `/tmp/recall-worktrees/auth` | 2026-08-24 | 2026-08-24 | API 12/12; web 6/6; API `tsc --noEmit` | Web `next build`; commit `5694038` | Web lint has pre-existing errors outside Session 03. |
 | 04 | `recall-api-client` |  |  |  |  |  |  |
 | 05 | `recall-save-flow` | `/tmp/recall-worktrees/save-flow` (salvaged into integration branch) | 2026-08-24 | 2026-08-24 | API 30/30; web 13/13; API and web type checks passed; API and web lint passed | Commit recorded in integration history after focused URL, metadata, timestamp, error, and duplicate-submit tests | E2E save, retry action, optimistic item display, attachment feedback, and refresh/reauth checks remain. |
-| 06 | `recall-uploads` |  |  |  |  |  |  |
+| 06 | `recall-uploads-fix` | `/tmp/recall-worktrees/uploads-fix` | 2026-08-24 | 2026-08-24 | API 32/32; web 15/15; API and web type checks passed; API lint passed | Commit `e40ed6a`, integrated as `c1be157`; browser/API size and signature tests passed | Drag-drop-specific test, mode-path E2E, durable key/fresh URL lifecycle, and full storage failure matrix remain. |
 | 07 | `recall-parser` |  |  |  |  |  |  |
 | 08 | `recall-sync` |  |  |  |  |  |  |
 | 09 | `recall-item-actions` |  |  |  |  |  |  |
