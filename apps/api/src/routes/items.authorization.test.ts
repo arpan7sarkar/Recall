@@ -162,6 +162,26 @@ describe("cross-user nested relation boundaries", () => {
     expect(prismaMock.item.create).not.toHaveBeenCalled();
   });
 
+  it("deletes an uploaded object when item persistence fails", async () => {
+    const persistenceError = new Error("database unavailable");
+    prismaMock.item.create.mockRejectedValue(persistenceError);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const response = await invoke(itemRoutes, "post", "/upload", {
+      body: { title: "Uploaded document" },
+      file: {
+        buffer: Buffer.from("%PDF-1.7"),
+        mimetype: "application/pdf",
+        originalname: "document.pdf",
+      },
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(response.body).toEqual({ error: "Failed to upload item metadata", recovery: undefined });
+    expect(storageMock.deleteFile).toHaveBeenCalledWith("uploads/user-1/file.pdf");
+    errorSpy.mockRestore();
+  });
+
   it("rejects a tag attachment when the tag belongs to another user", async () => {
     prismaMock.item.findFirst.mockResolvedValue(currentItem);
     prismaMock.tag.findFirst.mockResolvedValue(null);

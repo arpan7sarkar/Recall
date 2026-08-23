@@ -7,6 +7,20 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: recall
+          POSTGRES_PASSWORD: recall
+          POSTGRES_DB: recall
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U recall -d recall"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
       CLERK_SECRET_KEY: sk_test_ci_placeholder
@@ -27,6 +41,11 @@ jobs:
         run: npm ci --prefix apps/web
       - name: Validate Prisma schema
         run: npm run prisma:generate && npm --prefix apps/api exec prisma validate -- --schema prisma/schema.prisma
+      - name: Apply and verify Prisma migrations
+        run: |
+          npm --prefix apps/api exec prisma migrate deploy -- --schema prisma/schema.prisma
+          npm --prefix apps/api exec prisma migrate status -- --schema prisma/schema.prisma
+          npm --prefix apps/api exec prisma db execute --stdin --schema prisma/schema.prisma < apps/api/prisma/migration_smoke.sql
       - name: Run tests
         run: npm test
       - name: Run runtime tests

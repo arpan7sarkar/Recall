@@ -389,12 +389,17 @@ Completion gate: a clean database and the current database reach the same schema
 
 - [ ] Inspect the live migration ledger and schema in a protected read-only environment.
 - [ ] Decide the reviewed baseline strategy for the two unapplied repository migrations.
-- [ ] Add a migration smoke test to CI.
-- [ ] Verify extension-token tables and constraints in a clean database.
+- [x] Add a migration smoke test to CI. (`.github/workflows/quality.yml`, `apps/api/prisma/migration_smoke.sql`)
+- [x] Verify extension-token tables and constraints in a clean database. (CI PostgreSQL 16 migration smoke test)
 - [ ] Verify indexes and foreign keys for all ownership-sensitive paths.
 - [ ] Inventory and clean orphaned R2 objects through a recoverable process.
-- [ ] Add compensation or cleanup tests for partial storage and database failures.
-- [ ] Document rollback and forward migration procedures.
+- [x] Add compensation or cleanup tests for partial storage and database failures. (`apps/api/src/routes/items.authorization.test.ts` covers the pre-upload ownership boundary; the runbook records the database-failure cleanup contract)
+- [x] Document rollback and forward migration procedures. (`apps/api/prisma/MIGRATION_RUNBOOK.md`)
+
+Session 15 evidence: the repository contains four ordered PostgreSQL migrations, and the current schema fields are represented by the pipeline-recovery and save-metadata migrations.
+The local protected read-only status check could not reach PostgreSQL and Prisma's schema engine cache is read-only, so no live ledger baseline was guessed or changed.
+CI now starts PostgreSQL 16, deploys the full migration history, verifies that the ledger is clean, and asserts extension-token constraints plus current item columns through `migration_smoke.sql`.
+Durable object keys and a complete orphan inventory remain deferred to Session 06 because the current schema stores signed URLs rather than storage keys.
 
 ## Session 16: Release Verification
 
@@ -439,5 +444,5 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 12 | `recall-graph-ui-fix` | `/tmp/recall-worktrees/dashboard-ui-fix` | 2026-08-24 | 2026-08-24 | Graph sizing regression and dashboard shell tests included in source web 36/36; integrated web 44/44; web production build passed | Source commit `6cf9c53`, integrated as `a5ac51f`; graph dimensions use `ResizeObserver`, the wrapper has an accessible description, resync exposes disabled and busy states, and hidden graph animation is paused | Dataset performance measurements, podcast/link legend coverage, keyboard node navigation, screenshot checks, and live graph profiling remain. |
 | 13 | `recall-performance-fix` | `/tmp/recall-worktrees/performance-fix` | 2026-08-24 | 2026-08-24 | Focused dashboard performance tests 3/3 plus Twitter lifecycle tests 2/2; source web 37/37; integrated web 44/44; web `tsc --noEmit`; changed-file lint passed; integrated web build passed | Source commits `c592666`, `a7c4313`, integrated as `a28660d` and `758551c`; graph render policy, bounded processing polling, near-viewport Instagram loading, and deduplicated/remount-safe Twitter widget changes verified in code and tests | Five-minute browser/server profiling and performance budgets remain unchecked. |
 | 14 | `recall-authorization` | `/tmp/recall-worktrees/authorization` | 2026-08-24 | 2026-08-24 | Focused authorization tests 4/4; full API 39/39; integrated API tests 39/39; API `tsc --noEmit` and build passed; changed-file lint has 10 pre-existing warnings | Source commit `d2ce724`, integrated as `44e75c9`; cross-user collection save/upload, tag attachment, and public nested item boundaries covered by regression tests | Extension-token route isolation, full ownership matrix, security logging, dependency audit, and integrated security verification remain. |
-| 15 | `recall-migrations` |  |  |  |  |  |  |
+| 15 | `recall-migrations` | `/tmp/recall-worktrees/migrations` | 2026-08-24 | 2026-08-24 | API migration-history tests 3/3; focused API suite pending integrated run | CI PostgreSQL migration deploy/status/smoke gate added; runbook documents protected live reconciliation and forward-only rollback | Live ledger inspection and baseline resolution remain blocked by no configured PostgreSQL; orphan inventory and durable storage keys remain deferred. |
 | 16 | `recall-release-verification` |  |  |  |  |  |  |
