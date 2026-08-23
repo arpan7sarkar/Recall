@@ -118,7 +118,7 @@ router.get("/", async (req: Request, res: Response) => {
             }
           });
         }
-      } catch (e) {
+      } catch {
         // Silently skip if no embedding found or query fails
       }
     }));

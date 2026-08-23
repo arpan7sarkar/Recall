@@ -100,7 +100,7 @@ router.get("/public/:slug", async (req: Request, res: Response) => {
 
     const flattenedItems = flattenCollectionItems(collection.items, collection.userId);
     res.json({ ...collection, items: flattenedItems });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to fetch shared collection" });
   }
 });
@@ -125,7 +125,7 @@ router.get("/", async (req: Request, res: Response) => {
       },
     });
     res.json(collections);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to fetch collections" });
   }
 });
@@ -154,7 +154,7 @@ router.post("/", async (req: Request, res: Response) => {
       },
     });
     res.status(201).json(collection);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to create collection" });
   }
 });
@@ -191,7 +191,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     const flattenedItems = flattenCollectionItems(collection.items, collection.userId);
 
     res.json({ ...collection, items: flattenedItems });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to fetch collection" });
   }
 });
@@ -248,7 +248,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
       data: updateData,
     });
     res.json(collection);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to update collection" });
   }
 });
@@ -290,7 +290,7 @@ router.post("/:id/share", async (req: Request, res: Response) => {
       ...updated,
       sharePath: `/c/${updated.publicSlug}`,
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to share collection" });
   }
 });
@@ -326,7 +326,7 @@ router.post("/:id/unshare", async (req: Request, res: Response) => {
       ...updated,
       sharePath: null,
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to unshare collection" });
   }
 });
@@ -347,7 +347,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 
     await prisma.collection.delete({ where: { id } });
     res.status(204).send();
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to delete collection" });
   }
 });
@@ -387,7 +387,7 @@ router.post("/:id/items", async (req: Request, res: Response) => {
     });
 
     res.status(200).json({ success: true, collectionId, itemId });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to add item to collection" });
   }
 });
@@ -427,7 +427,7 @@ router.delete("/:id/items/:itemId", async (req: Request, res: Response) => {
     }
 
     res.status(200).json({ success: true, collectionId, itemId });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to remove item from collection" });
   }
 });
