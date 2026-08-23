@@ -47,17 +47,19 @@ async function generateUniquePublicSlug(name: string): Promise<string> {
   return `${base}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
-function flattenCollectionItems(items: any[]) {
-  return items.map((ci: any) => ({
-    ...ci.item,
-    tags: ci.item.tags?.map((t: any) => ({
-      tagId: t.tag.id,
-      tagName: t.tag.name,
-      tagColor: t.tag.color || null,
-      isAiGenerated: t.isAiGenerated || false,
-      confidence: t.confidence || 1.0,
-    })) || [],
-  }));
+function flattenCollectionItems(items: any[], ownerId?: string) {
+  return items
+    .filter((ci: any) => !ownerId || ci.item?.userId === ownerId)
+    .map((ci: any) => ({
+      ...ci.item,
+      tags: ci.item.tags?.map((t: any) => ({
+        tagId: t.tag.id,
+        tagName: t.tag.name,
+        tagColor: t.tag.color || null,
+        isAiGenerated: t.isAiGenerated || false,
+        confidence: t.confidence || 1.0,
+      })) || [],
+    }));
 }
 
 /**
@@ -96,7 +98,7 @@ router.get("/public/:slug", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Shared collection not found" });
     }
 
-    const flattenedItems = flattenCollectionItems(collection.items);
+    const flattenedItems = flattenCollectionItems(collection.items, collection.userId);
     res.json({ ...collection, items: flattenedItems });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch shared collection" });
@@ -186,7 +188,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Collection not found" });
     }
 
-    const flattenedItems = flattenCollectionItems(collection.items);
+    const flattenedItems = flattenCollectionItems(collection.items, collection.userId);
 
     res.json({ ...collection, items: flattenedItems });
   } catch (error) {

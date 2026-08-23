@@ -362,14 +362,20 @@ Related ledger IDs: `DATA-001` and `DATA-002`.
 
 Completion gate: every cross-user access attempt fails closed and every nested relation is ownership-checked.
 
-- [ ] Add failing tests for cross-user collection attachment.
-- [ ] Add failing tests for cross-user tag attachment.
+- [x] Add failing tests for cross-user collection attachment.
+- [x] Add failing tests for cross-user tag attachment.
 - [ ] Verify item, collection, tag, graph, search, and related-item ownership filters.
 - [ ] Verify extension tokens cannot access unrelated users.
-- [ ] Verify public collection access exposes only intentionally public data.
-- [ ] Add authorization checks before nested Prisma writes.
+- [x] Verify public collection access exposes only intentionally public data.
+- [x] Add authorization checks before nested Prisma writes.
 - [ ] Add security logging that excludes secrets and content.
 - [ ] Run dependency and static security checks.
+
+Session 14 evidence: the URL and upload save tests first reproduced cross-user collection attachment as a successful write, then passed after ownership checks were added before nested item creation and storage upload.
+The tag attachment negative test passed against the existing item and tag owner checks, so no production change was needed for that path.
+The public collection test first reproduced exposure of a foreign user's item through a malformed nested relation, then passed after flattening filters relations to the collection owner.
+Focused authorization tests pass 4/4, the full API suite passes 39/39, and changed-file lint passes with ten pre-existing unused-catch warnings in collections.ts.
+The isolated API type check is blocked because the worktree lacks a generated Prisma client and `prisma generate` cannot write its cache in this environment.
 
 ## Session 15: Migration and Storage Reconciliation
 
@@ -432,6 +438,6 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 11 | `recall-dashboard-ui-fix` | `/tmp/recall-worktrees/dashboard-ui-fix` | 2026-08-24 | 2026-08-24 | Web 36/36 in source worktree; integrated web 39/39; web `tsc --noEmit`; changed-file ESLint passed with two existing image warnings | Source commit `6cf9c53`, integrated as `a5ac51f`; light color-scheme, accessible contrast tokens, mobile sidebar closed state, pressed-state controls, and responsive shell tests verified | Full web lint retains pre-existing errors outside this session; hardcoded card colors, preference persistence, screenshots, and full responsive visual checks remain. |
 | 12 | `recall-graph-ui-fix` | `/tmp/recall-worktrees/dashboard-ui-fix` | 2026-08-24 | 2026-08-24 | Graph sizing regression and dashboard shell tests included in source web 36/36; integrated web 39/39; web production build passed | Source commit `6cf9c53`, integrated as `a5ac51f`; graph dimensions use `ResizeObserver`, the wrapper has an accessible description, resync exposes disabled and busy states, and hidden graph animation is paused | Dataset performance measurements, podcast/link legend coverage, keyboard node navigation, screenshot checks, and live graph profiling remain. |
 | 13 | `recall-performance-fix` | `/tmp/recall-worktrees/performance-fix` | 2026-08-24 | 2026-08-24 | Focused dashboard performance tests 3/3 plus Twitter lifecycle tests 2/2; source web 37/37; integrated web 41/41; web `tsc --noEmit`; changed-file lint passed; integrated web build passed | Source commits `c592666`, `a7c4313`, integrated as `a28660d` and `758551c`; graph render policy, bounded processing polling, near-viewport Instagram loading, and deduplicated/remount-safe Twitter widget changes verified in code and tests | Five-minute browser/server profiling and performance budgets remain unchecked. |
-| 14 | `recall-authorization` |  |  |  |  |  |  |
+| 14 | `recall-authorization` | `/tmp/recall-worktrees/authorization` | 2026-08-24 | 2026-08-24 | Focused authorization tests 4/4; full API 39/39; changed-file lint; integrated API type/build verification pending | Source commit `d2ce724`, integrated pending; cross-user collection save/upload, tag attachment, and public nested item boundaries covered by regression tests | Extension-token route isolation, full ownership matrix, security logging, dependency audit, and integrated type/build verification remain. |
 | 15 | `recall-migrations` |  |  |  |  |  |  |
 | 16 | `recall-release-verification` |  |  |  |  |  |  |

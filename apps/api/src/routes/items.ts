@@ -21,6 +21,26 @@ const ITEM_TYPES: ItemType[] = ["article", "tweet", "youtube", "pdf", "image", "
 const PROCESSING_STATUSES: ProcessingStatus[] = ["pending", "processing", "ready", "failed"];
 const SAVE_SOURCES: SaveSource[] = ["extension", "web_url", "web_upload"];
 
+class OwnershipError extends Error {
+  readonly status = 404;
+
+  constructor(message: string) {
+    super(message);
+    this.name = "OwnershipError";
+  }
+}
+
+async function requireOwnedCollection(userId: string, collectionId: unknown): Promise<void> {
+  if (typeof collectionId !== "string" || collectionId.trim().length === 0) return;
+
+  const collection = await prisma.collection.findFirst({
+    where: { id: collectionId, userId },
+    select: { id: true },
+  });
+
+  if (!collection) throw new OwnershipError("Collection not found");
+}
+
 function isItemType(value: unknown): value is ItemType {
   return typeof value === "string" && ITEM_TYPES.includes(value as ItemType);
 }
@@ -108,6 +128,7 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
   let item: any;
   let uploadedFile: { key: string; url: string } | null = null;
   try {
+    await requireOwnedCollection(userId, collectionId);
     const normalizedTags = normalizeTagsInput(tags);
     const inferredType: ItemType =
       isItemType(itemType) ? itemType : file.mimetype.startsWith("image") ? "image" : "pdf";
@@ -157,6 +178,9 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
     await invalidateGraphCache(userId);
 
   } catch (error) {
+    if (error instanceof OwnershipError) {
+      return res.status(error.status).json({ error: error.message });
+    }
     console.error(error);
     let cleanupError: string | null = null;
     if (uploadedFile) {
@@ -402,6 +426,7 @@ router.post("/", async (req: Request, res: Response) => {
   let item: any;
   let normalizedUrl: string;
   try {
+    await requireOwnedCollection(userId, collectionId);
     normalizedUrl = normalizeSaveUrl(url);
     const normalizedTags = normalizeTagsInput(tags);
     const normalizedItemType = isItemType(itemType) ? itemType : detectItemTypeFromUrl(normalizedUrl);
@@ -453,6 +478,9 @@ router.post("/", async (req: Request, res: Response) => {
     await invalidateGraphCache(userId);
 
   } catch (error) {
+    if (error instanceof OwnershipError) {
+      return res.status(error.status).json({ error: error.message });
+    }
     if (error instanceof SaveValidationError) {
       return res.status(error.status).json({
         error: error.message,
