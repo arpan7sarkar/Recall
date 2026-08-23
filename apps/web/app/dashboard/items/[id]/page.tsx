@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useItem, useArchiveItem, useDeleteItem, useUnarchiveItem } from "@/hooks/useItems";
+import {
+  useItem,
+  useArchiveItem,
+  useDeleteItem,
+  useRetryItem,
+  useToggleFavorite,
+  useUnarchiveItem,
+} from "@/hooks/useItems";
 import { useCollections, useAddItemToCollection, useCreateCollection } from "@/hooks/useCollections";
 import { TypeBadge } from "@/components/shared/TypeBadge";
 import { TagChip } from "@/components/shared/TagChip";
 import { timeAgo, extractDomain, formatReadingTime } from "@/lib/utils";
+import { getApiErrorMessage } from "@/lib/api";
 import { RelatedItems } from "@/components/items/RelatedItems";
 import { Icon } from "@/components/shared/Icon";
 import { TweetPreview } from "@/components/items/TweetPreview";
@@ -23,6 +31,8 @@ export default function ItemDetailPage() {
   const archiveItem = useArchiveItem();
   const unarchiveItem = useUnarchiveItem();
   const deleteItem = useDeleteItem();
+  const toggleFavorite = useToggleFavorite();
+  const retryItem = useRetryItem();
   const { data: collections } = useCollections();
   const addItemToCollection = useAddItemToCollection();
   const createCollection = useCreateCollection();
@@ -31,12 +41,17 @@ export default function ItemDetailPage() {
   const [newCollectionName, setNewCollectionName] = useState("");
   const [newCollectionDescription, setNewCollectionDescription] = useState("");
   const [collectionError, setCollectionError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [retryNotice, setRetryNotice] = useState<string | null>(null);
 
   const isArchiving = archiveItem.isPending || unarchiveItem.isPending;
   const isDeleting = deleteItem.isPending;
+  const isFavoriteUpdating = toggleFavorite.isPending;
+  const isRetrying = retryItem.isPending;
 
   const handleArchive = async () => {
     if (!item) return;
+    setActionError(null);
     try {
       if (item.isArchived) {
         await unarchiveItem.mutateAsync(item.id);
@@ -44,7 +59,29 @@ export default function ItemDetailPage() {
         await archiveItem.mutateAsync(item.id);
       }
     } catch (e) {
-      console.error("Failed to archive item", e);
+      setActionError(getApiErrorMessage(e, "Archive update failed. Please try again."));
+    }
+  };
+
+  const handleFavorite = async () => {
+    if (!item) return;
+    setActionError(null);
+    try {
+      await toggleFavorite.mutateAsync({ id: item.id, isFavourite: !item.isFavourite });
+    } catch (e) {
+      setActionError(getApiErrorMessage(e, "Favorite update failed. Please try again."));
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!item) return;
+    setActionError(null);
+    setRetryNotice(null);
+    try {
+      await retryItem.mutateAsync(item.id);
+      setRetryNotice("Retry queued. This page will update when processing resumes.");
+    } catch (e) {
+      setActionError(getApiErrorMessage(e, "Retry could not be queued. Check the worker and try again."));
     }
   };
 
@@ -69,6 +106,7 @@ export default function ItemDetailPage() {
 
   const handleDelete = async () => {
     if (!item) return;
+    setActionError(null);
     const confirmed = window.confirm("Delete this item permanently? This action cannot be undone.");
     if (!confirmed) return;
 
@@ -76,7 +114,7 @@ export default function ItemDetailPage() {
       await deleteItem.mutateAsync(item.id);
       router.push("/dashboard");
     } catch (e) {
-      console.error("Failed to delete item", e);
+      setActionError(getApiErrorMessage(e, "Delete failed. Please try again."));
     }
   };
 
@@ -210,6 +248,64 @@ export default function ItemDetailPage() {
             <span>· {item.viewCount} views</span>
           </div>
 
+          {item.status === "failed" && (
+            <div
+              role="alert"
+              className="mb-6 rounded-xl border p-4"
+              style={{
+                borderColor: "color-mix(in srgb, var(--border) 55%, #ef4444 45%)",
+                background: "color-mix(in srgb, var(--bg-secondary) 86%, #7f1d1d 14%)",
+              }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: "#fca5a5" }}>
+                    Processing failed
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: "var(--text-tertiary)" }}>
+                    Stage: {item.processingStage || "processing"}
+                  </p>
+                </div>
+                <button
+                  onClick={handleRetry}
+                  disabled={isRetrying || isDeleting || isArchiving}
+                  className="rounded-lg border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60"
+                  style={{ color: "var(--text-primary)", borderColor: "var(--border)", background: "var(--bg-primary)" }}
+                  aria-label="Retry processing"
+                >
+                  {isRetrying ? "Retrying..." : "Retry processing"}
+                </button>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                {item.processingError || "Processing stopped before this item was ready."}
+              </p>
+            </div>
+          )}
+
+          {retryNotice && (
+            <p
+              role="status"
+              className="mb-6 rounded-lg border px-3 py-2 text-sm"
+              style={{ color: "var(--text-secondary)", borderColor: "var(--border)", background: "var(--bg-secondary)" }}
+            >
+              {retryNotice}
+            </p>
+          )}
+
+          {actionError && (
+            <p
+              role="alert"
+              className="mb-6 rounded-lg border px-3 py-2 text-sm"
+              style={{
+                color: "color-mix(in srgb, #ef4444 75%, var(--text-primary) 25%)",
+                borderColor: "color-mix(in srgb, var(--border) 55%, #ef4444 45%)",
+                background: "color-mix(in srgb, var(--bg-primary) 88%, #7f1d1d 12%)",
+              }}
+            >
+              {actionError}
+            </p>
+          )}
+
           {/* Content Body */}
           {(item.description || item.contentText) && (
             <div
@@ -293,15 +389,19 @@ export default function ItemDetailPage() {
             </h3>
             <div className="flex flex-wrap gap-2">
               <button
+                onClick={handleFavorite}
+                disabled={isFavoriteUpdating || isDeleting || isArchiving}
+                aria-label={item.isFavourite ? "Remove from favorites" : "Save to Favorites"}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 focus-ring shadow-sm"
                 style={{
                   background: item.isFavourite ? "var(--button-primary-bg)" : "var(--bg-tertiary)",
                   color: item.isFavourite ? "var(--button-primary-text)" : "var(--text-secondary)",
                   border: item.isFavourite ? "1px solid var(--button-primary-border)" : "1px solid var(--border)",
+                  opacity: isFavoriteUpdating || isDeleting || isArchiving ? 0.6 : 1,
                 }}
               >
                 <Icon name={item.isFavourite ? "check" : "plus"} size={16} />
-                {item.isFavourite ? "Saved" : "Save to Favorites"}
+                {isFavoriteUpdating ? "Updating..." : item.isFavourite ? "Saved" : "Save to Favorites"}
               </button>
               {item.url && (
                 <a

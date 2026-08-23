@@ -247,15 +247,15 @@ Related ledger IDs: `UI-007` and `UI-009`.
 
 Completion gate: every visible item action works, reports its state, and is covered by a browser-level regression test.
 
-- [ ] Add a failing test for the inert favorite control.
-- [ ] Implement favorite mutation and cache updates.
-- [ ] Add failed-state display to item cards and detail views.
-- [ ] Add failure stage and reason display.
-- [ ] Add retry action to item cards and detail views.
-- [ ] Show retry loading, success, duplicate, and failure states.
+- [x] Add a failing test for the inert favorite control. (`apps/web/tests/item-actions.test.tsx`, `apps/web/tests/item-detail-actions.test.tsx`)
+- [x] Implement favorite mutation and cache updates. (`apps/web/hooks/useItems.ts`, `apps/web/tests/item-actions-hooks.test.tsx`)
+- [x] Add failed-state display to item cards and detail views. (`apps/web/components/items/ItemCard.tsx`, `apps/web/app/dashboard/items/[id]/page.tsx`)
+- [x] Add failure stage and reason display. (`apps/web/components/items/ItemCard.tsx`, `apps/web/app/dashboard/items/[id]/page.tsx`)
+- [x] Add retry action to item cards and detail views. (`apps/web/hooks/useItems.ts`, `apps/web/tests/item-actions.test.tsx`, `apps/web/tests/item-detail-actions.test.tsx`)
+- [x] Show retry loading, success, duplicate, and failure states. (loading and queued states are rendered locally; API duplicate/failure messages remain visible through `getApiErrorMessage`)
 - [ ] Confirm archive and unarchive update all affected screens.
 - [ ] Confirm delete updates items, collections, graph, and search.
-- [ ] Add keyboard and screen-reader labels for every item action.
+- [x] Add keyboard and screen-reader labels for every item action. (favorite and retry labels added; archive/delete labels preserved)
 - [ ] Add browser tests for action success and server failure.
 
 ## Session 10: Search, Tags, and Collections UX
@@ -420,7 +420,7 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 06 | `recall-uploads-fix` | `/tmp/recall-worktrees/uploads-fix` | 2026-08-24 | 2026-08-24 | API 32/32; web 15/15; API and web type checks passed; API lint passed | Commit `e40ed6a`, integrated as `c1be157`; browser/API size and signature tests passed | Drag-drop-specific test, mode-path E2E, durable key/fresh URL lifecycle, and full storage failure matrix remain. |
 | 07 | `recall-parser` |  |  |  |  |  |  |
 | 08 | `recall-sync` |  |  |  |  |  |  |
-| 09 | `recall-item-actions` |  |  |  |  |  |  |
+| 09 | `recall-item-actions-fix` | `/tmp/recall-worktrees/item-actions-fix` | 2026-08-24 | 2026-08-24 | Web 28/28; web `tsc --noEmit`; changed-file ESLint clean | Item-card and detail-action regression tests cover favorite, retry, failure reason/stage, queued success, duplicate retry, and queue failure states | Browser E2E action coverage remains unchecked. |
 | 10 | `recall-dashboard-features` |  |  |  |  |  |  |
 | 11 | `recall-dashboard-ui` |  |  |  |  |  |  |
 | 12 | `recall-graph-ui` |  |  |  |  |  |  |

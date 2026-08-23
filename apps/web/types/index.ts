@@ -3,6 +3,7 @@ export type {
   Item,
   ItemType,
   ItemStatus,
+  ProcessingStage,
   SaveSource,
   ItemTag,
 } from "./item";

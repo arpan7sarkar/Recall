@@ -118,6 +118,41 @@ export function useUpdateItem() {
   });
 }
 
+export function useToggleFavorite() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, isFavourite }: { id: string; isFavourite: boolean }) => {
+      const token = await getToken();
+      if (!token) throw new Error("Missing auth token");
+      return api.patch<Item>(`/items/${id}`, { isFavourite }, { token });
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["items"] });
+      qc.invalidateQueries({ queryKey: ["item", vars.id] });
+      qc.invalidateQueries({ queryKey: ["search"] });
+    },
+  });
+}
+
+export function useRetryItem() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const token = await getToken();
+      if (!token) throw new Error("Missing auth token");
+      return api.post<Item>(`/items/${id}/retry`, undefined, { token });
+    },
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ["items"] });
+      qc.invalidateQueries({ queryKey: ["item", id] });
+    },
+  });
+}
+
 export function useDeleteItem() {
   const qc = useQueryClient();
   const { getToken } = useAuth();

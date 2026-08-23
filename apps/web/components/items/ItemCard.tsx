@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { TypeBadge } from "@/components/shared/TypeBadge";
 import { timeAgo, extractDomain } from "@/lib/utils";
+import { getApiErrorMessage } from "@/lib/api";
 import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/shared/Icon";
@@ -13,7 +14,13 @@ import Script from "next/script";
 import { LoaderOne } from "@/components/ui/unique-loader-components";
 import { SocialPostPreview } from "@/components/items/SocialPostPreview";
 import { InstagramAutoEmbed } from "@/components/items/InstagramAutoEmbed";
-import { useArchiveItem, useDeleteItem, useUnarchiveItem } from "@/hooks/useItems";
+import {
+  useArchiveItem,
+  useDeleteItem,
+  useRetryItem,
+  useToggleFavorite,
+  useUnarchiveItem,
+} from "@/hooks/useItems";
 
 interface ItemCardProps {
   item: Item;
@@ -23,9 +30,13 @@ interface ItemCardProps {
 export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [retryNotice, setRetryNotice] = useState<string | null>(null);
   const archiveItem = useArchiveItem();
   const unarchiveItem = useUnarchiveItem();
   const deleteItem = useDeleteItem();
+  const toggleFavorite = useToggleFavorite();
+  const retryItem = useRetryItem();
   const isProcessing = item.status === "processing" || item.status === "pending";
   const isInstagram = item.itemType === "instagram";
   const isStaticSocialPreview = item.itemType === "linkedin";
@@ -33,6 +44,10 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
   const shouldShowTitle = !isInstagram || trimmedTitle.length > 0;
   const isArchiveUpdating = archiveItem.isPending || unarchiveItem.isPending;
   const isDeletePending = deleteItem.isPending;
+  const isFavoriteUpdating = toggleFavorite.isPending;
+  const isRetrying = retryItem.isPending;
+
+  const clearActionError = () => setActionError(null);
 
   const handleCardClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("a, button, blockquote")) return;
@@ -41,6 +56,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
 
   const handleArchiveToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    clearActionError();
 
     try {
       if (item.isArchived) {
@@ -49,12 +65,37 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
         await archiveItem.mutateAsync(item.id);
       }
     } catch (err) {
-      console.error("Failed to toggle archive state:", err);
+      setActionError(getApiErrorMessage(err, "Archive update failed. Please try again."));
+    }
+  };
+
+  const handleFavoriteToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    clearActionError();
+
+    try {
+      await toggleFavorite.mutateAsync({ id: item.id, isFavourite: !item.isFavourite });
+    } catch (err) {
+      setActionError(getApiErrorMessage(err, "Favorite update failed. Please try again."));
+    }
+  };
+
+  const handleRetry = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    clearActionError();
+    setRetryNotice(null);
+
+    try {
+      await retryItem.mutateAsync(item.id);
+      setRetryNotice("Retry queued. This item will update when processing resumes.");
+    } catch (err) {
+      setActionError(getApiErrorMessage(err, "Retry could not be queued. Check the worker and try again."));
     }
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    clearActionError();
     setShowDeleteConfirm(true);
   };
 
@@ -63,9 +104,62 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
       await deleteItem.mutateAsync(item.id);
       setShowDeleteConfirm(false);
     } catch (err) {
-      console.error("Failed to delete item:", err);
+      setActionError(getApiErrorMessage(err, "Delete failed. Please try again."));
     }
   };
+
+  const favoriteLabel = item.isFavourite ? "Remove from favorites" : "Add to favorites";
+  const failureReason = item.processingError?.trim() || "Processing stopped before this item was ready.";
+  const recoveryMessage = actionError ? (
+    <p
+      role={item.status === "failed" ? undefined : "alert"}
+      className="mt-2 rounded-lg border px-3 py-2 text-xs"
+      style={{
+        color: "color-mix(in srgb, #ef4444 75%, var(--text-primary) 25%)",
+        borderColor: "color-mix(in srgb, var(--border) 55%, #ef4444 45%)",
+        background: "color-mix(in srgb, var(--bg-primary) 88%, #7f1d1d 12%)",
+      }}
+    >
+      {actionError}
+    </p>
+  ) : null;
+  const failureState = item.status === "failed" ? (
+    <div
+      role="alert"
+      className="relative z-10 mt-3 rounded-xl border px-3 py-3"
+      style={{
+        borderColor: "color-mix(in srgb, var(--border) 55%, #ef4444 45%)",
+        background: "color-mix(in srgb, var(--bg-secondary) 86%, #7f1d1d 14%)",
+      }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-medium" style={{ color: "#fca5a5" }}>
+          Processing failed
+        </p>
+        <button
+          onClick={handleRetry}
+          disabled={isRetrying || isDeletePending || isArchiveUpdating}
+          className="rounded-md border px-2 py-1 text-[11px] font-medium transition-colors disabled:opacity-60"
+          style={{ color: "var(--text-primary)", borderColor: "var(--border)", background: "var(--bg-primary)" }}
+          aria-label="Retry processing"
+        >
+          {isRetrying ? "Retrying..." : "Retry"}
+        </button>
+      </div>
+      <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+        {failureReason}
+      </p>
+      <p className="mt-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+        Stage: {item.processingStage || "processing"}
+      </p>
+      {retryNotice && (
+        <p role="status" className="mt-2 text-xs" style={{ color: "var(--text-secondary)" }}>
+          {retryNotice}
+        </p>
+      )}
+      {recoveryMessage}
+    </div>
+  ) : recoveryMessage;
 
   const deleteConfirmPopup = showDeleteConfirm ? (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
@@ -148,6 +242,7 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
             <p className="text-[10px] font-serif italic text-zinc-500 mt-1.5 group-hover/list:text-zinc-400 transition-colors">
               {extractDomain(item.url)} <span className="mx-1 opacity-30">|</span> {timeAgo(item.savedAt)}
             </p>
+            {failureState}
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
@@ -176,11 +271,16 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
               {isDeletePending ? "Deleting..." : "Delete"}
             </button>
 
-            {item.isFavourite && (
-              <div className="flex items-center justify-center shrink-0" style={{ color: "var(--accent-500)" }}>
-                <Heart size={14} fill="currentColor" />
-              </div>
-            )}
+            <button
+              onClick={handleFavoriteToggle}
+              disabled={isFavoriteUpdating || isDeletePending || isArchiveUpdating}
+              className="flex items-center justify-center shrink-0 rounded-md p-1 transition-colors disabled:opacity-60"
+              style={{ color: item.isFavourite ? "var(--accent-500)" : "var(--text-tertiary)" }}
+              aria-label={favoriteLabel}
+              title={favoriteLabel}
+            >
+              <Heart size={14} fill={item.isFavourite ? "currentColor" : "none"} />
+            </button>
           </div>
         </div>
 
@@ -235,14 +335,16 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
           </div>
         ) : null}
 
-        {item.isFavourite && (
-          <div
-            className="absolute top-4 right-14 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md"
-            style={{ width: 32, height: 32, color: "var(--accent-500)" }}
-          >
-            <Heart size={16} fill="currentColor" />
-          </div>
-        )}
+        <button
+          onClick={handleFavoriteToggle}
+          disabled={isFavoriteUpdating || isDeletePending || isArchiveUpdating}
+          className="absolute top-4 right-14 z-10 flex items-center justify-center rounded-full text-xs border border-white/5 bg-(--bg-elevated)/60 backdrop-blur-md disabled:opacity-60"
+          style={{ width: 32, height: 32, color: item.isFavourite ? "var(--accent-500)" : "var(--text-secondary)" }}
+          aria-label={favoriteLabel}
+          title={favoriteLabel}
+        >
+          <Heart size={16} fill={item.isFavourite ? "currentColor" : "none"} />
+        </button>
 
         <button
           onClick={handleArchiveToggle}
@@ -283,6 +385,8 @@ export function ItemCard({ item, viewMode = "grid" }: ItemCardProps) {
               {item.description}
             </p>
           )}
+
+          {failureState}
         </div>
       </div>
       {deleteConfirmPopup}
