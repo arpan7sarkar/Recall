@@ -36,12 +36,17 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
     // 1. Handle Extension Tokens
     if (isExtensionToken) {
       const tokenHash = hashToken(bearerToken);
-      const record = await prisma.extensionToken.findUnique({
-        where: { tokenHash },
-      }).catch((err: any) => {
+      let record;
+      try {
+        record = await prisma.extensionToken.findUnique({
+          where: { tokenHash },
+        });
+      } catch (err: any) {
         console.error("[Auth] DB Error (Extension Token):", err.message);
-        throw err;
-      });
+        return res.status(503).json({
+          error: "Authentication service temporarily unavailable",
+        });
+      }
 
       if (record && !record.revokedAt && new Date() <= record.expiresAt) {
         userId = record.userId;
@@ -99,39 +104,54 @@ export const authenticateClerk = async (req: Request, res: Response, next: NextF
     // 5. Context assignment and User Lookup
     (req as any).auth = { userId, source };
 
-    let user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { googleId: userId },
-          { id: userId },
-        ],
-      },
-    }).catch((err) => {
+    let user;
+    try {
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { googleId: userId },
+            { id: userId },
+          ],
+        },
+      });
+    } catch (err: any) {
       console.error("[Auth] Database User Lookup Error:", err.message);
-      return null;
-    });
+      return res.status(503).json({
+        error: "Authentication service temporarily unavailable",
+      });
+    }
 
     // 6. Auto-sync for Clerk users
     if (!user && source === "clerk") {
-      user = await prisma.user.upsert({
-        where: { id: userId },
-        update: {},
-        create: {
-          id: userId,
-          email: `${userId}@clerk.local`,
-          name: "Clerk User",
-        },
-      }).catch((err) => {
+      try {
+        user = await prisma.user.upsert({
+          where: { id: userId },
+          update: {},
+          create: {
+            id: userId,
+            email: `${userId}@clerk.local`,
+            name: "Clerk User",
+          },
+        });
+      } catch (err: any) {
         console.error("[Auth] DB User Sync Error:", err.message);
-        return null;
-      });
+        return res.status(503).json({
+          error: "Authentication service temporarily unavailable",
+        });
+      }
     }
 
     if (!user && source === "extension_token") {
       return res.status(401).json({ error: "Linked user not found." });
     }
 
-    if (user) (req as any).user = user;
+    if (!user) {
+      return res.status(503).json({
+        error: "Authentication service temporarily unavailable",
+      });
+    }
+
+    (req as any).user = user;
     
     return next();
   } catch (error: any) {

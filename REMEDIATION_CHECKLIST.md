@@ -107,17 +107,17 @@ Related ledger IDs: `AUTH-001` through `AUTH-005`.
 
 Completion gate: a signed-in user cannot enter the dashboard in a broken sync state, and authentication failures are actionable in the UI.
 
-- [ ] Add a failing test for AuthGuard sync failure behavior.
-- [ ] Keep the dashboard blocked while required local-user synchronization is unresolved.
-- [ ] Distinguish transient token unavailability from permanent authentication failure.
-- [ ] Add bounded sync retry with visible failure state.
-- [ ] Prevent API middleware from continuing after local-user provisioning fails.
-- [ ] Resolve placeholder email and real-email uniqueness conflicts safely.
-- [ ] Add migration or account-linking behavior for legacy Clerk users.
-- [ ] Verify Clerk bearer JWT validation in cross-origin development requests.
-- [ ] Verify extension-token validation remains isolated from web authentication.
-- [ ] Preserve protected-route redirect destinations after login and registration.
-- [ ] Add integration tests for missing token, expired token, invalid token, database outage, and email conflict.
+- [x] Add a failing test for AuthGuard sync failure behavior.
+- [x] Keep the dashboard blocked while required local-user synchronization is unresolved.
+- [x] Distinguish transient token unavailability from permanent authentication failure.
+- [x] Add bounded sync retry with visible failure state.
+- [x] Prevent API middleware from continuing after local-user provisioning fails.
+- [x] Resolve placeholder email and real-email uniqueness conflicts safely.
+- [x] Add migration or account-linking behavior for legacy Clerk users.
+- [x] Verify Clerk bearer JWT validation in cross-origin development requests.
+- [x] Verify extension-token validation remains isolated from web authentication.
+- [x] Preserve protected-route redirect destinations after login and registration.
+- [x] Add integration tests for missing token, expired token, invalid token, database outage, and email conflict.
 
 ## Session 04: API Client and CORS Reliability
 
