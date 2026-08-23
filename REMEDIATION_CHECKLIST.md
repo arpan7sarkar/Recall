@@ -191,7 +191,7 @@ Completion gate: unsafe or oversized uploads fail before unbounded buffering, an
 
 ## Session 07: Parser Architecture and Content Safety
 
-Branch: `recall-parser`
+Branch: `recall-parser-safety`
 
 Worktree scope: source adapters, metadata extraction, text extraction, social fallbacks, and parser diagnostics.
 
@@ -206,14 +206,21 @@ Completion gate: each supported source has typed results, deterministic fixtures
 - [ ] Add fixtures for blocked pages and changed social responses.
 - [ ] Add YouTube-specific metadata and transcript behavior or explicitly mark it unsupported.
 - [ ] Preserve useful fallback title, author, description, and source-domain data.
-- [ ] Populate word count and reading time from validated content.
+- [x] Populate word count and reading time from validated content.
 - [ ] Stop swallowing social fallback diagnostics.
 - [ ] Add parser stage and source details to failure records.
-- [ ] Add content-length and content-type limits to every remote fetch.
-- [ ] Add redirect limits and response timeouts.
-- [ ] Add concurrency limits for scraper and file parsing jobs.
-- [ ] Add SSRF protections for user URLs, thumbnails, redirects, and remote files.
-- [ ] Add bounded-memory tests using controlled large responses.
+- [x] Add content-length and content-type limits to every remote fetch.
+- [x] Add redirect limits and response timeouts.
+- [x] Add concurrency limits for scraper and file parsing jobs.
+- [x] Add SSRF protections for user URLs, thumbnails, redirects, and remote files.
+- [x] Add bounded-memory tests using controlled large responses.
+
+Session 07 safety evidence: `apps/api/src/lib/remoteFetch.ts` now validates schemes, credentials, local/private literal addresses, DNS answers, redirect targets, response content types, timeouts, and bounded streamed bodies before parser or storage consumers receive bytes.
+Scraper HTML, social oEmbed JSON, thumbnail, and PDF fetches all use the shared boundary, and unsafe thumbnail URLs are not retained as a fallback.
+PDF parsing accepts `application/pdf` and `application/octet-stream` only after a `%PDF-` signature check, and extracted text is capped before persistence.
+Parser statistics now populate `wordCount` and `readingTime`, while worker concurrency is configurable but capped at four.
+Focused remote safety and parser statistics tests pass, the full API suite passes 48/48, API typecheck passes, and changed-file ESLint passes.
+Full source adapter fixtures, YouTube transcript support, user-visible social diagnostics, and end-to-end remote dependency checks remain unchecked.
 
 ## Session 08: Dashboard Synchronization and Cache Correctness
 
@@ -436,7 +443,7 @@ Completion gate: all critical and high checklist items are verified or explicitl
 | 04 | `recall-api-client-fix` | `/tmp/recall-worktrees/api-client-fix` | 2026-08-24 | 2026-08-24 | API 32/32; web 20/20; API and web type checks passed; changed-file lint passed | Commit `76df424`, integrated as `59e34ab`; transport tests cover 401, offline, empty response, base URL, and correlation ID | Preflight integration test and explicit removal/documentation of the legacy production fallback remain. |
 | 05 | `recall-save-flow` | `/tmp/recall-worktrees/save-flow` (salvaged into integration branch) | 2026-08-24 | 2026-08-24 | API 30/30; web 13/13; API and web type checks passed; API and web lint passed | Commit recorded in integration history after focused URL, metadata, timestamp, error, and duplicate-submit tests | E2E save, retry action, optimistic item display, attachment feedback, and refresh/reauth checks remain. |
 | 06 | `recall-uploads-fix` | `/tmp/recall-worktrees/uploads-fix` | 2026-08-24 | 2026-08-24 | API 32/32; web 15/15; API and web type checks passed; API lint passed | Commit `e40ed6a`, integrated as `c1be157`; browser/API size and signature tests passed | Drag-drop-specific test, mode-path E2E, durable key/fresh URL lifecycle, and full storage failure matrix remain. |
-| 07 | `recall-parser` |  |  |  |  |  |  |
+| 07 | `recall-parser-safety` | `/tmp/recall-worktrees/parser-safety` | 2026-08-24 | 2026-08-24 | API 48/48; focused remote safety, parser statistics, and concurrency tests; API `tsc --noEmit`; changed-file ESLint clean | Shared bounded remote fetch covers SSRF, DNS, redirect, timeout, content-type, and streaming size controls; scraper, social, thumbnail, and PDF consumers migrated; parser stats persisted | Full source adapter fixtures, YouTube behavior, user-visible social diagnostics, and live remote dependency scenarios remain. |
 | 08 | `recall-sync-fix` | `/tmp/recall-worktrees/sync-fix` | 2026-08-24 | 2026-08-24 | API 35/35; web 21/21; API/web type checks passed; changed-file lint passed | Graph cache route tests, web resync contract, bounded pagination and processing count consistency | Full web lint retains pre-existing errors outside this session; live Redis and full save consistency E2E remain. |
 | 09 | `recall-item-actions-fix` | `/tmp/recall-worktrees/item-actions-fix` | 2026-08-24 | 2026-08-24 | Web 28/28; web `tsc --noEmit`; changed-file ESLint clean | Commit `a17ad75`, integrated as `2eafd2b`; item-card and detail-action regression tests cover favorite, retry, failure reason/stage, queued success, duplicate retry, and queue failure states | Browser E2E action coverage remains unchecked. |
 | 10 | `recall-features-followup` | `/tmp/recall-worktrees/features-followup` | 2026-08-24 | 2026-08-24 | Source web 42/42; integrated web 44/44; web `tsc --noEmit`; changed-file ESLint passed | Source commit `7f6156d`, integrated as `f444367`; top-bar search errors/loading/retry and collection removal success/failure feedback are covered by regression tests | Full search/tag/collection integration and browser E2E remain. |

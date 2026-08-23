@@ -10,6 +10,7 @@ import { processEmbed } from "./embedWorker";
 import { getRuntimeDiagnostics, getMissingEnvironment } from "../runtime/environment";
 import { getWorkerReadiness } from "../runtime/workerReadiness";
 import { readinessHttpStatus } from "../runtime/readiness";
+import { getWorkerConcurrency } from "./workerConcurrency";
 
 // Minimal health-check server so Render detects an open port
 const PORT = parseInt(process.env.PORT || "4001", 10);
@@ -83,7 +84,7 @@ const scrapeWorker = new Worker(
     console.log(`[Scrape] Processing job ${job.id} for item ${job.data.itemId}`);
     return processScrape(job);
   },
-  { connection, concurrency: 2 }
+  { connection, concurrency: getWorkerConcurrency(process.env.SCRAPER_CONCURRENCY) }
 );
 
 const aiWorker = new Worker(
@@ -92,7 +93,7 @@ const aiWorker = new Worker(
     console.log(`[AI] Processing job ${job.id} for item ${job.data.itemId}`);
     return processAi(job);
   },
-  { connection, concurrency: 2 }
+  { connection, concurrency: getWorkerConcurrency(process.env.AI_CONCURRENCY) }
 );
 
 const embedWorker = new Worker(
@@ -101,7 +102,7 @@ const embedWorker = new Worker(
     console.log(`[Embed] Processing job ${job.id} for item ${job.data.itemId}`);
     return processEmbed(job);
   },
-  { connection, concurrency: 2 }
+  { connection, concurrency: getWorkerConcurrency(process.env.EMBED_CONCURRENCY) }
 );
 
 // ── Success handlers ──

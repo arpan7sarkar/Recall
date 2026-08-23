@@ -3,8 +3,11 @@ import { PDFParse } from "pdf-parse";
 import prisma from "@/lib/prisma";
 import { embedQueue } from "@/queues";
 import { buildPipelineJobId, buildProcessingFailureUpdate } from "@/queues/pipeline";
-import axios from "axios";
 import { invalidateGraphCache } from "../lib/graphCache";
+import { fetchRemoteResource } from "../lib/remoteFetch";
+import { calculateTextStats } from "./parserStats";
+
+const MAX_EXTRACTED_TEXT_CHARS = 200_000;
 
 async function markReady(itemId: string, warning: string | null = null): Promise<void> {
   await prisma.item.update({
@@ -88,20 +91,23 @@ export async function processAi(job: any) {
     if (item.itemType === "pdf" && item.fileUrl && !item.contentText) {
       console.log(`[AI] Parsing PDF for item ${itemId}...`);
       try {
-        const response = await axios.get(item.fileUrl, { responseType: "arraybuffer" });
-        const parser = new PDFParse({ data: Buffer.from(response.data) });
+        const response = await fetchRemoteResource(item.fileUrl, {
+          timeoutMs: Number(process.env.REMOTE_PDF_TIMEOUT_MS ?? 15000),
+          maxBytes: Number(process.env.REMOTE_PDF_MAX_BYTES ?? 20 * 1024 * 1024),
+          maxRedirects: Number(process.env.REMOTE_MAX_REDIRECTS ?? 3),
+          allowedContentTypes: ["application/pdf", "application/octet-stream"],
+        });
+        if (response.buffer.subarray(0, 5).toString("ascii") !== "%PDF-") {
+          throw new Error("Remote response did not contain a valid PDF signature.");
+        }
+        const parser = new PDFParse({ data: response.buffer });
         try {
           const data = await parser.getText();
-          contentToAnalyze = data.text;
+          contentToAnalyze = data.text.slice(0, MAX_EXTRACTED_TEXT_CHARS);
         } finally {
           await parser.destroy();
         }
         
-        // Update content in DB for later use
-        await prisma.item.update({
-          where: { id: itemId },
-          data: { contentText: contentToAnalyze },
-        });
       } catch (err: any) {
         console.error(`[AI] Failed to parse PDF:`, err.message);
         enrichmentWarning = `PDF text extraction was unavailable: ${err.message}`;
@@ -109,10 +115,15 @@ export async function processAi(job: any) {
     }
 
     // Keep content synchronized for embedding context.
-    if (contentToAnalyze && contentToAnalyze !== item.contentText) {
+    const textStats = calculateTextStats(contentToAnalyze);
+    if (contentToAnalyze !== item.contentText || item.wordCount !== textStats.wordCount || item.readingTime !== textStats.readingTime) {
       await prisma.item.update({
         where: { id: itemId },
-        data: { contentText: contentToAnalyze },
+        data: {
+          contentText: contentToAnalyze || null,
+          readingTime: textStats.readingTime,
+          wordCount: textStats.wordCount,
+        },
       });
     }
 

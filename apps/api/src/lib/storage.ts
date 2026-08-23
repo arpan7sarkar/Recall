@@ -6,6 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
+import { fetchRemoteResource } from "./remoteFetch";
 
 dotenv.config();
 
@@ -127,46 +128,15 @@ export async function uploadFromUrl(
   key: string,
   mimeType = "image/jpeg"
 ): Promise<UploadResult> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), Number.isFinite(REMOTE_FETCH_TIMEOUT_MS) ? REMOTE_FETCH_TIMEOUT_MS : 15000);
-  let response: Response;
-  try {
-    response = await fetch(remoteUrl, { signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
-  if (!response.ok) {
-    throw new Error(`Failed to fetch remote file: ${response.status} ${response.statusText}`);
-  }
-
-  const declaredLength = Number(response.headers.get("content-length"));
   const maxBytes = Number.isFinite(REMOTE_FETCH_MAX_BYTES) && REMOTE_FETCH_MAX_BYTES > 0 ? REMOTE_FETCH_MAX_BYTES : 5 * 1024 * 1024;
-  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
-    throw new Error("Remote file exceeds the configured storage limit.");
-  }
+  const resource = await fetchRemoteResource(remoteUrl, {
+    timeoutMs: Number.isFinite(REMOTE_FETCH_TIMEOUT_MS) && REMOTE_FETCH_TIMEOUT_MS > 0 ? REMOTE_FETCH_TIMEOUT_MS : 15000,
+    maxBytes,
+    maxRedirects: 3,
+    allowedContentTypes: [mimeType.startsWith("image/") ? "image/" : mimeType],
+  });
 
-  const chunks: Buffer[] = [];
-  let total = 0;
-  if (response.body) {
-    const reader = response.body.getReader();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > maxBytes) {
-        await reader.cancel();
-        throw new Error("Remote file exceeds the configured storage limit.");
-      }
-      chunks.push(Buffer.from(value));
-    }
-  } else {
-    const arrayBuffer = await response.arrayBuffer();
-    if (arrayBuffer.byteLength > maxBytes) throw new Error("Remote file exceeds the configured storage limit.");
-    chunks.push(Buffer.from(arrayBuffer));
-  }
-  const buffer = Buffer.concat(chunks);
-
-  return uploadFile(buffer, key, mimeType);
+  return uploadFile(resource.buffer, key, mimeType);
 }
 
 export { r2 };
