@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { validateEnvironment } from "./validate-env.mjs";
 
 const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+const apiPackageJson = JSON.parse(readFileSync(new URL("../apps/api/package.json", import.meta.url), "utf8"));
 const compose = readFileSync(new URL("../docker-compose.yml", import.meta.url), "utf8");
 const apiSource = readFileSync(new URL("../apps/api/src/index.ts", import.meta.url), "utf8");
 const corsSource = readFileSync(new URL("../apps/api/src/runtime/cors.ts", import.meta.url), "utf8");
@@ -29,6 +30,10 @@ describe("root runtime contract", () => {
 
   it("keeps Redis on BullMQ's noeviction policy", () => {
     assert.match(compose, /maxmemory-policy.*noeviction/);
+  });
+
+  it("deploys committed database migrations before starting the production API", () => {
+    assert.match(apiPackageJson.scripts.start, /prisma migrate deploy/);
   });
 
   it("exposes separate liveness and readiness endpoints", () => {
