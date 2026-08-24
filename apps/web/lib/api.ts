@@ -8,6 +8,17 @@ export type ApiEnvironment = Readonly<{
   NEXT_PUBLIC_API_URL?: string;
 }>;
 
+// Next.js only includes NEXT_PUBLIC_* values in browser bundles when each
+// variable is referenced directly. Passing process.env through as an object
+// leaves these values undefined in deployed clients.
+const BUNDLED_API_ENVIRONMENT: ApiEnvironment = {
+  NODE_ENV: process.env.NODE_ENV,
+  NEXT_PUBLIC_API_URL_DEV: process.env.NEXT_PUBLIC_API_URL_DEV,
+  NEXT_PUBLIC_RENDER_API_URL: process.env.NEXT_PUBLIC_RENDER_API_URL,
+  NEXT_PUBLIC_API_URL_PROD: process.env.NEXT_PUBLIC_API_URL_PROD,
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+};
+
 function firstConfigured(...values: Array<string | undefined>): string | undefined {
   return values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim().replace(/\/$/, "");
 }
@@ -33,7 +44,7 @@ function isLocalHost(hostname: string): boolean {
 
 export function resolveApiBase(
   location?: Pick<Location, "hostname">,
-  environment: ApiEnvironment = process.env,
+  environment: ApiEnvironment = BUNDLED_API_ENVIRONMENT,
 ): string {
   const hostname = location?.hostname ?? (typeof window === "undefined" ? undefined : window.location.hostname);
   const { development, production } = getApiBases(environment);
