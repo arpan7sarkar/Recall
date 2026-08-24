@@ -62,6 +62,7 @@ Completion gate: one documented local command starts the API, web app, worker, P
 - [x] Make the root development workflow start or clearly validate the worker.
 - [x] Add dependency service startup and shutdown instructions.
 - [x] Make API readiness verify PostgreSQL connectivity.
+- [x] Make API readiness verify the migrated application schema instead of accepting a bare `SELECT 1`. (`apps/api/src/runtime/apiReadiness.ts`)
 - [x] Make API readiness verify Redis connectivity.
 - [x] Make API readiness verify queue availability.
 - [x] Make worker readiness verify Redis connectivity before reporting healthy.
@@ -71,6 +72,7 @@ Completion gate: one documented local command starts the API, web app, worker, P
 - [x] Complete `.env.example` with Clerk, CORS, readiness, storage, host, port, and clock-skew variables.
 - [x] Document the required API, worker, and web environment contract.
 - [x] Verify production and worker services use the same Redis configuration.
+- [x] Apply committed Prisma migrations before the production API process starts. (`apps/api/package.json`)
 
 ## Session 02: Redis and BullMQ Pipeline Recovery
 
@@ -402,8 +404,8 @@ Related ledger IDs: `DATA-003`, `DATA-004`, and `TEST-005`.
 
 Completion gate: a clean database and the current database reach the same schema through documented, reviewed commands.
 
-- [ ] Inspect the live migration ledger and schema in a protected read-only environment.
-- [ ] Decide the reviewed baseline strategy for the two unapplied repository migrations.
+- [x] Inspect the configured live Neon migration ledger and schema without reading application records. (the `public` schema was empty and all four migrations were pending on 2026-08-24)
+- [x] Apply the reviewed four-migration history to the empty production schema. (`prisma migrate deploy` completed all four migrations and `prisma migrate status` reports up to date)
 - [x] Add a migration smoke test to CI. (`.github/workflows/quality.yml`, `apps/api/prisma/migration_smoke.sql`)
 - [x] Verify extension-token tables and constraints in a clean database. (CI PostgreSQL 16 migration smoke test)
 - [ ] Verify indexes and foreign keys for all ownership-sensitive paths.
@@ -412,7 +414,8 @@ Completion gate: a clean database and the current database reach the same schema
 - [x] Document rollback and forward migration procedures. (`apps/api/prisma/MIGRATION_RUNBOOK.md`)
 
 Session 15 evidence: the repository contains four ordered PostgreSQL migrations, and the current schema fields are represented by the pipeline-recovery and save-metadata migrations.
-The local protected read-only status check could not reach PostgreSQL and Prisma's schema engine cache is read-only, so no live ledger baseline was guessed or changed.
+The configured Neon database was reachable but had no tables in its `public` schema, which caused authenticated user synchronization and public collection queries to fail while the old `SELECT 1` readiness probe passed.
+All four reviewed migrations were deployed successfully, Prisma reports the live schema up to date, and the live nonexistent public-collection probe changed from an erroneous HTTP 500 to the expected HTTP 404.
 CI now starts PostgreSQL 16, deploys the full migration history, verifies that the ledger is clean, and asserts extension-token constraints plus current item columns through `migration_smoke.sql`.
 Durable object keys and a complete orphan inventory remain deferred to Session 06 because the current schema stores signed URLs rather than storage keys.
 

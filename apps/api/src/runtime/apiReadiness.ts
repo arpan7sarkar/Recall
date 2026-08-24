@@ -11,7 +11,19 @@ function requireEnvironment(name: string): void {
 
 async function checkDatabase(): Promise<void> {
   requireEnvironment("DATABASE_URL");
-  await prisma.$queryRawUnsafe("SELECT 1");
+  await Promise.all([
+    prisma.user.findFirst({ select: { id: true } }),
+    prisma.extensionToken.findFirst({ select: { id: true } }),
+    prisma.item.findFirst({
+      select: {
+        id: true,
+        processingStage: true,
+        processingError: true,
+        processingAttempt: true,
+        podcastName: true,
+      },
+    }),
+  ]);
 }
 
 async function checkRedis(): Promise<void> {
