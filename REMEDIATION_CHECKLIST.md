@@ -138,12 +138,14 @@ Completion gate: every API failure is classified consistently in the UI, and loc
 - [x] Remove the empty 401 handling branch. (`apps/web/lib/api.ts`)
 - [x] Make API base URL configuration explicit per environment. (`apps/web/.env.example`)
 - [x] Remove the hardcoded production fallback and fail closed when a production API base is missing. (`apps/web/lib/api.ts`, `apps/web/.env.example`)
+- [x] Read public API environment variables through direct `process.env.NEXT_PUBLIC_*` expressions so Next.js includes them in deployed browser bundles. (`apps/web/lib/api.ts`, `apps/web/tests/api-config.test.ts`)
 - [x] Allow configured development origins beyond port 3000. (runtime CORS defaults and `CORS_ORIGINS`)
 - [x] Add CORS preflight integration tests for configured web and extension origins. (`apps/api/src/runtime/cors.test.ts`)
 - [x] Ensure successful empty responses do not require JSON parsing. (`apps/web/tests/api-client.test.ts`)
 - [x] Add request correlation IDs for save and processing flows. (`X-Request-ID` browser/API propagation)
 
 Session 04 follow-up evidence: the production API base no longer contains a fixed deployment URL and now requires `NEXT_PUBLIC_RENDER_API_URL` or `NEXT_PUBLIC_API_URL_PROD`, while development and test environments retain the documented localhost default.
+The Vercel production-build regression was reproduced with the configured API URL absent from every browser chunk, then verified after the fix with the URL present in the emitted client bundle.
 The API CORS middleware now uses a shared environment-aware configuration, keeps local defaults outside production, and accepts explicitly configured deployed origins.
 Focused web API configuration and transport tests pass 8/8, focused API CORS preflight tests pass 4/4, and changed-file type checks and lint pass.
 
